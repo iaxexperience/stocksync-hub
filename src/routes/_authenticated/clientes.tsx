@@ -1415,6 +1415,120 @@ function ClienteForm({
     return d.toISOString().split("T")[0];
   });
 
+  // Load draft on mount (if creating a new client, i.e., no id is provided)
+  useEffect(() => {
+    if (!id) {
+      try {
+        const saved = localStorage.getItem("stocksync_cliente_form_draft");
+        if (saved) {
+          const draft = JSON.parse(saved);
+          if (draft.customerType !== undefined) setCustomerType(draft.customerType);
+          if (draft.name !== undefined) setName(draft.name);
+          if (draft.tradeName !== undefined) setTradeName(draft.tradeName);
+          if (draft.cpfCnpj !== undefined) setCpfCnpj(draft.cpfCnpj);
+          if (draft.rgIe !== undefined) setRgIe(draft.rgIe);
+          if (draft.birthOrOpening !== undefined) setBirthOrOpening(draft.birthOrOpening);
+          if (draft.phone !== undefined) setPhone(draft.phone);
+          if (draft.whatsapp !== undefined) setWhatsapp(draft.whatsapp);
+          if (draft.email !== undefined) setEmail(draft.email);
+          if (draft.photoUrl !== undefined) setPhotoUrl(draft.photoUrl);
+          if (draft.status !== undefined) setStatus(draft.status);
+          if (draft.notes !== undefined) setNotes(draft.notes);
+
+          if (draft.zipCode !== undefined) setZipCode(draft.zipCode);
+          if (draft.street !== undefined) setStreet(draft.street);
+          if (draft.number !== undefined) setNumber(draft.number);
+          if (draft.complement !== undefined) setComplement(draft.complement);
+          if (draft.neighborhood !== undefined) setNeighborhood(draft.neighborhood);
+          if (draft.city !== undefined) setCity(draft.city);
+          if (draft.state !== undefined) setState(draft.state);
+          if (draft.reference !== undefined) setReference(draft.reference);
+
+          if (draft.cartItems !== undefined) setCartItems(draft.cartItems);
+          if (draft.installationFee !== undefined) setInstallationFee(draft.installationFee);
+          if (draft.shippingFee !== undefined) setShippingFee(draft.shippingFee);
+          if (draft.discountType !== undefined) setDiscountType(draft.discountType);
+          if (draft.discountVal !== undefined) setDiscountVal(draft.discountVal);
+          if (draft.paymentMethod !== undefined) setPaymentMethod(draft.paymentMethod);
+          if (draft.installmentsCount !== undefined) setInstallmentsCount(draft.installmentsCount);
+          if (draft.downPayment !== undefined) setDownPayment(draft.downPayment);
+          if (draft.firstDueDate !== undefined) setFirstDueDate(draft.firstDueDate);
+        }
+      } catch (e) {
+        console.error("Error loading draft", e);
+      }
+    }
+  }, [id]);
+
+  // Save draft to localStorage on state changes (if creating a new client)
+  useEffect(() => {
+    if (!id) {
+      const draft = {
+        customerType,
+        name,
+        tradeName,
+        cpfCnpj,
+        rgIe,
+        birthOrOpening,
+        phone,
+        whatsapp,
+        email,
+        photoUrl,
+        status,
+        notes,
+        zipCode,
+        street,
+        number,
+        complement,
+        neighborhood,
+        city,
+        state,
+        reference,
+        cartItems,
+        installationFee,
+        shippingFee,
+        discountType,
+        discountVal,
+        paymentMethod,
+        installmentsCount,
+        downPayment,
+        firstDueDate
+      };
+      localStorage.setItem("stocksync_cliente_form_draft", JSON.stringify(draft));
+    }
+  }, [
+    id,
+    customerType,
+    name,
+    tradeName,
+    cpfCnpj,
+    rgIe,
+    birthOrOpening,
+    phone,
+    whatsapp,
+    email,
+    photoUrl,
+    status,
+    notes,
+    zipCode,
+    street,
+    number,
+    complement,
+    neighborhood,
+    city,
+    state,
+    reference,
+    cartItems,
+    installationFee,
+    shippingFee,
+    discountType,
+    discountVal,
+    paymentMethod,
+    installmentsCount,
+    downPayment,
+    firstDueDate
+  ]);
+
   // Se for Venda, preenche dados do cliente pré-existente
   const activeCustomer = useMemo(() => {
     if (id) {
