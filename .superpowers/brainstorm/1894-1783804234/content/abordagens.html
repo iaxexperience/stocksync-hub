@@ -1,0 +1,98 @@
+<h2>Como implementar o Módulo de Clientes?</h2>
+<p class="subtitle">Escolha a abordagem de desenvolvimento que melhor se encaixa na sua necessidade</p>
+
+<div class="options">
+  <div class="option" data-choice="a" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>Camadas Sequenciais <span style="font-size:0.75rem;background:#22c55e22;color:#16a34a;padding:2px 8px;border-radius:99px;margin-left:6px">Recomendado</span></h3>
+      <p>Schema → Lista de clientes → Formulário de cadastro → Carrinho/Pedidos → Assinatura digital → Dashboard</p>
+      <div class="pros-cons" style="margin-top:12px">
+        <div class="pros"><h4>Prós</h4><ul><li>Testável a cada etapa</li><li>Funcional rapidamente</li><li>Menor risco de retrabalho</li></ul></div>
+        <div class="cons"><h4>Contras</h4><ul><li>Mais lento para ter tudo pronto</li><li>Carrinho e assinatura ficam por último</li></ul></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="b" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>Agentes Paralelos</h3>
+      <p>Múltiplos agentes trabalhando ao mesmo tempo: DB + CRUD + Carrinho + Assinatura + Dashboard em paralelo</p>
+      <div class="pros-cons" style="margin-top:12px">
+        <div class="pros"><h4>Prós</h4><ul><li>Entrega completa mais rápida</li><li>Todas as partes prontas juntas</li></ul></div>
+        <div class="cons"><h4>Contras</h4><ul><li>Mais difícil de coordenar</li><li>Requer revisão de integração ao final</li></ul></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="c" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>MVP Primeiro</h3>
+      <p>Só cadastro + lista + status agora. Carrinho, assinatura, parcelas e dashboard em sprints posteriores</p>
+      <div class="pros-cons" style="margin-top:12px">
+        <div class="pros"><h4>Prós</h4><ul><li>Mais rápido para entrar em produção</li><li>Valida o core antes de construir o resto</li></ul></div>
+        <div class="cons"><h4>Contras</h4><ul><li>Sem carrinho ou assinatura no primeiro ciclo</li><li>Pode exigir refatoração posterior</li></ul></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section" style="margin-top:32px">
+  <h3>O que cada abordagem entrega primeiro</h3>
+  <table style="width:100%;border-collapse:collapse;font-size:0.875rem">
+    <thead>
+      <tr style="border-bottom:1px solid #e2e8f0">
+        <th style="text-align:left;padding:8px 12px;color:#64748b">Funcionalidade</th>
+        <th style="text-align:center;padding:8px 12px">A — Sequencial</th>
+        <th style="text-align:center;padding:8px 12px">B — Paralelo</th>
+        <th style="text-align:center;padding:8px 12px">C — MVP</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr style="border-bottom:1px solid #f1f5f9">
+        <td style="padding:8px 12px">Schema / Banco</td>
+        <td style="text-align:center">✅ 1º</td>
+        <td style="text-align:center">✅ 1º</td>
+        <td style="text-align:center">✅ 1º</td>
+      </tr>
+      <tr style="border-bottom:1px solid #f1f5f9">
+        <td style="padding:8px 12px">Lista de Clientes</td>
+        <td style="text-align:center">✅ 2º</td>
+        <td style="text-align:center">✅ junto</td>
+        <td style="text-align:center">✅ 2º</td>
+      </tr>
+      <tr style="border-bottom:1px solid #f1f5f9">
+        <td style="padding:8px 12px">Formulário de Cadastro</td>
+        <td style="text-align:center">✅ 3º</td>
+        <td style="text-align:center">✅ junto</td>
+        <td style="text-align:center">✅ 3º</td>
+      </tr>
+      <tr style="border-bottom:1px solid #f1f5f9">
+        <td style="padding:8px 12px">Carrinho + Pedidos</td>
+        <td style="text-align:center">✅ 4º</td>
+        <td style="text-align:center">✅ junto</td>
+        <td style="text-align:center">🔜 Sprint 2</td>
+      </tr>
+      <tr style="border-bottom:1px solid #f1f5f9">
+        <td style="padding:8px 12px">Parcelas</td>
+        <td style="text-align:center">✅ 4º</td>
+        <td style="text-align:center">✅ junto</td>
+        <td style="text-align:center">🔜 Sprint 2</td>
+      </tr>
+      <tr style="border-bottom:1px solid #f1f5f9">
+        <td style="padding:8px 12px">Assinatura Digital</td>
+        <td style="text-align:center">✅ 5º</td>
+        <td style="text-align:center">✅ junto</td>
+        <td style="text-align:center">🔜 Sprint 3</td>
+      </tr>
+      <tr>
+        <td style="padding:8px 12px">Dashboard</td>
+        <td style="text-align:center">✅ 6º</td>
+        <td style="text-align:center">✅ junto</td>
+        <td style="text-align:center">🔜 Sprint 3</td>
+      </tr>
+    </tbody>
+  </table>
+</div>

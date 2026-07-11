@@ -1,0 +1,159 @@
+<h2>Seção 2 — Schema do Banco de Dados</h2>
+<p class="subtitle">6 tabelas novas + integração com products e stock_movements existentes</p>
+
+<div class="section">
+  <h3>Visão geral das tabelas e relacionamentos</h3>
+  <div style="background:#f8fafc;border-radius:10px;padding:20px;font-family:monospace;font-size:0.78rem;line-height:1.8;overflow-x:auto">
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px">
+
+      <!-- customers -->
+      <div style="background:white;border:2px solid #3b82f6;border-radius:8px;padding:12px">
+        <div style="font-weight:700;color:#1d4ed8;border-bottom:1px solid #dbeafe;padding-bottom:6px;margin-bottom:8px">customers ✨</div>
+        <div style="color:#475569">id · uuid PK</div>
+        <div style="color:#475569">organization_id · uuid FK</div>
+        <div style="color:#475569">customer_type · enum</div>
+        <div style="color:#64748b;font-size:0.72rem">  (pessoa_fisica | pessoa_juridica)</div>
+        <div style="color:#475569">name · text</div>
+        <div style="color:#475569">trade_name · text</div>
+        <div style="color:#475569">cpf_cnpj · text</div>
+        <div style="color:#475569">rg_state_registration · text</div>
+        <div style="color:#475569">birth_or_opening_date · date</div>
+        <div style="color:#475569">phone · text</div>
+        <div style="color:#475569">whatsapp · text</div>
+        <div style="color:#475569">email · text</div>
+        <div style="color:#475569">photo_url · text</div>
+        <div style="color:#475569">status · enum</div>
+        <div style="color:#64748b;font-size:0.72rem">  (ativo | inativo | em_analise | bloqueado | inadimplente)</div>
+        <div style="color:#475569">notes · text</div>
+        <div style="color:#475569">deleted_at · timestamptz</div>
+        <div style="color:#475569">created_by · uuid FK</div>
+        <div style="color:#475569">created_at · updated_at</div>
+      </div>
+
+      <!-- customer_addresses -->
+      <div style="background:white;border:2px solid #3b82f6;border-radius:8px;padding:12px">
+        <div style="font-weight:700;color:#1d4ed8;border-bottom:1px solid #dbeafe;padding-bottom:6px;margin-bottom:8px">customer_addresses ✨</div>
+        <div style="color:#475569">id · uuid PK</div>
+        <div style="color:#e11d48">customer_id → customers</div>
+        <div style="color:#475569">zip_code · text</div>
+        <div style="color:#475569">street · text</div>
+        <div style="color:#475569">number · text</div>
+        <div style="color:#475569">complement · text</div>
+        <div style="color:#475569">neighborhood · text</div>
+        <div style="color:#475569">city · text</div>
+        <div style="color:#475569">state · char(2)</div>
+        <div style="color:#475569">reference · text</div>
+        <div style="color:#475569">is_primary · boolean</div>
+        <div style="color:#475569">created_at · timestamptz</div>
+      </div>
+
+      <!-- orders -->
+      <div style="background:white;border:2px solid #3b82f6;border-radius:8px;padding:12px">
+        <div style="font-weight:700;color:#1d4ed8;border-bottom:1px solid #dbeafe;padding-bottom:6px;margin-bottom:8px">orders ✨</div>
+        <div style="color:#475569">id · uuid PK</div>
+        <div style="color:#475569">organization_id · uuid FK</div>
+        <div style="color:#e11d48">customer_id → customers</div>
+        <div style="color:#e11d48">seller_id → profiles</div>
+        <div style="color:#475569">order_number · text unique</div>
+        <div style="color:#475569">order_type · enum</div>
+        <div style="color:#64748b;font-size:0.72rem">  (pedido | orcamento | contrato)</div>
+        <div style="color:#475569">subtotal · numeric(14,2)</div>
+        <div style="color:#475569">discount · numeric(14,2)</div>
+        <div style="color:#475569">shipping_fee · numeric(14,2)</div>
+        <div style="color:#475569">installation_fee · numeric(14,2)</div>
+        <div style="color:#475569">total_amount · numeric(14,2)</div>
+        <div style="color:#475569">payment_method · text</div>
+        <div style="color:#475569">installments_count · int</div>
+        <div style="color:#475569">first_due_date · date</div>
+        <div style="color:#475569">status · enum</div>
+        <div style="color:#64748b;font-size:0.72rem">  (rascunho | confirmado | cancelado | entregue)</div>
+        <div style="color:#475569">payment_status · enum</div>
+        <div style="color:#64748b;font-size:0.72rem">  (pendente | parcial | pago | vencido)</div>
+        <div style="color:#475569">delivery_date · date</div>
+        <div style="color:#475569">notes · text</div>
+        <div style="color:#475569">created_at · updated_at</div>
+      </div>
+
+      <!-- order_items -->
+      <div style="background:white;border:2px solid #8b5cf6;border-radius:8px;padding:12px">
+        <div style="font-weight:700;color:#7c3aed;border-bottom:1px solid #ede9fe;padding-bottom:6px;margin-bottom:8px">order_items ✨</div>
+        <div style="color:#475569">id · uuid PK</div>
+        <div style="color:#e11d48">order_id → orders</div>
+        <div style="color:#e11d48">product_id → products ⚠️</div>
+        <div style="color:#475569">quantity · numeric(14,3)</div>
+        <div style="color:#475569">unit_price · numeric(14,2)</div>
+        <div style="color:#475569">discount · numeric(14,2)</div>
+        <div style="color:#475569">additional_fee · numeric(14,2)</div>
+        <div style="color:#475569">total_amount · numeric(14,2)</div>
+        <div style="color:#475569">warranty_days · int</div>
+        <div style="color:#475569">serial_number · text</div>
+        <div style="color:#475569">status · text</div>
+        <div style="color:#475569">created_at · timestamptz</div>
+      </div>
+
+      <!-- installments -->
+      <div style="background:white;border:2px solid #8b5cf6;border-radius:8px;padding:12px">
+        <div style="font-weight:700;color:#7c3aed;border-bottom:1px solid #ede9fe;padding-bottom:6px;margin-bottom:8px">installments ✨</div>
+        <div style="color:#475569">id · uuid PK</div>
+        <div style="color:#e11d48">order_id → orders</div>
+        <div style="color:#475569">installment_number · int</div>
+        <div style="color:#475569">due_date · date</div>
+        <div style="color:#475569">amount · numeric(14,2)</div>
+        <div style="color:#475569">payment_date · date</div>
+        <div style="color:#475569">payment_method · text</div>
+        <div style="color:#475569">status · enum</div>
+        <div style="color:#64748b;font-size:0.72rem">  (pendente | pago | vencido | cancelado)</div>
+        <div style="color:#475569">receipt_url · text</div>
+        <div style="color:#475569">created_at · timestamptz</div>
+      </div>
+
+      <!-- customer_signatures -->
+      <div style="background:white;border:2px solid #8b5cf6;border-radius:8px;padding:12px">
+        <div style="font-weight:700;color:#7c3aed;border-bottom:1px solid #ede9fe;padding-bottom:6px;margin-bottom:8px">customer_signatures ✨</div>
+        <div style="color:#475569">id · uuid PK</div>
+        <div style="color:#e11d48">customer_id → customers</div>
+        <div style="color:#e11d48">order_id → orders</div>
+        <div style="color:#475569">signature_url · text</div>
+        <div style="color:#475569">signed_at · timestamptz</div>
+        <div style="color:#e11d48">signed_by → profiles</div>
+        <div style="color:#475569">device_information · jsonb</div>
+        <div style="color:#475569">ip_address · text</div>
+        <div style="color:#475569">latitude · numeric</div>
+        <div style="color:#475569">longitude · numeric</div>
+        <div style="color:#475569">contract_url · text</div>
+        <div style="color:#475569">contract_version · text</div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<div class="section" style="margin-top:20px">
+  <h3>Integração com tabelas existentes</h3>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+
+    <div style="background:#fefce8;border:1px solid #fde047;border-radius:8px;padding:14px">
+      <div style="font-weight:600;color:#854d0e;margin-bottom:8px">⚠️ products — já existe</div>
+      <p style="font-size:0.82rem;color:#713f12;margin:0">O <code>products</code> atual usa <code>stock_current</code>, <code>warranty_months</code> e <code>sale_price</code>. As novas tabelas usam esses campos diretamente. <strong>Nenhuma alteração na tabela products.</strong> O <code>order_items.product_id</code> faz FK para o products existente.</p>
+    </div>
+
+    <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:14px">
+      <div style="font-weight:600;color:#166534;margin-bottom:8px">✅ stock_movements — trigger automático</div>
+      <p style="font-size:0.82rem;color:#15803d;margin:0">Ao <strong>confirmar</strong> um pedido → cria <code>stock_movements</code> com <code>movement_type = 'saida'</code> para cada item. Ao <strong>cancelar</strong> → cria entrada de estorno. Reutiliza o trigger existente de atualização de saldo.</p>
+    </div>
+  </div>
+</div>
+
+<div class="section" style="margin-top:16px">
+  <h3>Triggers e regras automáticas</h3>
+  <div style="font-size:0.82rem;display:flex;flex-direction:column;gap:8px">
+    <div style="background:#eff6ff;padding:10px 14px;border-radius:6px;border-left:3px solid #3b82f6">📌 <strong>order_number:</strong> gerado automaticamente no formato <code>ORD-{ANO}-{SEQUENCIAL}</code> via trigger</div>
+    <div style="background:#eff6ff;padding:10px 14px;border-radius:6px;border-left:3px solid #3b82f6">📌 <strong>Estoque na confirmação:</strong> trigger em <code>orders</code> (status → confirmado) cria saída no stock_movements</div>
+    <div style="background:#eff6ff;padding:10px 14px;border-radius:6px;border-left:3px solid #3b82f6">📌 <strong>Estoque no cancelamento:</strong> trigger em <code>orders</code> (status → cancelado) cria estorno no stock_movements</div>
+    <div style="background:#eff6ff;padding:10px 14px;border-radius:6px;border-left:3px solid #3b82f6">📌 <strong>Status vencido:</strong> função agendada (pg_cron ou verificação em query) marca installments como vencido quando due_date &lt; hoje e status = pendente</div>
+    <div style="background:#eff6ff;padding:10px 14px;border-radius:6px;border-left:3px solid #3b82f6">📌 <strong>Exclusão lógica:</strong> <code>customers.deleted_at</code> — clientes com pedidos não podem ser excluídos fisicamente</div>
+    <div style="background:#eff6ff;padding:10px 14px;border-radius:6px;border-left:3px solid #3px solid #3b82f6">📌 <strong>RLS:</strong> todas as tabelas com <code>organization_id</code> herdam as mesmas políticas de isolamento por empresa</div>
+  </div>
+</div>
+
+<p class="subtitle" style="margin-top:20px">O schema está correto? Alguma tabela ou campo para ajustar antes de seguir?</p>
