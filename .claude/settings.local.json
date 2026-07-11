@@ -2,7 +2,10 @@
   "permissions": {
     "allow": [
       "Skill(superpowers:brainstorming)",
-      "Bash(C:/Users/maxra/.claude/plugins/cache/claude-plugins-official/superpowers/5.1.0/skills/brainstorming/scripts/start-server.sh *)"
+      "Bash(C:/Users/maxra/.claude/plugins/cache/claude-plugins-official/superpowers/5.1.0/skills/brainstorming/scripts/start-server.sh *)",
+      "Bash(Get-ChildItem \"D:\\\\stocksync-hub\\\\supabase\\\\migrations\" -File)",
+      "Bash(Sort-Object LastWriteTime -Descending)",
+      "Bash(Select-Object Name, LastWriteTime)"
     ]
   }
 }
