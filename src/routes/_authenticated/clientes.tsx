@@ -1754,6 +1754,7 @@ function ClienteForm({
     };
 
     await upsertCustomer({ customer: customerObj, address: addressObj });
+    localStorage.removeItem("stocksync_cliente_form_draft");
   }
 
   // Finalizar Cobrança (Gerar orçamento, pedido ou contrato)
@@ -1842,6 +1843,7 @@ function ClienteForm({
       items: itemsObj,
       installmentsList: projectedInstallments,
     });
+    localStorage.removeItem("stocksync_cliente_form_draft");
   }
 
   return (
