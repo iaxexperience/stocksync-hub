@@ -568,9 +568,29 @@ function ClientesLayout() {
       </div>
 
       <div className="flex-1">
-        {isLoadingCustomers || isLoadingOrders || isLoadingInstallments ? (
+        {aba === "dashboard" && (isLoadingCustomers || isLoadingOrders) ? (
           <div className="flex items-center justify-center py-20 text-muted-foreground">
-            Carregando informações...
+            Carregando informações do dashboard...
+          </div>
+        ) : aba === "lista" && isLoadingCustomers ? (
+          <div className="flex items-center justify-center py-20 text-muted-foreground">
+            Carregando lista de clientes...
+          </div>
+        ) : aba === "pagamentos" && isLoadingInstallments ? (
+          <div className="flex items-center justify-center py-20 text-muted-foreground">
+            Carregando parcelas e pagamentos...
+          </div>
+        ) : aba === "produtos" && (isLoadingCustomers || isLoadingOrders) ? (
+          <div className="flex items-center justify-center py-20 text-muted-foreground">
+            Carregando produtos contratados...
+          </div>
+        ) : aba === "historico" && isLoadingOrders ? (
+          <div className="flex items-center justify-center py-20 text-muted-foreground">
+            Carregando histórico de compras...
+          </div>
+        ) : aba === "perfil" && (isLoadingCustomers || isLoadingOrders || isLoadingInstallments) ? (
+          <div className="flex items-center justify-center py-20 text-muted-foreground">
+            Carregando perfil do cliente...
           </div>
         ) : (
           <>
@@ -1323,7 +1343,7 @@ function ClienteForm({
 }) {
   const isVendaMode = id && !isEditMode; // se passar ID mas não estiver editando, é venda!
 
-  const [activeTab, setActiveTab] = useState("dados");
+  const [activeTab, setActiveTab] = useState(id && !isEditMode ? "cobranca" : "dados");
 
   // Cadastro States
   const [customerType, setCustomerType] = useState("PF");
@@ -1424,6 +1444,7 @@ function ClienteForm({
         const saved = localStorage.getItem("stocksync_cliente_form_draft");
         if (saved) {
           const draft = JSON.parse(saved);
+          if (draft.activeTab !== undefined) setActiveTab(draft.activeTab);
           if (draft.customerType !== undefined) setCustomerType(draft.customerType);
           if (draft.name !== undefined) setName(draft.name);
           if (draft.tradeName !== undefined) setTradeName(draft.tradeName);
@@ -1468,6 +1489,7 @@ function ClienteForm({
   useEffect(() => {
     if (!id) {
       const draft = {
+        activeTab,
         customerType,
         name,
         tradeName,
@@ -1504,6 +1526,7 @@ function ClienteForm({
     }
   }, [
     id,
+    activeTab,
     customerType,
     name,
     tradeName,
