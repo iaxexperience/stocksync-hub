@@ -3983,23 +3983,56 @@ function SignatureCollector({
           <h4 className="font-bold text-slate-800">Termos de Compra e Serviços</h4>
           <div className="border p-3 rounded bg-white max-h-[160px] overflow-y-auto text-[10px] leading-relaxed text-slate-600 font-mono shadow-inner">
             <p className="font-bold text-center border-b pb-1 mb-2">
-              INSTRUMENTO PARTICULAR DE COMPRA E SERVIÇO
+              CONTRATO DE COMPRA, VENDA E PRESTAÇÃO DE SERVIÇOS
             </p>
             <p className="mb-2">
-              1. Pelo presente termo, o CLIENTE acima identificado contrata a aquisição dos produtos
-              e serviços listados no resumo físico deste pedido.
+              Pelo presente instrumento particular, de um lado, como <strong>CONTRATANTE</strong>, o
+              cliente <strong>{customer.name}</strong>, inscrito no CPF/CNPJ sob o nº{" "}
+              <strong>{customer.cpf_cnpj}</strong>
+              {customer.email ? `, e-mail: ${customer.email}` : ""}
+              {customer.phone || customer.whatsapp
+                ? `, telefone: ${customer.phone || customer.whatsapp}`
+                : ""}
+              {customer.customer_addresses?.[0]
+                ? `, residente e domiciliado em: ${customer.customer_addresses[0].street}, nº ${customer.customer_addresses[0].number}${customer.customer_addresses[0].complement ? `, ${customer.customer_addresses[0].complement}` : ""}, ${customer.customer_addresses[0].neighborhood}, ${customer.customer_addresses[0].city} - ${customer.customer_addresses[0].state}, CEP ${customer.customer_addresses[0].zip_code}`
+                : ""}
+              .
             </p>
             <p className="mb-2">
-              2. O CLIENTE declara-se ciente do prazo de entrega, garantias contratuais de fábrica
-              descritas e o valor unitário cobrado por cada item.
+              E de outro lado, como <strong>CONTRATADA</strong>, a empresa identificada na prestação
+              dos serviços do StockFlow.
             </p>
+            <p className="mb-2 font-semibold">CLÁUSULA PRIMEIRA - DO OBJETO E VALOR:</p>
             <p className="mb-2">
-              3. O inadimplemento de qualquer parcela financeira implicará em juros de mora de 1% ao
-              mês e multa compensatória de 2% sobre o montante devido.
+              O CONTRATANTE adquire os seguintes itens/serviços:{" "}
+              {order.order_items
+                ?.map((item: any) => `${item.quantity}x ${item.products?.name || "Produto"}`)
+                .join(", ")}
+              , totalizando o valor de{" "}
+              <strong>
+                {Number(order.total_amount).toLocaleString("pt-BR", {
+                  style: "currency",
+                  currency: "BRL",
+                })}
+              </strong>
+              , a ser pago via <strong>{order.payment_method}</strong> em{" "}
+              <strong>{order.installments} parcelas</strong>.
             </p>
+            <p className="mb-2 font-semibold">CLÁUSULA SEGUNDA - DA ENTREGA E GARANTIAS:</p>
             <p className="mb-2">
-              4. A assinatura digital efetuada na tela deste dispositivo constitui prova inequívoca
-              de aceitação dos termos contratuais sob a regência do Código Civil Brasileiro.
+              A CONTRATADA compromete-se a entregar os itens em conformidade com as especificações
+              técnicas. As garantias contratuais de cada item seguem os prazos dos fabricantes.
+            </p>
+            <p className="mb-2 font-semibold">CLÁUSULA TERCEIRA - DA MORA E MULTAS:</p>
+            <p className="mb-2">
+              O atraso no pagamento de qualquer parcela sujeitará o CONTRATANTE ao pagamento de
+              multa moratória de 2% sobre a parcela vencida, acrescida de juros de 1% ao mês.
+            </p>
+            <p className="mb-2 font-semibold">CLÁUSULA QUARTA - DA ASSINATURA DIGITAL:</p>
+            <p className="mb-2">
+              As partes declaram concordar com as cláusulas deste contrato e elegem a assinatura
+              eletrônica deste dispositivo como prova expressa e válida de consentimento contratual
+              sob as normas vigentes.
             </p>
           </div>
           <div className="flex items-center gap-2 mt-auto pt-2 bg-slate-50/50 p-2 rounded border">
