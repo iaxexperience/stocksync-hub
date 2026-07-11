@@ -30,8 +30,14 @@ function createSupabaseFetch(supabaseKey: string): typeof fetch {
 function createSupabaseClient() {
   // Use import.meta.env for client-side (Vite build-time replacement)
   // Fall back to process.env for SSR (server-side rendering)
-  const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
-  const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || process.env.SUPABASE_PUBLISHABLE_KEY;
+  let SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
+  let SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || process.env.SUPABASE_PUBLISHABLE_KEY;
+
+  // Se o Lovable injetar as credenciais antigas do Supabase, forçamos o uso do novo projeto do usuário
+  if (!SUPABASE_URL || SUPABASE_URL.includes("hlangcduecxwmfbnncf")) {
+    SUPABASE_URL = "https://fyvatfnpdoqowjckhtkb.supabase.co";
+    SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ5dmF0Zm5wZG9xb3dqY2todGtiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM4MDk1ODUsImV4cCI6MjA5OTM4NTU4NX0.IF7vOW5J2mApvM3e7L7XCGCiFdp5rs8KYbg35Q0jr0E";
+  }
 
   if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
     const missing = [
