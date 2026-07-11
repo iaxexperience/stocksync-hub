@@ -2100,10 +2100,13 @@ function ClienteForm({
               </div>
 
               <div className="flex justify-end pt-4 gap-2 border-t">
-                <Button variant="outline" onClick={() => navegarAba("lista")}>
+                <Button variant="outline" type="button" onClick={() => navegarAba("lista")}>
                   Cancelar
                 </Button>
-                <Button onClick={() => setActiveTab("endereco")}>
+                <Button variant="secondary" type="button" onClick={handleSaveCustomerOnly}>
+                  Salvar Cadastro
+                </Button>
+                <Button type="button" onClick={() => setActiveTab("endereco")}>
                   Próximo: Endereço <ChevronRight className="h-4 w-4 ml-1" />
                 </Button>
               </div>
@@ -2185,15 +2188,13 @@ function ClienteForm({
               </div>
 
               <div className="flex justify-end pt-4 gap-2 border-t">
-                <Button variant="outline" onClick={() => setActiveTab("dados")}>
+                <Button variant="outline" type="button" onClick={() => setActiveTab("dados")}>
                   Voltar
                 </Button>
-                {!isVendaMode && (
-                  <Button variant="secondary" onClick={handleSaveCustomerOnly}>
-                    Apenas Salvar Ficha
-                  </Button>
-                )}
-                <Button onClick={() => setActiveTab("cobranca")}>
+                <Button variant="secondary" type="button" onClick={handleSaveCustomerOnly}>
+                  Salvar Cadastro
+                </Button>
+                <Button type="button" onClick={() => setActiveTab("cobranca")}>
                   Próximo: Produtos & Cobrança <ChevronRight className="h-4 w-4 ml-1" />
                 </Button>
               </div>

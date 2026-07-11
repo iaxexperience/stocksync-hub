@@ -387,6 +387,7 @@ function Produtos() {
                   <TableHead>SKU</TableHead>
                   <TableHead>Categoria</TableHead>
                   <TableHead>Marca</TableHead>
+                  <TableHead>Fornecedor</TableHead>
                   <TableHead className="text-right">Custo</TableHead>
                   <TableHead className="text-right">Estoque</TableHead>
                   <TableHead>Situação</TableHead>
@@ -396,13 +397,13 @@ function Produtos() {
               <TableBody>
                 {isLoading ? (
                   <TableRow>
-                    <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                    <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
                       Carregando…
                     </TableCell>
                   </TableRow>
                 ) : filtered.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={8} className="text-center py-12 text-muted-foreground">
+                    <TableCell colSpan={9} className="text-center py-12 text-muted-foreground">
                       <PackageIcon className="mx-auto h-10 w-10 opacity-40 mb-2" />
                       Nenhum produto cadastrado.
                     </TableCell>
@@ -419,6 +420,7 @@ function Produtos() {
                         </TableCell>
                         <TableCell className="text-sm">{p.categories?.name ?? "—"}</TableCell>
                         <TableCell className="text-sm">{p.brands?.name ?? "—"}</TableCell>
+                        <TableCell className="text-sm">{p.suppliers?.legal_name ?? "—"}</TableCell>
                         <TableCell className="text-right">
                           {Number(p.cost_price).toLocaleString("pt-BR", {
                             style: "currency",
