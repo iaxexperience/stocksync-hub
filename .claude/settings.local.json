@@ -8,7 +8,8 @@
       "Bash(Select-Object Name, LastWriteTime)",
       "Bash(git add *)",
       "Bash(git commit *)",
-      "Skill(superpowers:writing-plans)"
+      "Skill(superpowers:writing-plans)",
+      "Skill(superpowers:subagent-driven-development)"
     ]
   }
 }
