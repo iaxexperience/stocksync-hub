@@ -1492,7 +1492,7 @@ function ClienteForm({
         paymentMethod,
         installmentsCount,
         downPayment,
-        firstDueDate
+        firstDueDate,
       };
       localStorage.setItem("stocksync_cliente_form_draft", JSON.stringify(draft));
     }
@@ -1526,7 +1526,7 @@ function ClienteForm({
     paymentMethod,
     installmentsCount,
     downPayment,
-    firstDueDate
+    firstDueDate,
   ]);
 
   // Se for Venda, preenche dados do cliente pré-existente
