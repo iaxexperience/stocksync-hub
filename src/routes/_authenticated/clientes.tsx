@@ -3735,6 +3735,77 @@ function SignatureCollector({
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [signedResult, setSignedResult] = useState<any | null>(null);
 
+  // Fetch active organization details for the contract
+  const { data: organization } = useQuery({
+    queryKey: ["active_organization", customer?.organization_id],
+    enabled: !!customer?.organization_id,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("organizations")
+        .select("*")
+        .eq("id", customer.organization_id)
+        .single();
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  // Fetch seller's profile details
+  const { data: sellerProfile } = useQuery({
+    queryKey: ["seller_profile", order?.seller_id],
+    enabled: !!order?.seller_id,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("full_name")
+        .eq("id", order.seller_id)
+        .single();
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  // Fetch installments for the order
+  const { data: orderInstallments = [] } = useQuery({
+    queryKey: ["order_installments", order?.id],
+    enabled: !!order?.id,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("installments")
+        .select("*")
+        .eq("order_id", order.id)
+        .order("installment_number", { ascending: true });
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
+  // Calculations for payment terms
+  const totalAmount = Number(order.total_amount) || 0;
+  const installmentTotal = orderInstallments.reduce(
+    (acc: number, ins: any) => acc + Number(ins.amount),
+    0
+  );
+  const installmentsCount = orderInstallments.length || Number(order.installments) || 1;
+  const installmentAmount = orderInstallments[0]
+    ? Number(orderInstallments[0].amount)
+    : totalAmount / installmentsCount;
+  const downPayment = Math.max(0, totalAmount - installmentTotal);
+  const financedBalance = installmentTotal || totalAmount;
+  const firstDueDate = orderInstallments[0]
+    ? new Date(orderInstallments[0].due_date + "T12:00:00").toLocaleDateString("pt-BR")
+    : new Date().toLocaleDateString("pt-BR");
+
+  const sellerName = sellerProfile?.full_name || "Representante Legal";
+  const addressObj = customer.customer_addresses?.[0];
+  const customerAddress = addressObj
+    ? `${addressObj.street || ""}, nº ${addressObj.number || ""}${
+        addressObj.complement ? `, ${addressObj.complement}` : ""
+      }, ${addressObj.neighborhood || ""}, ${addressObj.city || ""} - ${
+        addressObj.state || ""
+      }, CEP ${addressObj.zip_code || ""}`
+    : "Endereço não cadastrado";
+
   // Inicializa Canvas
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -3769,29 +3840,29 @@ function SignatureCollector({
   }
 
   function startDrawing(e: any) {
-    e.preventDefault();
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    const coords = getCoordinates(e);
+    const { x, y } = getCoordinates(e);
     ctx.beginPath();
-    ctx.moveTo(coords.x, coords.y);
+    ctx.moveTo(x, y);
     setIsDrawing(true);
+    e.preventDefault();
   }
 
   function draw(e: any) {
     if (!isDrawing) return;
-    e.preventDefault();
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    const coords = getCoordinates(e);
-    ctx.lineTo(coords.x, coords.y);
+    const { x, y } = getCoordinates(e);
+    ctx.lineTo(x, y);
     ctx.stroke();
+    e.preventDefault();
   }
 
   function stopDrawing() {
@@ -3886,251 +3957,604 @@ function SignatureCollector({
     window.open(`mailto:${customer.email}?subject=${subject}&body=${body}`, "_blank");
   }
 
-  if (signedResult) {
-    return (
-      <div className="p-6 text-center space-y-6 animate-fade-in text-xs">
-        <div className="h-16 w-16 bg-success/10 rounded-full flex items-center justify-center mx-auto text-success border border-success/30">
-          <Check className="h-8 w-8" />
-        </div>
-        <div>
-          <h3 className="text-base font-bold text-slate-800">Contrato Assinado Digitalmente!</h3>
-          <p className="text-muted-foreground mt-1">
-            O documento foi formalizado juridicamente e registrado na auditoria da empresa.
-          </p>
-        </div>
-
-        <div className="bg-slate-50 border p-4 rounded-lg text-left space-y-2 max-w-md mx-auto">
-          <p className="font-bold border-b pb-1 text-slate-700">Protocolo de Assinatura</p>
-          <p>
-            <span className="font-semibold text-muted-foreground">ID do Registro:</span>{" "}
-            {signedResult.id}
-          </p>
-          <p>
-            <span className="font-semibold text-muted-foreground">Data/Hora:</span>{" "}
-            {new Date(signedResult.signed_at).toLocaleString("pt-BR")}
-          </p>
-          <p>
-            <span className="font-semibold text-muted-foreground">Endereço IP:</span>{" "}
-            {signedResult.ip_address}
-          </p>
-          <p>
-            <span className="font-semibold text-muted-foreground">Geolocalização:</span>{" "}
-            {signedResult.latitude
-              ? `${signedResult.latitude}, ${signedResult.longitude}`
-              : "Não autorizado"}
-          </p>
-          <p>
-            <span className="font-semibold text-muted-foreground">Contrato Versão:</span> v
-            {signedResult.contract_version}
-          </p>
-          <p className="font-semibold text-slate-800 pt-1">Assinatura Armazenada:</p>
-          <div className="h-16 w-44 bg-white border p-1 rounded mx-auto flex items-center justify-center shadow-inner">
-            <img src={signedResult.signature_url} className="h-full object-contain" alt="" />
-          </div>
-        </div>
-
-        <div className="flex flex-wrap gap-2 justify-center border-t pt-4">
-          <Button
-            variant="outline"
-            className="flex items-center gap-1"
-            onClick={() => window.print()}
-          >
-            <Printer className="h-4 w-4" /> Imprimir Contrato
-          </Button>
-          <Button
-            variant="outline"
-            className="flex items-center gap-1 text-emerald-600 border-emerald-200 bg-emerald-50 hover:bg-emerald-100"
-            onClick={handleSendWhatsApp}
-          >
-            <Share2 className="h-4 w-4" /> Enviar WhatsApp
-          </Button>
-          <Button
-            variant="outline"
-            className="flex items-center gap-1 text-indigo-600 border-indigo-200 bg-indigo-50 hover:bg-indigo-100"
-            onClick={handleSendEmail}
-          >
-            <Mail className="h-4 w-4" /> Enviar E-mail
-          </Button>
-          <Button variant="default" onClick={onClose}>
-            Concluir
-          </Button>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-5 py-2 text-xs">
-      <DialogHeader>
+      <style>{`
+        @media print {
+          body * {
+            visibility: hidden;
+          }
+          .print-container, .print-container * {
+            visibility: visible;
+          }
+          .print-container {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            max-height: none !important;
+            overflow: visible !important;
+            border: none !important;
+            padding: 0 !important;
+          }
+          .no-print {
+            display: none !important;
+          }
+          .page-break-before {
+            page-break-before: always;
+          }
+        }
+      `}</style>
+
+      <DialogHeader className="no-print">
         <DialogTitle className="flex items-center gap-1.5">
           <FileSignature className="h-5 w-5 text-primary" /> Formalização e Assinatura Digital
         </DialogTitle>
       </DialogHeader>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {/* Resumo */}
-        <div className="space-y-3 p-3 bg-slate-50 border rounded-lg">
-          <h4 className="font-bold border-b pb-1 text-slate-800">Resumo da Contratação</h4>
-          <p>
-            <span className="font-semibold text-muted-foreground">Cliente:</span> {customer.name}
+      {/* Se já estiver assinado, exibe o painel de sucesso no topo */}
+      {signedResult && (
+        <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-lg space-y-3 no-print">
+          <div className="flex items-center gap-2 text-emerald-800">
+            <Check className="h-5 w-5 bg-emerald-100 rounded-full p-0.5" />
+            <span className="font-bold">Contrato Assinado Digitalmente com Sucesso!</span>
+          </div>
+          <p className="text-[11px] text-emerald-700">
+            Protocolo: {signedResult.id} | IP: {signedResult.ip_address} | Data:{" "}
+            {new Date(signedResult.signed_at).toLocaleString("pt-BR")}
           </p>
-          <p>
-            <span className="font-semibold text-muted-foreground">Documento:</span>{" "}
-            {customer.cpf_cnpj}
-          </p>
-          <p>
-            <span className="font-semibold text-muted-foreground">Pedido nº:</span> #
-            {order.order_number}
-          </p>
-          <p>
-            <span className="font-semibold text-muted-foreground">Forma de Faturamento:</span>{" "}
-            {order.payment_method} em {order.installments}x
-          </p>
-          <p>
-            <span className="font-semibold text-muted-foreground">Valor Total:</span>{" "}
-            <span className="font-extrabold text-indigo-700">
-              {Number(order.total_amount).toLocaleString("pt-BR", {
-                style: "currency",
-                currency: "BRL",
-              })}
-            </span>
-          </p>
+          <div className="flex flex-wrap gap-2 pt-1">
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex items-center gap-1"
+              onClick={() => window.print()}
+            >
+              <Printer className="h-3.5 w-3.5" /> Imprimir Contrato e Promissórias
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex items-center gap-1 text-emerald-700 bg-emerald-50"
+              onClick={handleSendWhatsApp}
+            >
+              <Share2 className="h-3.5 w-3.5" /> Enviar WhatsApp
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex items-center gap-1 text-indigo-700 bg-indigo-50"
+              onClick={handleSendEmail}
+            >
+              <Mail className="h-3.5 w-3.5" /> Enviar E-mail
+            </Button>
+          </div>
+        </div>
+      )}
 
-          <h5 className="font-bold pt-2 border-t text-[10px] text-slate-700">
-            Produtos Contratados:
-          </h5>
-          <div className="space-y-1 max-h-[100px] overflow-y-auto pr-1">
-            {order.order_items?.map((item: any, i: number) => (
-              <div
-                key={i}
-                className="flex justify-between text-[11px] border-b py-0.5 last:border-0"
-              >
-                <span>
-                  {item.quantity}x {item.products?.name || "Produto"}
-                </span>
-                <span className="font-semibold">
-                  {Number(item.total_amount).toLocaleString("pt-BR", {
-                    style: "currency",
-                    currency: "BRL",
-                  })}
-                </span>
-              </div>
-            ))}
+      {/* Visualização/Impressão do Contrato */}
+      <div
+        className="border p-6 rounded-lg bg-white overflow-y-auto max-h-[50vh] text-slate-800 space-y-6 print-container"
+        id="contrato-imprimir"
+        style={{ fontFamily: "serif" }}
+      >
+        <div className="text-center space-y-1">
+          <h1 className="text-sm font-bold uppercase tracking-wider">
+            CONTRATO PARTICULAR DE COMPRA E VENDA COM RESERVA DE DOMÍNIO
+          </h1>
+          <div className="text-[10px] space-y-0.5 text-slate-600">
+            <p>
+              <strong>Contrato nº:</strong> {order.order_number}
+            </p>
+            <p>
+              <strong>Pedido nº:</strong> {order.order_number}
+            </p>
+            <p>
+              <strong>Data:</strong> {new Date(order.created_at).toLocaleDateString("pt-BR")}
+            </p>
           </div>
         </div>
 
-        {/* Termos */}
-        <div className="space-y-3 flex flex-col">
-          <h4 className="font-bold text-slate-800">Termos de Compra e Serviços</h4>
-          <div className="border p-3 rounded bg-white max-h-[160px] overflow-y-auto text-[10px] leading-relaxed text-slate-600 font-mono shadow-inner">
-            <p className="font-bold text-center border-b pb-1 mb-2">
-              CONTRATO DE COMPRA, VENDA E PRESTAÇÃO DE SERVIÇOS
-            </p>
-            <p className="mb-2">
-              Pelo presente instrumento particular, de um lado, como <strong>CONTRATANTE</strong>, o
-              cliente <strong>{customer.name}</strong>, inscrito no CPF/CNPJ sob o nº{" "}
-              <strong>{customer.cpf_cnpj}</strong>
-              {customer.email ? `, e-mail: ${customer.email}` : ""}
-              {customer.phone || customer.whatsapp
-                ? `, telefone: ${customer.phone || customer.whatsapp}`
-                : ""}
-              {customer.customer_addresses?.[0]
-                ? `, residente e domiciliado em: ${customer.customer_addresses[0].street}, nº ${customer.customer_addresses[0].number}${customer.customer_addresses[0].complement ? `, ${customer.customer_addresses[0].complement}` : ""}, ${customer.customer_addresses[0].neighborhood}, ${customer.customer_addresses[0].city} - ${customer.customer_addresses[0].state}, CEP ${customer.customer_addresses[0].zip_code}`
-                : ""}
-              .
-            </p>
-            <p className="mb-2">
-              E de outro lado, como <strong>CONTRATADA</strong>, a empresa identificada na prestação
-              dos serviços do StockFlow.
-            </p>
-            <p className="mb-2 font-semibold">CLÁUSULA PRIMEIRA - DO OBJETO E VALOR:</p>
-            <p className="mb-2">
-              O CONTRATANTE adquire os seguintes itens/serviços:{" "}
-              {order.order_items
-                ?.map((item: any) => `${item.quantity}x ${item.products?.name || "Produto"}`)
-                .join(", ")}
-              , totalizando o valor de{" "}
+        <hr />
+
+        <div className="space-y-4">
+          <h2 className="text-xs font-bold uppercase border-b pb-1">DAS PARTES</h2>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-1">
+              <h3 className="font-bold text-[11px] uppercase text-indigo-900">VENDEDORA</h3>
+              <p>
+                <strong>Razão Social:</strong> {organization?.name || "StockFlow Gestão"}
+              </p>
+              <p>
+                <strong>CNPJ:</strong> {organization?.document || "00.000.000/0001-00"}
+              </p>
+              <p>
+                <strong>Endereço:</strong>{" "}
+                {organization?.address || "Av. Principal, 1000 - Centro"}
+              </p>
+              <p>
+                <strong>Telefone:</strong> {organization?.phone || "(00) 3000-0000"}
+              </p>
+              <p>
+                <strong>E-mail:</strong> {organization?.email || "contato@stockflow.com"}
+              </p>
+              <p>
+                <strong>Representante Legal:</strong> {sellerName}
+              </p>
+            </div>
+
+            <div className="space-y-1">
+              <h3 className="font-bold text-[11px] uppercase text-indigo-900">COMPRADOR(A)</h3>
+              <p>
+                <strong>Nome:</strong> {customer.name}
+              </p>
+              <p>
+                <strong>CPF/CNPJ:</strong> {customer.cpf_cnpj}
+              </p>
+              <p>
+                <strong>RG:</strong> {customer.rg_state_registration || "Não informado"}
+              </p>
+              <p>
+                <strong>Estado Civil:</strong> {customer.marital_status || "Não informado"}
+              </p>
+              <p>
+                <strong>Profissão:</strong> {customer.profession || "Não informado"}
+              </p>
+              <p>
+                <strong>Telefone:</strong> {customer.phone || "Não informado"}
+              </p>
+              <p>
+                <strong>WhatsApp:</strong> {customer.whatsapp || "Não informado"}
+              </p>
+              <p>
+                <strong>E-mail:</strong> {customer.email || "Não informado"}
+              </p>
+              <p>
+                <strong>Endereço:</strong> {customerAddress}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <hr />
+
+        <div className="space-y-2">
+          <h2 className="text-xs font-bold uppercase border-b pb-1">CLÁUSULA PRIMEIRA – DO OBJETO</h2>
+          <p>A VENDEDORA vende ao COMPRADOR os seguintes bens:</p>
+
+          <table className="w-full border-collapse border border-slate-300 text-[10px]">
+            <thead>
+              <tr className="bg-slate-100">
+                <th className="border border-slate-300 p-1 text-left">Produto</th>
+                <th className="border border-slate-300 p-1 text-left">Marca</th>
+                <th className="border border-slate-300 p-1 text-left">Modelo</th>
+                <th className="border border-slate-300 p-1 text-left">Nº Série</th>
+                <th className="border border-slate-300 p-1 text-center">Quantidade</th>
+                <th className="border border-slate-300 p-1 text-right">Valor Unitário</th>
+                <th className="border border-slate-300 p-1 text-right">Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              {order.order_items?.map((item: any, idx: number) => (
+                <tr key={idx}>
+                  <td className="border border-slate-300 p-1">{item.products?.name || "Produto"}</td>
+                  <td className="border border-slate-300 p-1">
+                    {item.products?.brand || "Genérica"}
+                  </td>
+                  <td className="border border-slate-300 p-1">
+                    {item.products?.model || "Padrão"}
+                  </td>
+                  <td className="border border-slate-300 p-1">{item.serial_number || "S/N"}</td>
+                  <td className="border border-slate-300 p-1 text-center">{Number(item.quantity)}</td>
+                  <td className="border border-slate-300 p-1 text-right">
+                    {Number(item.unit_price).toLocaleString("pt-BR", {
+                      style: "currency",
+                      currency: "BRL",
+                    })}
+                  </td>
+                  <td className="border border-slate-300 p-1 text-right">
+                    {Number(item.total_amount).toLocaleString("pt-BR", {
+                      style: "currency",
+                      currency: "BRL",
+                    })}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <p className="font-bold text-[11px] mt-2">
+            Valor Total da Venda:{" "}
+            {Number(order.total_amount).toLocaleString("pt-BR", {
+              style: "currency",
+              currency: "BRL",
+            })}{" "}
+            ({numberToWords(Number(order.total_amount))}).
+          </p>
+        </div>
+
+        <hr />
+
+        <div className="space-y-2">
+          <h2 className="text-xs font-bold uppercase border-b pb-1">
+            CLÁUSULA SEGUNDA – DA FORMA DE PAGAMENTO
+          </h2>
+          <p>O pagamento será realizado nas seguintes condições:</p>
+          <div className="space-y-1 pl-2">
+            <p>
+              Entrada:{" "}
               <strong>
-                {Number(order.total_amount).toLocaleString("pt-BR", {
+                {downPayment.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+              </strong>
+            </p>
+            <p>
+              Saldo financiado:{" "}
+              <strong>
+                {financedBalance.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+              </strong>
+            </p>
+            <p>
+              Quantidade de parcelas: <strong>{installmentsCount}</strong>
+            </p>
+            <p>
+              Valor de cada parcela:{" "}
+              <strong>
+                {installmentAmount.toLocaleString("pt-BR", {
                   style: "currency",
                   currency: "BRL",
                 })}
               </strong>
-              , a ser pago via <strong>{order.payment_method}</strong> em{" "}
-              <strong>{order.installments} parcelas</strong>.
             </p>
-            <p className="mb-2 font-semibold">CLÁUSULA SEGUNDA - DA ENTREGA E GARANTIAS:</p>
-            <p className="mb-2">
-              A CONTRATADA compromete-se a entregar os itens em conformidade com as especificações
-              técnicas. As garantias contratuais de cada item seguem os prazos dos fabricantes.
-            </p>
-            <p className="mb-2 font-semibold">CLÁUSULA TERCEIRA - DA MORA E MULTAS:</p>
-            <p className="mb-2">
-              O atraso no pagamento de qualquer parcela sujeitará o CONTRATANTE ao pagamento de
-              multa moratória de 2% sobre a parcela vencida, acrescida de juros de 1% ao mês.
-            </p>
-            <p className="mb-2 font-semibold">CLÁUSULA QUARTA - DA ASSINATURA DIGITAL:</p>
-            <p className="mb-2">
-              As partes declaram concordar com as cláusulas deste contrato e elegem a assinatura
-              eletrônica deste dispositivo como prova expressa e válida de consentimento contratual
-              sob as normas vigentes.
+            <p>
+              Primeiro vencimento: <strong>{firstDueDate}</strong>
             </p>
           </div>
-          <div className="flex items-center gap-2 mt-auto pt-2 bg-slate-50/50 p-2 rounded border">
-            <Checkbox
-              id="terms-accept"
-              checked={termsAccepted}
-              onCheckedChange={(c) => setTermsAccepted(!!c)}
-            />
-            <Label
-              htmlFor="terms-accept"
-              className="text-[11px] font-semibold text-slate-700 cursor-pointer"
-            >
-              Li e aceito os termos do contrato digital acima.
+          <p className="mt-2 text-[10px]">
+            Demais vencimentos ocorrerão mensalmente na mesma data. Em caso de atraso, poderão
+            incidir multa, juros e atualização monetária conforme legislação vigente.
+          </p>
+        </div>
+
+        <hr />
+
+        <div className="space-y-2">
+          <h2 className="text-xs font-bold uppercase border-b pb-1">
+            CLÁUSULA TERCEIRA – DA RESERVA DE DOMÍNIO
+          </h2>
+          <p>
+            A propriedade do(s) bem(ns) permanecerá pertencente à VENDEDORA até a quitação integral
+            do contrato.
+          </p>
+          <p>
+            Enquanto existir saldo devedor, o COMPRADOR possuirá apenas a posse direta do(s)
+            bem(ns).
+          </p>
+        </div>
+
+        <hr />
+
+        <div className="space-y-2">
+          <h2 className="text-xs font-bold uppercase border-b pb-1">
+            CLÁUSULA QUARTA – DA POSSE E CONSERVAÇÃO
+          </h2>
+          <p>O COMPRADOR compromete-se a:</p>
+          <ul className="list-disc pl-4 space-y-0.5">
+            <li>conservar adequadamente o(s) produto(s);</li>
+            <li>
+              não vender, emprestar, alugar ou dar o bem em garantia sem autorização da VENDEDORA;
+            </li>
+            <li>comunicar qualquer dano, perda, roubo ou furto.</li>
+          </ul>
+          <p>A VENDEDORA poderá solicitar informações sobre a localização e estado do bem.</p>
+        </div>
+
+        <hr />
+
+        <div className="space-y-2">
+          <h2 className="text-xs font-bold uppercase border-b pb-1">
+            CLÁUSULA QUINTA – DO INADIMPLEMENTO
+          </h2>
+          <p>O atraso no pagamento de qualquer parcela constituirá automaticamente o COMPRADOR em mora.</p>
+          <p>
+            A VENDEDORA poderá cobrar judicial ou extrajudicialmente os valores devidos, considerar
+            rescindido o contrato, requerer a restituição do bem, promover a execução das Notas
+            Promissórias emitidas e adotar todas as medidas previstas na legislação.
+          </p>
+        </div>
+
+        <hr />
+
+        <div className="space-y-2">
+          <h2 className="text-xs font-bold uppercase border-b pb-1">CLÁUSULA SEXTA – DA GARANTIA</h2>
+          <p>
+            O(s) produto(s) possui(em) garantia conforme especificação do fabricante e/ou da
+            VENDEDORA.
+          </p>
+          <p>
+            Não estão cobertos: mau uso, acidentes, instalação inadequada, quedas, violação dos
+            lacres e desgaste natural.
+          </p>
+        </div>
+
+        <hr />
+
+        <div className="space-y-2">
+          <h2 className="text-xs font-bold uppercase border-b pb-1">CLÁUSULA SÉTIMA – DA LGPD</h2>
+          <p>
+            As partes autorizam o tratamento dos dados pessoais exclusivamente para execução deste
+            contrato, emissão de documentos fiscais, cobrança, assistência técnica e cumprimento das
+            obrigações legais, nos termos da Lei nº 13.709/2018.
+          </p>
+        </div>
+
+        <hr />
+
+        <div className="space-y-2">
+          <h2 className="text-xs font-bold uppercase border-b pb-1">
+            CLÁUSULA OITAVA – DA ASSINATURA ELETRÔNICA
+          </h2>
+          <p>
+            As partes reconhecem como válida a assinatura eletrônica realizada através do sistema da
+            VENDEDORA, possuindo a mesma validade jurídica da assinatura manuscrita.
+          </p>
+          <p>
+            O sistema registrará automaticamente: Data e hora, IP, Dispositivo utilizado,
+            Geolocalização (quando autorizada), Hash criptográfico do documento e Usuário
+            responsável.
+          </p>
+        </div>
+
+        <hr />
+
+        <div className="space-y-2">
+          <h2 className="text-xs font-bold uppercase border-b pb-1">
+            CLÁUSULA NONA – DAS DISPOSIÇÕES GERAIS
+          </h2>
+          <p>
+            Este contrato obriga as partes e seus sucessores. Qualquer tolerância quanto ao
+            descumprimento contratual não implicará renúncia de direitos.
+          </p>
+        </div>
+
+        <hr />
+
+        <div className="space-y-2">
+          <h2 className="text-xs font-bold uppercase border-b pb-1">CLÁUSULA DÉCIMA – DO FORO</h2>
+          <p>
+            Fica eleito o foro da Comarca de{" "}
+            <strong>
+              {customer.customer_addresses?.[0]?.city || "Cidade"} /{" "}
+              {customer.customer_addresses?.[0]?.state || "UF"}
+            </strong>
+            , renunciando as partes a qualquer outro, por mais privilegiado que seja.
+          </p>
+        </div>
+
+        <hr />
+
+        {/* ASSINATURAS */}
+        <div className="space-y-6 pt-4">
+          <h2 className="text-xs font-bold uppercase border-b pb-1">ASSINATURAS</h2>
+
+          <div className="grid grid-cols-2 gap-8 pt-4">
+            <div className="text-center space-y-4">
+              <p className="font-bold text-[10px] uppercase">VENDEDORA</p>
+              <p>
+                Empresa: <strong>{organization?.name || "StockFlow Gestão"}</strong>
+              </p>
+              <p>
+                Representante: <strong>{sellerName}</strong>
+              </p>
+              <div className="border-b border-slate-400 h-10 w-2/3 mx-auto flex items-center justify-center">
+                <span className="text-[9px] text-muted-foreground uppercase">
+                  [Assinatura Digital no Sistema]
+                </span>
+              </div>
+            </div>
+
+            <div className="text-center space-y-4">
+              <p className="font-bold text-[10px] uppercase">COMPRADOR</p>
+              <p>
+                Nome: <strong>{customer.name}</strong>
+              </p>
+              <p>
+                CPF/CNPJ: <strong>{customer.cpf_cnpj}</strong>
+              </p>
+              <div className="border-b border-slate-400 h-12 w-2/3 mx-auto flex items-center justify-center">
+                {signedResult || order.customer_signatures?.[0] ? (
+                  <img
+                    src={signedResult?.signature_url || order.customer_signatures?.[0]?.signature_url}
+                    className="max-h-full object-contain"
+                    alt="Assinatura"
+                  />
+                ) : (
+                  <span className="text-[9px] text-muted-foreground uppercase">
+                    [Pendente Assinatura]
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-8 pt-6">
+            <div className="space-y-1">
+              <p className="font-bold text-[10px]">1ª TESTEMUNHA</p>
+              <p>Nome: ___________________________________</p>
+              <p>CPF: ____________________________________</p>
+              <p>Assinatura: _______________________________</p>
+            </div>
+            <div className="space-y-1">
+              <p className="font-bold text-[10px]">2ª TESTEMUNHA</p>
+              <p>Nome: ___________________________________</p>
+              <p>CPF: ____________________________________</p>
+              <p>Assinatura: _______________________________</p>
+            </div>
+          </div>
+        </div>
+
+        {/* NOTAS PROMISSÓRIAS (REPETE AUTOMATICAMENTE PARA CADA PARCELA) */}
+        {orderInstallments.length > 0 && (
+          <div className="pt-8 space-y-8 page-break-before">
+            <hr className="border-2" />
+            <h1 className="text-sm font-bold uppercase tracking-wider text-center">
+              ANEXO I – NOTAS PROMISSÓRIAS
+            </h1>
+            <p className="text-[10px] text-center italic text-slate-500">
+              As notas promissórias abaixo integram este contrato e correspondem às parcelas
+              pactuadas, podendo ser destacadas e utilizadas individualmente.
+            </p>
+
+            {orderInstallments.map((ins: any, idx: number) => {
+              const promissoriaNumero = `${ins.installment_number}/${orderInstallments.length}`;
+              const dataVencimento = new Date(ins.due_date + "T12:00:00").toLocaleDateString(
+                "pt-BR"
+              );
+              const valorParcela = Number(ins.amount);
+
+              return (
+                <div
+                  key={ins.id}
+                  className="border-2 border-slate-800 p-4 rounded-md space-y-3 bg-slate-50/30 relative"
+                >
+                  <div className="flex justify-between border-b pb-2">
+                    <span className="font-bold text-[11px]">
+                      NOTA PROMISSÓRIA Nº {promissoriaNumero}
+                    </span>
+                    <span className="font-bold text-[11px]">VENCIMENTO: {dataVencimento}</span>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-2 text-[10px]">
+                    <p>
+                      <strong>Contrato:</strong> {order.order_number}
+                    </p>
+                    <p>
+                      <strong>Pedido:</strong> {order.order_number}
+                    </p>
+                    <p>
+                      <strong>Valor:</strong>{" "}
+                      {valorParcela.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+                    </p>
+                  </div>
+
+                  <p className="text-[10px] leading-relaxed">
+                    No vencimento acima indicado, pagarei, por esta única via de{" "}
+                    <strong>NOTA PROMISSÓRIA</strong>, sem qualquer condição, à empresa{" "}
+                    <strong>{organization?.name || "StockFlow Gestão"}</strong>, inscrita no CNPJ nº{" "}
+                    <strong>{organization?.document || "00.000.000/0001-00"}</strong>, ou à sua
+                    ordem, a quantia de{" "}
+                    <strong>
+                      {valorParcela.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}{" "}
+                      ({numberToWords(valorParcela)})
+                    </strong>
+                    , referente à {ins.installment_number}ª parcela do Contrato Particular de Compra
+                    e Venda nº {order.order_number}.
+                  </p>
+
+                  <div className="grid grid-cols-2 gap-4 text-[9px] pt-2">
+                    <div>
+                      <h4 className="font-bold uppercase text-[9px]">Emitente</h4>
+                      <p>Nome: {customer.name}</p>
+                      <p>CPF/CNPJ: {customer.cpf_cnpj}</p>
+                      <p>Endereço: {customerAddress}</p>
+                      <p>
+                        Cidade/UF: {customer.customer_addresses?.[0]?.city || "Cidade"} /{" "}
+                        {customer.customer_addresses?.[0]?.state || "UF"}
+                      </p>
+                    </div>
+                    <div>
+                      <h4 className="font-bold uppercase text-[9px]">Avalista (Opcional)</h4>
+                      <p>Nome: ___________________________________</p>
+                      <p>CPF: ____________________________________</p>
+                      <p>Assinatura: _______________________________</p>
+                    </div>
+                  </div>
+
+                  <div className="flex justify-between items-end pt-4 border-t border-dashed">
+                    <div className="text-[8px] text-slate-500">
+                      <p>Código NP: {ins.id.slice(0, 8).toUpperCase()}</p>
+                      <p>
+                        Hash: {order.id.slice(0, 10).toUpperCase()}-
+                        {ins.id.slice(0, 10).toUpperCase()}
+                      </p>
+                    </div>
+                    <div className="text-center w-1/2">
+                      <p className="text-[8px] text-slate-500 mb-6">
+                        {customer.customer_addresses?.[0]?.city || "Cidade"},{" "}
+                        {new Date(order.created_at).toLocaleDateString("pt-BR")}
+                      </p>
+                      <div className="border-t border-slate-400 w-4/5 mx-auto pt-0.5">
+                        <span className="text-[8px] font-bold block">{customer.name}</span>
+                        <span className="text-[7px] text-slate-500 block">
+                          Emitente (Assinatura)
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* Se não estiver assinado, exibe o painel de assinatura no rodapé */}
+      {!signedResult && (
+        <>
+          <div className="space-y-3 flex flex-col no-print">
+            <div className="flex items-center gap-2 mt-auto pt-2 bg-slate-50/50 p-2 rounded border">
+              <Checkbox
+                id="terms-accept"
+                checked={termsAccepted}
+                onCheckedChange={(c) => setTermsAccepted(!!c)}
+              />
+              <Label
+                htmlFor="terms-accept"
+                className="text-[11px] font-semibold text-slate-700 cursor-pointer"
+              >
+                Li e aceito os termos do contrato digital acima.
+              </Label>
+            </div>
+          </div>
+
+          {/* Caixa de Assinatura Canvas */}
+          <div className="space-y-2 no-print">
+            <Label className="font-bold text-slate-800">
+              Assine na área abaixo (Celular/Tablet toque com o dedo, Desktop clique e arraste):
             </Label>
+            <div className="border-2 border-dashed border-slate-300 rounded-lg overflow-hidden bg-slate-50 flex justify-center">
+              <canvas
+                ref={canvasRef}
+                width={600}
+                height={180}
+                className="bg-white cursor-crosshair max-w-full block"
+                onTouchStart={startDrawing}
+                onTouchMove={draw}
+                onTouchEnd={stopDrawing}
+                onMouseDown={startDrawing}
+                onMouseMove={draw}
+                onMouseUp={stopDrawing}
+                onMouseLeave={stopDrawing}
+              />
+            </div>
           </div>
-        </div>
-      </div>
 
-      {/* Caixa de Assinatura Canvas */}
-      <div className="space-y-2">
-        <Label className="font-bold text-slate-800">
-          Assine na área abaixo (Celular/Tablet toque com o dedo, Desktop clique e arraste):
-        </Label>
-        <div className="border-2 border-dashed border-slate-300 rounded-lg overflow-hidden bg-slate-50 flex justify-center">
-          <canvas
-            ref={canvasRef}
-            width={600}
-            height={180}
-            className="bg-white cursor-crosshair max-w-full block"
-            onTouchStart={startDrawing}
-            onTouchMove={draw}
-            onTouchEnd={stopDrawing}
-            onMouseDown={startDrawing}
-            onMouseMove={draw}
-            onMouseUp={stopDrawing}
-            onMouseLeave={stopDrawing}
-          />
-        </div>
-      </div>
-
-      <DialogFooter className="flex justify-between sm:justify-between items-center border-t pt-4">
-        <Button variant="outline" type="button" onClick={handleClearCanvas}>
-          Limpar Assinatura
-        </Button>
-        <div className="flex gap-2">
-          <Button variant="outline" type="button" onClick={onClose}>
-            Cancelar
-          </Button>
-          <Button
-            onClick={handleConfirmSignature}
-            disabled={!termsAccepted}
-            className="bg-primary hover:bg-primary-hover font-semibold"
-          >
-            Confirmar e Assinar Contrato
-          </Button>
-        </div>
-      </DialogFooter>
+          <DialogFooter className="flex justify-between sm:justify-between items-center border-t pt-4 no-print">
+            <Button variant="outline" type="button" onClick={handleClearCanvas}>
+              Limpar Assinatura
+            </Button>
+            <div className="flex gap-2">
+              <Button variant="outline" type="button" onClick={onClose}>
+                Cancelar
+              </Button>
+              <Button
+                onClick={handleConfirmSignature}
+                disabled={!termsAccepted}
+                className="bg-primary hover:bg-primary-hover font-semibold"
+              >
+                Confirmar e Assinar Contrato
+              </Button>
+            </div>
+          </DialogFooter>
     </div>
   );
 }
