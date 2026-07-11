@@ -1338,6 +1338,8 @@ function ClienteForm({
   const [photoUrl, setPhotoUrl] = useState("");
   const [status, setStatus] = useState("Ativo");
   const [notes, setNotes] = useState("");
+  const [maritalStatus, setMaritalStatus] = useState("");
+  const [profession, setProfession] = useState("");
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isUploading, setIsUploading] = useState(false);
@@ -1434,6 +1436,8 @@ function ClienteForm({
           if (draft.photoUrl !== undefined) setPhotoUrl(draft.photoUrl);
           if (draft.status !== undefined) setStatus(draft.status);
           if (draft.notes !== undefined) setNotes(draft.notes);
+          if (draft.maritalStatus !== undefined) setMaritalStatus(draft.maritalStatus);
+          if (draft.profession !== undefined) setProfession(draft.profession);
 
           if (draft.zipCode !== undefined) setZipCode(draft.zipCode);
           if (draft.street !== undefined) setStreet(draft.street);
