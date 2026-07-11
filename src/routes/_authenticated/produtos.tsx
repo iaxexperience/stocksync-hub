@@ -314,7 +314,6 @@ function Produtos() {
                   type="number"
                   step="0.001"
                   defaultValue={editing?.stock_current ?? 0}
-                  disabled={!!editing}
                 />
               </div>
               <div className="space-y-1">
