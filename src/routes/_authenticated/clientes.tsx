@@ -1480,6 +1480,8 @@ function ClienteForm({
         photoUrl,
         status,
         notes,
+        maritalStatus,
+        profession,
         zipCode,
         street,
         number,
@@ -1514,6 +1516,8 @@ function ClienteForm({
     photoUrl,
     status,
     notes,
+    maritalStatus,
+    profession,
     zipCode,
     street,
     number,
@@ -1556,6 +1560,8 @@ function ClienteForm({
       setPhotoUrl(activeCustomer.photo_url || "");
       setStatus(activeCustomer.status);
       setNotes(activeCustomer.notes || "");
+      setMaritalStatus(activeCustomer.marital_status || "");
+      setProfession(activeCustomer.profession || "");
 
       const addr = activeCustomer.customer_addresses?.[0];
       if (addr) {
@@ -1744,6 +1750,8 @@ function ClienteForm({
       photo_url: photoUrl,
       status,
       notes,
+      marital_status: customerType === "PF" ? maritalStatus : null,
+      profession: customerType === "PF" ? profession : null,
     };
 
     const addressObj = {
@@ -1792,6 +1800,8 @@ function ClienteForm({
           photo_url: photoUrl,
           status,
           notes,
+          marital_status: customerType === "PF" ? maritalStatus : null,
+          profession: customerType === "PF" ? profession : null,
         };
 
         const addressObj = {
@@ -1980,6 +1990,33 @@ function ClienteForm({
                     placeholder="nome@exemplo.com"
                   />
                 </div>
+                {customerType === "PF" && (
+                  <>
+                    <div className="space-y-1">
+                      <Label>Estado Civil</Label>
+                      <Select value={maritalStatus} onValueChange={setMaritalStatus}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Solteiro(a)">Solteiro(a)</SelectItem>
+                          <SelectItem value="Casado(a)">Casado(a)</SelectItem>
+                          <SelectItem value="Divorciado(a)">Divorciado(a)</SelectItem>
+                          <SelectItem value="Viúvo(a)">Viúvo(a)</SelectItem>
+                          <SelectItem value="União Estável">União Estável</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-1">
+                      <Label>Profissão</Label>
+                      <Input
+                        value={profession}
+                        onChange={(e) => setProfession(e.target.value)}
+                        placeholder="Ex: Vendedor, Advogado"
+                      />
+                    </div>
+                  </>
+                )}
                 <div className="md:col-span-2 space-y-1">
                   <Label>Foto / Logomarca (URL)</Label>
                   <div className="flex gap-2">
