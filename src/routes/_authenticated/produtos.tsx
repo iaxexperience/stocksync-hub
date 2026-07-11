@@ -51,19 +51,19 @@ function Produtos() {
 
   const { data: categories = [] } = useQuery({
     queryKey: ["categories", orgId], enabled: !!orgId,
-    queryFn: async () => (await supabase.from("categories").select("id,name").eq("organization_id", orgId!)).data ?? [],
+    queryFn: async () => (await supabase.from("categories").select("id,name").eq("organization_id", orgId!).order("name")).data ?? [],
   });
   const { data: brands = [] } = useQuery({
     queryKey: ["brands", orgId], enabled: !!orgId,
-    queryFn: async () => (await supabase.from("brands").select("id,name").eq("organization_id", orgId!)).data ?? [],
+    queryFn: async () => (await supabase.from("brands").select("id,name").eq("organization_id", orgId!).order("name")).data ?? [],
   });
   const { data: units = [] } = useQuery({
     queryKey: ["units", orgId], enabled: !!orgId,
-    queryFn: async () => (await supabase.from("units").select("id,name,abbreviation").eq("organization_id", orgId!)).data ?? [],
+    queryFn: async () => (await supabase.from("units").select("id,name,abbreviation").eq("organization_id", orgId!).order("abbreviation")).data ?? [],
   });
   const { data: suppliers = [] } = useQuery({
     queryKey: ["suppliers", orgId], enabled: !!orgId,
-    queryFn: async () => (await supabase.from("suppliers").select("id,legal_name").eq("organization_id", orgId!)).data ?? [],
+    queryFn: async () => (await supabase.from("suppliers").select("id,legal_name").eq("organization_id", orgId!).order("legal_name")).data ?? [],
   });
 
   const upsert = useMutation({
