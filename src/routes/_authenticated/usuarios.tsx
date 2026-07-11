@@ -30,9 +30,25 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus, Pencil, UserX, Loader2, ShieldCheck, Mail, ShieldAlert } from "lucide-react";
+import { Plus, Pencil, UserX, Loader2, Mail } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
+
+interface Profile {
+  id: string;
+  full_name: string;
+  email: string;
+  phone?: string;
+  is_active: boolean;
+}
+
+interface Member {
+  id: string;
+  role: string;
+  created_at: string;
+  user_id: string;
+  profiles: Profile | null;
+}
 
 export const Route = createFileRoute("/_authenticated/usuarios")({
   head: () => ({ meta: [{ title: "Usuários · StockFlow" }] }),
@@ -45,7 +61,7 @@ function UsuariosPage() {
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
-  const [editingMember, setEditingMember] = useState<any | null>(null);
+  const [editingMember, setEditingMember] = useState<Member | null>(null);
 
   // Form states for creation
   const [email, setEmail] = useState("");
@@ -54,7 +70,7 @@ function UsuariosPage() {
   const [role, setRole] = useState("vendedor");
 
   // Fetch users in the active organization
-  const { data: members = [], isLoading } = useQuery({
+  const { data: members = [], isLoading } = useQuery<Member[]>({
     queryKey: ["org_members", orgId],
     enabled: !!orgId,
     queryFn: async () => {
@@ -77,7 +93,7 @@ function UsuariosPage() {
         )
         .eq("organization_id", orgId!);
       if (error) throw error;
-      return data ?? [];
+      return (data as unknown as Member[]) ?? [];
     },
   });
 
@@ -113,7 +129,7 @@ function UsuariosPage() {
       setFullName("");
       setRole("vendedor");
     },
-    onError: (err: any) => {
+    onError: (err: { message?: string }) => {
       toast.error(err.message || "Erro ao criar usuário.");
     },
   });
@@ -133,7 +149,7 @@ function UsuariosPage() {
       setEditOpen(false);
       setEditingMember(null);
     },
-    onError: (err: any) => {
+    onError: (err: { message?: string }) => {
       toast.error(err.message || "Erro ao atualizar permissão.");
     },
   });
@@ -148,7 +164,7 @@ function UsuariosPage() {
       toast.success("Usuário removido da organização.");
       qc.invalidateQueries({ queryKey: ["org_members"] });
     },
-    onError: (err: any) => {
+    onError: (err: { message?: string }) => {
       toast.error(err.message || "Erro ao remover usuário.");
     },
   });
@@ -297,7 +313,7 @@ function UsuariosPage() {
                     </TableCell>
                   </TableRow>
                 ) : (
-                  members.map((m: any) => (
+                  members.map((m) => (
                     <TableRow key={m.id}>
                       <TableCell className="font-medium flex items-center gap-2 py-4">
                         <div className="h-8 w-8 rounded-full bg-slate-100 flex items-center justify-center font-bold text-slate-600">
