@@ -203,7 +203,7 @@ BEGIN
       JOIN public.products p ON p.id = oi.product_id
       WHERE oi.order_id = NEW.id
     LOOP
-      IF (item.quantity > item.stock_current AND (v_role IS NULL OR v_role != 'admin')) THEN
+      IF (item.quantity > item.stock_current AND (v_role IS NULL OR v_role != 'admin'::public.app_role)) THEN
         RAISE EXCEPTION 'Estoque insuficiente para o produto "%". Estoque disponível: %, Solicitado no pedido: %. Apenas administradores podem autorizar a venda sem estoque.', item.name, item.stock_current, item.quantity;
       END IF;
     END LOOP;
