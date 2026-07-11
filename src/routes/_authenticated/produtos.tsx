@@ -65,7 +65,7 @@ function Produtos() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("products")
-        .select("*, categories(name), brands(name), units(abbreviation)")
+        .select("*, categories(name), brands(name), units(abbreviation), suppliers(legal_name)")
         .eq("organization_id", orgId!)
         .order("name");
       if (error) throw error;
@@ -197,7 +197,7 @@ function Produtos() {
             <DialogHeader>
               <DialogTitle>{editing ? "Editar produto" : "Novo produto"}</DialogTitle>
             </DialogHeader>
-            <form onSubmit={submit} className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <form key={editing?.id ?? "new"} onSubmit={submit} className="grid grid-cols-2 md:grid-cols-4 gap-3">
               <div className="col-span-2 md:col-span-2 space-y-1">
                 <Label>Nome *</Label>
                 <Input name="name" required defaultValue={editing?.name} />
