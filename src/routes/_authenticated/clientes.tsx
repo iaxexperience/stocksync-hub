@@ -3784,7 +3784,7 @@ function SignatureCollector({
   const totalAmount = Number(order.total_amount) || 0;
   const installmentTotal = orderInstallments.reduce(
     (acc: number, ins: any) => acc + Number(ins.amount),
-    0
+    0,
   );
   const installmentsCount = orderInstallments.length || Number(order.installments) || 1;
   const installmentAmount = orderInstallments[0]
@@ -4070,8 +4070,7 @@ function SignatureCollector({
                 <strong>CNPJ:</strong> {organization?.document || "00.000.000/0001-00"}
               </p>
               <p>
-                <strong>Endereço:</strong>{" "}
-                {organization?.address || "Av. Principal, 1000 - Centro"}
+                <strong>Endereço:</strong> {organization?.address || "Av. Principal, 1000 - Centro"}
               </p>
               <p>
                 <strong>Telefone:</strong> {organization?.phone || "(00) 3000-0000"}
@@ -4120,7 +4119,9 @@ function SignatureCollector({
         <hr />
 
         <div className="space-y-2">
-          <h2 className="text-xs font-bold uppercase border-b pb-1">CLÁUSULA PRIMEIRA – DO OBJETO</h2>
+          <h2 className="text-xs font-bold uppercase border-b pb-1">
+            CLÁUSULA PRIMEIRA – DO OBJETO
+          </h2>
           <p>A VENDEDORA vende ao COMPRADOR os seguintes bens:</p>
 
           <table className="w-full border-collapse border border-slate-300 text-[10px]">
@@ -4138,7 +4139,9 @@ function SignatureCollector({
             <tbody>
               {order.order_items?.map((item: any, idx: number) => (
                 <tr key={idx}>
-                  <td className="border border-slate-300 p-1">{item.products?.name || "Produto"}</td>
+                  <td className="border border-slate-300 p-1">
+                    {item.products?.name || "Produto"}
+                  </td>
                   <td className="border border-slate-300 p-1">
                     {item.products?.brand || "Genérica"}
                   </td>
@@ -4146,7 +4149,9 @@ function SignatureCollector({
                     {item.products?.model || "Padrão"}
                   </td>
                   <td className="border border-slate-300 p-1">{item.serial_number || "S/N"}</td>
-                  <td className="border border-slate-300 p-1 text-center">{Number(item.quantity)}</td>
+                  <td className="border border-slate-300 p-1 text-center">
+                    {Number(item.quantity)}
+                  </td>
                   <td className="border border-slate-300 p-1 text-right">
                     {Number(item.unit_price).toLocaleString("pt-BR", {
                       style: "currency",
@@ -4254,7 +4259,10 @@ function SignatureCollector({
           <h2 className="text-xs font-bold uppercase border-b pb-1">
             CLÁUSULA QUINTA – DO INADIMPLEMENTO
           </h2>
-          <p>O atraso no pagamento de qualquer parcela constituirá automaticamente o COMPRADOR em mora.</p>
+          <p>
+            O atraso no pagamento de qualquer parcela constituirá automaticamente o COMPRADOR em
+            mora.
+          </p>
           <p>
             A VENDEDORA poderá cobrar judicial ou extrajudicialmente os valores devidos, considerar
             rescindido o contrato, requerer a restituição do bem, promover a execução das Notas
@@ -4265,7 +4273,9 @@ function SignatureCollector({
         <hr />
 
         <div className="space-y-2">
-          <h2 className="text-xs font-bold uppercase border-b pb-1">CLÁUSULA SEXTA – DA GARANTIA</h2>
+          <h2 className="text-xs font-bold uppercase border-b pb-1">
+            CLÁUSULA SEXTA – DA GARANTIA
+          </h2>
           <p>
             O(s) produto(s) possui(em) garantia conforme especificação do fabricante e/ou da
             VENDEDORA.
@@ -4363,7 +4373,9 @@ function SignatureCollector({
               <div className="border-b border-slate-400 h-12 w-2/3 mx-auto flex items-center justify-center">
                 {signedResult || order.customer_signatures?.[0] ? (
                   <img
-                    src={signedResult?.signature_url || order.customer_signatures?.[0]?.signature_url}
+                    src={
+                      signedResult?.signature_url || order.customer_signatures?.[0]?.signature_url
+                    }
                     className="max-h-full object-contain"
                     alt="Assinatura"
                   />
@@ -4407,7 +4419,7 @@ function SignatureCollector({
             {orderInstallments.map((ins: any, idx: number) => {
               const promissoriaNumero = `${ins.installment_number}/${orderInstallments.length}`;
               const dataVencimento = new Date(ins.due_date + "T12:00:00").toLocaleDateString(
-                "pt-BR"
+                "pt-BR",
               );
               const valorParcela = Number(ins.amount);
 
@@ -4555,6 +4567,8 @@ function SignatureCollector({
               </Button>
             </div>
           </DialogFooter>
+        </>
+      )}
     </div>
   );
 }
