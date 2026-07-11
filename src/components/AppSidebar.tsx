@@ -46,6 +46,7 @@ const groups = [
       { title: "Unidades", to: "/cadastros/$tipo", params: { tipo: "unidades" }, icon: Ruler },
       { title: "Depósitos", to: "/cadastros/$tipo", params: { tipo: "depositos" }, icon: Warehouse },
       { title: "Fornecedores", to: "/cadastros/$tipo", params: { tipo: "fornecedores" }, icon: Truck },
+      { title: "Usuários", to: "/usuarios", icon: Users },
     ],
   },
 ] as const;
