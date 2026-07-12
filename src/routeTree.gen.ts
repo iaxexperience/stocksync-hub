@@ -18,6 +18,7 @@ import { Route as AuthenticatedMovimentacoesRouteImport } from './routes/_authen
 import { Route as AuthenticatedEstoqueRouteImport } from './routes/_authenticated/estoque'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedClientesRouteImport } from './routes/_authenticated/clientes'
+import { Route as AuthenticatedAjudaRouteImport } from './routes/_authenticated/ajuda'
 import { Route as AuthenticatedCadastrosTipoRouteImport } from './routes/_authenticated/cadastros.$tipo'
 
 const AuthRoute = AuthRouteImport.update({
@@ -65,6 +66,11 @@ const AuthenticatedClientesRoute = AuthenticatedClientesRouteImport.update({
   path: '/clientes',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedAjudaRoute = AuthenticatedAjudaRouteImport.update({
+  id: '/ajuda',
+  path: '/ajuda',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedCadastrosTipoRoute =
   AuthenticatedCadastrosTipoRouteImport.update({
     id: '/cadastros/$tipo',
@@ -75,6 +81,7 @@ const AuthenticatedCadastrosTipoRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/ajuda': typeof AuthenticatedAjudaRoute
   '/clientes': typeof AuthenticatedClientesRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/estoque': typeof AuthenticatedEstoqueRoute
@@ -86,6 +93,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/ajuda': typeof AuthenticatedAjudaRoute
   '/clientes': typeof AuthenticatedClientesRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/estoque': typeof AuthenticatedEstoqueRoute
@@ -99,6 +107,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
+  '/_authenticated/ajuda': typeof AuthenticatedAjudaRoute
   '/_authenticated/clientes': typeof AuthenticatedClientesRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/estoque': typeof AuthenticatedEstoqueRoute
@@ -112,6 +121,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
+    | '/ajuda'
     | '/clientes'
     | '/dashboard'
     | '/estoque'
@@ -123,6 +133,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
+    | '/ajuda'
     | '/clientes'
     | '/dashboard'
     | '/estoque'
@@ -135,6 +146,7 @@ export interface FileRouteTypes {
     | '/'
     | '/_authenticated'
     | '/auth'
+    | '/_authenticated/ajuda'
     | '/_authenticated/clientes'
     | '/_authenticated/dashboard'
     | '/_authenticated/estoque'
@@ -215,6 +227,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedClientesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/ajuda': {
+      id: '/_authenticated/ajuda'
+      path: '/ajuda'
+      fullPath: '/ajuda'
+      preLoaderRoute: typeof AuthenticatedAjudaRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/cadastros/$tipo': {
       id: '/_authenticated/cadastros/$tipo'
       path: '/cadastros/$tipo'
@@ -226,6 +245,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedAjudaRoute: typeof AuthenticatedAjudaRoute
   AuthenticatedClientesRoute: typeof AuthenticatedClientesRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedEstoqueRoute: typeof AuthenticatedEstoqueRoute
@@ -236,6 +256,7 @@ interface AuthenticatedRouteRouteChildren {
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedAjudaRoute: AuthenticatedAjudaRoute,
   AuthenticatedClientesRoute: AuthenticatedClientesRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedEstoqueRoute: AuthenticatedEstoqueRoute,

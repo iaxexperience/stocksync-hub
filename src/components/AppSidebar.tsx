@@ -3,6 +3,7 @@ import {
   LayoutDashboard, Package, Warehouse, Tag, Building2, Truck,
   ArrowDownToLine, ArrowUpFromLine, Ruler, LogOut, Boxes, Settings,
   Users, UserPlus, ShieldCheck, History, CreditCard, FileSignature,
+  HelpCircle, BookOpen,
 } from "lucide-react";
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupLabel, SidebarGroupContent,
@@ -47,6 +48,12 @@ const groups = [
       { title: "Depósitos", to: "/cadastros/$tipo", params: { tipo: "depositos" }, icon: Warehouse },
       { title: "Fornecedores", to: "/cadastros/$tipo", params: { tipo: "fornecedores" }, icon: Truck },
       { title: "Usuários", to: "/usuarios", icon: Users },
+    ],
+  },
+  {
+    label: "Suporte",
+    items: [
+      { title: "Ajuda & Portfólio", to: "/ajuda", icon: HelpCircle },
     ],
   },
 ] as const;
