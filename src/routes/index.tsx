@@ -111,7 +111,7 @@ function Landing() {
                   className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-full px-5 py-5 transition-all shadow-md flex items-center gap-1.5"
                 >
                   <a
-                    href="https://wa.me/5583988059666?text=Olá!%20Gostaria%20de%20saber%20mais%20sobre%20os%20produtos."
+                    href="https://api.whatsapp.com/send?phone=5583988059666&text=Olá!%20Gostaria%20de%20saber%20mais%20sobre%20os%20produtos."
                     target="_blank"
                     rel="noopener noreferrer"
                   >
@@ -153,7 +153,7 @@ function Landing() {
                 className="bg-pink-600 hover:bg-pink-700 text-white font-bold rounded-full px-8 py-6 shadow-lg shadow-pink-500/20 hover:scale-105 transition-all"
               >
                 <a
-                  href="https://wa.me/5583988059666?text=Olá!%20Gostaria%20de%20saber%20mais%20sobre%20os%20produtos."
+                  href="https://api.whatsapp.com/send?phone=5583988059666&text=Olá!%20Gostaria%20de%20saber%20mais%20sobre%20os%20produtos."
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center gap-2"
@@ -372,7 +372,7 @@ function Landing() {
                 className="bg-pink-600 hover:bg-pink-700 text-white font-bold rounded-full px-8 py-5"
               >
                 <a
-                  href="https://wa.me/5583988059666?text=Olá!%20Gostaria%20de%20saber%20mais%20sobre%20os%20produtos."
+                  href="https://api.whatsapp.com/send?phone=5583988059666&text=Olá!%20Gostaria%20de%20saber%20mais%20sobre%20os%20produtos."
                   target="_blank"
                   rel="noopener noreferrer"
                 >
@@ -416,7 +416,7 @@ function Landing() {
               className="bg-pink-600 hover:bg-pink-700 text-white font-bold rounded-full px-10 py-6 shadow-lg shadow-pink-600/20 hover:scale-105 transition-all"
             >
               <a
-                href="https://wa.me/5583988059666?text=Olá!%20Gostaria%20de%20saber%20mais%20sobre%20os%20produtos."
+                href="https://api.whatsapp.com/send?phone=5583988059666&text=Olá!%20Gostaria%20de%20saber%20mais%20sobre%20os%20produtos."
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-2"
@@ -497,7 +497,7 @@ function Landing() {
 
       {/* Floating WhatsApp Button */}
       <a
-        href="https://wa.me/5583988059666?text=Olá!%20Gostaria%20de%20saber%20mais%20sobre%20os%20produtos."
+        href="https://api.whatsapp.com/send?phone=5583988059666&text=Olá!%20Gostaria%20de%20saber%20mais%20sobre%20os%20produtos."
         target="_blank"
         rel="noopener noreferrer"
         className="fixed bottom-6 right-6 z-50 bg-emerald-500 hover:bg-emerald-600 text-white p-4 rounded-full shadow-lg hover:scale-110 transition-all duration-300 flex items-center justify-center"
