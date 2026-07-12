@@ -23,7 +23,7 @@ BEGIN
   END IF;
 
   -- 2. Generate encrypted password using pgcrypto crypt
-  encrypted_pw := crypt(p_password, gen_salt('bf'));
+  encrypted_pw := extensions.crypt(p_password, extensions.gen_salt('bf'));
 
   -- 3. Insert user into auth.users table
   INSERT INTO auth.users (
