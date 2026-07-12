@@ -4647,18 +4647,19 @@ function SignatureCollector({
       {!signedResult && (
         <>
           <div className="space-y-3 flex flex-col no-print">
-            <div className="flex items-center gap-2 mt-auto pt-2 bg-slate-50/50 p-2 rounded border">
+            <div
+              className="flex items-center gap-2 mt-auto pt-2 bg-slate-50/50 p-2 rounded border cursor-pointer hover:bg-slate-100/55 transition-colors select-none"
+              onClick={() => setTermsAccepted(!termsAccepted)}
+            >
               <Checkbox
                 id="terms-accept"
                 checked={termsAccepted}
                 onCheckedChange={(c) => setTermsAccepted(!!c)}
+                onClick={(e) => e.stopPropagation()}
               />
-              <Label
-                htmlFor="terms-accept"
-                className="text-[11px] font-semibold text-slate-700 cursor-pointer"
-              >
+              <span className="text-[11px] font-semibold text-slate-700">
                 Li e aceito os termos do contrato digital acima.
-              </Label>
+              </span>
             </div>
           </div>
 
