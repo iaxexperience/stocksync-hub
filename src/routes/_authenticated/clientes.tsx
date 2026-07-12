@@ -4111,6 +4111,10 @@ function SignatureCollector({
   return (
     <div className="space-y-5 py-2 text-xs">
       <style>{`
+        @page {
+          size: A4;
+          margin: 15mm 20mm;
+        }
         @media print {
           body * {
             visibility: hidden;
@@ -4128,6 +4132,7 @@ function SignatureCollector({
             margin: 0 !important;
             padding: 0 !important;
             box-shadow: none !important;
+            background: white !important;
           }
           .print-container {
             position: absolute !important;
@@ -4138,12 +4143,18 @@ function SignatureCollector({
             overflow: visible !important;
             border: none !important;
             padding: 0 !important;
+            background: white !important;
           }
           .no-print {
             display: none !important;
           }
           .page-break-before {
-            page-break-before: always;
+            page-break-before: always !important;
+            break-before: always !important;
+          }
+          .print-avoid-break {
+            page-break-inside: avoid !important;
+            break-inside: avoid !important;
           }
         }
       `}</style>
@@ -4606,7 +4617,7 @@ function SignatureCollector({
               return (
                 <div
                   key={ins.id}
-                  className="border-2 border-slate-800 p-4 rounded-md space-y-3 bg-slate-50/30 relative"
+                  className="border-2 border-slate-800 p-4 rounded-md space-y-3 bg-slate-50/30 relative print-avoid-break"
                 >
                   <div className="flex justify-between border-b pb-2">
                     <span className="font-bold text-[11px]">
