@@ -14,6 +14,47 @@ export type Database = {
   }
   public: {
     Tables: {
+      audit_logs: {
+        Row: {
+          action: string
+          created_at: string
+          details: Json | null
+          entity_id: string | null
+          entity_type: string | null
+          id: string
+          organization_id: string
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          details?: Json | null
+          entity_id?: string | null
+          entity_type?: string | null
+          id?: string
+          organization_id: string
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          details?: Json | null
+          entity_id?: string | null
+          entity_type?: string | null
+          id?: string
+          organization_id?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "audit_logs_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       brands: {
         Row: {
           created_at: string
@@ -88,6 +129,399 @@ export type Database = {
           },
         ]
       }
+      customer_addresses: {
+        Row: {
+          city: string | null
+          complement: string | null
+          created_at: string
+          customer_id: string
+          id: string
+          is_primary: boolean
+          neighborhood: string | null
+          number: string | null
+          reference: string | null
+          state: string | null
+          street: string | null
+          updated_at: string
+          zip_code: string | null
+        }
+        Insert: {
+          city?: string | null
+          complement?: string | null
+          created_at?: string
+          customer_id: string
+          id?: string
+          is_primary?: boolean
+          neighborhood?: string | null
+          number?: string | null
+          reference?: string | null
+          state?: string | null
+          street?: string | null
+          updated_at?: string
+          zip_code?: string | null
+        }
+        Update: {
+          city?: string | null
+          complement?: string | null
+          created_at?: string
+          customer_id?: string
+          id?: string
+          is_primary?: boolean
+          neighborhood?: string | null
+          number?: string | null
+          reference?: string | null
+          state?: string | null
+          street?: string | null
+          updated_at?: string
+          zip_code?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customer_addresses_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      customer_signatures: {
+        Row: {
+          contract_url: string | null
+          contract_version: string | null
+          created_at: string
+          customer_id: string
+          device_information: string | null
+          id: string
+          ip_address: string | null
+          latitude: number | null
+          longitude: number | null
+          order_id: string
+          signature_url: string | null
+          signed_at: string
+          signed_by: string | null
+        }
+        Insert: {
+          contract_url?: string | null
+          contract_version?: string | null
+          created_at?: string
+          customer_id: string
+          device_information?: string | null
+          id?: string
+          ip_address?: string | null
+          latitude?: number | null
+          longitude?: number | null
+          order_id: string
+          signature_url?: string | null
+          signed_at?: string
+          signed_by?: string | null
+        }
+        Update: {
+          contract_url?: string | null
+          contract_version?: string | null
+          created_at?: string
+          customer_id?: string
+          device_information?: string | null
+          id?: string
+          ip_address?: string | null
+          latitude?: number | null
+          longitude?: number | null
+          order_id?: string
+          signature_url?: string | null
+          signed_at?: string
+          signed_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customer_signatures_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "customer_signatures_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      customers: {
+        Row: {
+          birth_or_opening_date: string | null
+          cpf_cnpj: string | null
+          created_at: string
+          created_by: string | null
+          customer_type: string
+          deleted_at: string | null
+          email: string | null
+          id: string
+          is_deleted: boolean
+          marital_status: string | null
+          name: string
+          notes: string | null
+          organization_id: string
+          phone: string | null
+          photo_url: string | null
+          profession: string | null
+          rg_state_registration: string | null
+          status: string
+          trade_name: string | null
+          updated_at: string
+          whatsapp: string | null
+        }
+        Insert: {
+          birth_or_opening_date?: string | null
+          cpf_cnpj?: string | null
+          created_at?: string
+          created_by?: string | null
+          customer_type?: string
+          deleted_at?: string | null
+          email?: string | null
+          id?: string
+          is_deleted?: boolean
+          marital_status?: string | null
+          name: string
+          notes?: string | null
+          organization_id: string
+          phone?: string | null
+          photo_url?: string | null
+          profession?: string | null
+          rg_state_registration?: string | null
+          status?: string
+          trade_name?: string | null
+          updated_at?: string
+          whatsapp?: string | null
+        }
+        Update: {
+          birth_or_opening_date?: string | null
+          cpf_cnpj?: string | null
+          created_at?: string
+          created_by?: string | null
+          customer_type?: string
+          deleted_at?: string | null
+          email?: string | null
+          id?: string
+          is_deleted?: boolean
+          marital_status?: string | null
+          name?: string
+          notes?: string | null
+          organization_id?: string
+          phone?: string | null
+          photo_url?: string | null
+          profession?: string | null
+          rg_state_registration?: string | null
+          status?: string
+          trade_name?: string | null
+          updated_at?: string
+          whatsapp?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customers_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      installments: {
+        Row: {
+          amount: number
+          created_at: string
+          due_date: string
+          id: string
+          installment_number: number
+          order_id: string
+          payment_date: string | null
+          payment_method: string | null
+          receipt_url: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          amount?: number
+          created_at?: string
+          due_date: string
+          id?: string
+          installment_number: number
+          order_id: string
+          payment_date?: string | null
+          payment_method?: string | null
+          receipt_url?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          due_date?: string
+          id?: string
+          installment_number?: number
+          order_id?: string
+          payment_date?: string | null
+          payment_method?: string | null
+          receipt_url?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "installments_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      order_items: {
+        Row: {
+          additional_fee: number
+          created_at: string
+          discount: number
+          id: string
+          order_id: string
+          product_id: string | null
+          quantity: number
+          serial_number: string | null
+          status: string
+          total_amount: number
+          unit_price: number
+          warranty_days: number | null
+        }
+        Insert: {
+          additional_fee?: number
+          created_at?: string
+          discount?: number
+          id?: string
+          order_id: string
+          product_id?: string | null
+          quantity?: number
+          serial_number?: string | null
+          status?: string
+          total_amount?: number
+          unit_price?: number
+          warranty_days?: number | null
+        }
+        Update: {
+          additional_fee?: number
+          created_at?: string
+          discount?: number
+          id?: string
+          order_id?: string
+          product_id?: string | null
+          quantity?: number
+          serial_number?: string | null
+          status?: string
+          total_amount?: number
+          unit_price?: number
+          warranty_days?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_items_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      orders: {
+        Row: {
+          created_at: string
+          customer_id: string
+          delivery_date: string | null
+          discount: number
+          first_due_date: string | null
+          id: string
+          installation_fee: number
+          installments: number
+          notes: string | null
+          order_number: string
+          order_type: string
+          organization_id: string
+          payment_method: string | null
+          payment_status: string
+          seller_id: string | null
+          shipping_fee: number
+          status: string
+          subtotal: number
+          total_amount: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          customer_id: string
+          delivery_date?: string | null
+          discount?: number
+          first_due_date?: string | null
+          id?: string
+          installation_fee?: number
+          installments?: number
+          notes?: string | null
+          order_number: string
+          order_type?: string
+          organization_id: string
+          payment_method?: string | null
+          payment_status?: string
+          seller_id?: string | null
+          shipping_fee?: number
+          status?: string
+          subtotal?: number
+          total_amount?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          customer_id?: string
+          delivery_date?: string | null
+          discount?: number
+          first_due_date?: string | null
+          id?: string
+          installation_fee?: number
+          installments?: number
+          notes?: string | null
+          order_number?: string
+          order_type?: string
+          organization_id?: string
+          payment_method?: string | null
+          payment_status?: string
+          seller_id?: string | null
+          shipping_fee?: number
+          status?: string
+          subtotal?: number
+          total_amount?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "orders_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orders_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       organization_members: {
         Row: {
           created_at: string
@@ -122,6 +556,7 @@ export type Database = {
       }
       organizations: {
         Row: {
+          address: string | null
           created_at: string
           document: string | null
           email: string | null
@@ -131,6 +566,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          address?: string | null
           created_at?: string
           document?: string | null
           email?: string | null
@@ -140,6 +576,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          address?: string | null
           created_at?: string
           document?: string | null
           email?: string | null
