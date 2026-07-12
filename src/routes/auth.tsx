@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Eye, EyeOff, Loader2, LogIn, Info } from "lucide-react";
+import { Eye, EyeOff, Loader2, LogIn, Info, ArrowLeft } from "lucide-react";
 import { z } from "zod";
 
 type Search = { mode?: "login" };
@@ -87,7 +87,7 @@ function AuthPage() {
             Sistema de Gestão de Eletrodomésticos
           </h2>
           <p className="mt-3 text-white/80 max-w-md text-sm">
-            Controle de estoque, clientes, vendas, contratos e muito mais — em um único lugar.
+             Controle de estoque, clientes, vendas, contratos e muito mais — em um único lugar.
           </p>
           <div className="mt-6 grid grid-cols-2 gap-3">
             {[
@@ -111,13 +111,25 @@ function AuthPage() {
       {/* Login Form */}
       <div className="flex items-center justify-center p-6 bg-background">
         <div className="w-full max-w-md space-y-4">
-          {/* Mobile logo */}
-          <Link to="/" className="md:hidden mb-4 flex items-center gap-2">
-            <div className="grid h-9 w-9 place-items-center rounded-lg gradient-primary text-primary-foreground font-bold">
-              SF
-            </div>
-            <span className="font-semibold">StockFlow Gestão</span>
-          </Link>
+          <div className="flex items-center justify-between mb-2">
+            {/* Mobile logo */}
+            <Link to="/" className="md:hidden flex items-center gap-2">
+              <div className="grid h-9 w-9 place-items-center rounded-lg gradient-primary text-primary-foreground font-bold">
+                SF
+              </div>
+              <span className="font-semibold text-slate-800">StockFlow</span>
+            </Link>
+            {/* Spacer for desktop alignment */}
+            <div className="hidden md:block" />
+            
+            <Link
+              to="/"
+              className="flex items-center gap-1 text-sm font-bold text-slate-500 hover:text-pink-600 transition-colors"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              <span>Voltar ao Site</span>
+            </Link>
+          </div>
 
           <Card className="shadow-lg border">
             <CardHeader className="pb-4">
