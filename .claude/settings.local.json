@@ -9,7 +9,15 @@
       "Bash(git add *)",
       "Bash(git commit *)",
       "Skill(superpowers:writing-plans)",
-      "Skill(superpowers:subagent-driven-development)"
+      "Skill(superpowers:subagent-driven-development)",
+      "Bash(git log *)",
+      "Bash(git cherry-pick *)",
+      "Bash(npx tsc *)",
+      "Bash(npm run *)",
+      "Bash(\"C:/Users/maxra/.claude/plugins/cache/claude-plugins-official/superpowers/6.1.1/skills/subagent-driven-development/scripts/task-brief\" docs/superpowers/plans/2026-07-11-geracao-pdf-contrato.md 1)",
+      "Bash(npm install *)",
+      "Bash(npx supabase *)",
+      "Bash(\"C:/Users/maxra/.claude/plugins/cache/claude-plugins-official/superpowers/6.1.1/skills/subagent-driven-development/scripts/review-package\" a6caec1b01f781d6f698705bafce09b59153bc96 *)"
     ]
   }
 }
