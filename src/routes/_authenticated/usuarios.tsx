@@ -6,34 +6,24 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
+  Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger,
 } from "@/components/ui/dialog";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { Plus, Pencil, UserX, Loader2, Mail } from "lucide-react";
+import {
+  Plus, Pencil, UserX, Loader2, Mail, Eye, EyeOff,
+  ShieldCheck, Keyboard, Users, CheckCircle2, Clock, XCircle,
+} from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 
+// ── Types ──────────────────────────────────────────────────────────────────
 interface Profile {
   id: string;
   full_name: string;
@@ -50,64 +40,127 @@ interface Member {
   profiles: Profile | null;
 }
 
+// pending_google_users simulated via a local table (or organization_members with status='pending')
+interface PendingUser {
+  id: string;
+  full_name: string;
+  email: string;
+  created_at: string;
+  provider: "google" | "email";
+}
+
+// ── Role config ────────────────────────────────────────────────────────────
+const ROLES = [
+  {
+    value: "admin",
+    label: "Administrador Geral",
+    desc: "Acesso total ao sistema: clientes, estoque, produtos, movimentações, usuários e configurações.",
+    icon: ShieldCheck,
+    color: "bg-rose-50 text-rose-700 border-rose-200",
+    iconColor: "text-rose-600",
+    bg: "bg-rose-50",
+  },
+  {
+    value: "digitador",
+    label: "Digitador",
+    desc: "Acesso restrito ao cadastro de produtos e consulta de estoque. Sem acesso a clientes, financeiro ou usuários.",
+    icon: Keyboard,
+    color: "bg-blue-50 text-blue-700 border-blue-200",
+    iconColor: "text-blue-600",
+    bg: "bg-blue-50",
+  },
+];
+
+const roleMap = Object.fromEntries(ROLES.map((r) => [r.value, r]));
+
+function getRoleInfo(role: string) {
+  return roleMap[role] ?? {
+    label: role,
+    color: "bg-slate-50 text-slate-700 border-slate-200",
+    icon: Users,
+    iconColor: "text-slate-500",
+    bg: "bg-slate-50",
+    desc: "",
+  };
+}
+
+// ── Route ──────────────────────────────────────────────────────────────────
 export const Route = createFileRoute("/_authenticated/usuarios")({
   head: () => ({ meta: [{ title: "Usuários · StockFlow" }] }),
   component: UsuariosPage,
 });
 
+// ── Component ──────────────────────────────────────────────────────────────
 function UsuariosPage() {
   const { data: profile } = useProfile();
   const orgId = profile?.active_org_id;
   const qc = useQueryClient();
+
+  // Dialog state
   const [open, setOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [editingMember, setEditingMember] = useState<Member | null>(null);
 
-  // Form states for creation
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  // Form state — new user
   const [fullName, setFullName] = useState("");
-  const [role, setRole] = useState("vendedor");
+  const [email, setEmail] = useState("");
+  const [role, setRole] = useState("digitador");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPw, setShowPw] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
 
-  // Fetch users in the active organization
+  // ── Fetch members ────────────────────────────────────────────────────────
   const { data: members = [], isLoading } = useQuery<Member[]>({
     queryKey: ["org_members", orgId],
     enabled: !!orgId,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("organization_members")
-        .select(
-          `
-          id,
-          role,
-          created_at,
-          user_id,
-          profiles:profiles (
-            id,
-            full_name,
-            email,
-            phone,
-            is_active
-          )
-        `,
-        )
+        .select(`
+          id, role, created_at, user_id,
+          profiles:profiles ( id, full_name, email, phone, is_active )
+        `)
         .eq("organization_id", orgId!);
       if (error) throw error;
       return (data as unknown as Member[]) ?? [];
     },
   });
 
-  // Mutation to create a new user and add to organization
+  // ── Fetch pending Google approvals ───────────────────────────────────────
+  const { data: pendingUsers = [] } = useQuery<PendingUser[]>({
+    queryKey: ["pending_users", orgId],
+    enabled: !!orgId,
+    queryFn: async () => {
+      // Pending users = organization_members with role = 'pendente'
+      const { data, error } = await supabase
+        .from("organization_members")
+        .select(`id, created_at, profiles:profiles ( full_name, email )`)
+        .eq("organization_id", orgId!)
+        .eq("role", "pendente");
+      if (error) return [];
+      return (data ?? []).map((d: any) => ({
+        id: d.id,
+        full_name: d.profiles?.full_name ?? "—",
+        email: d.profiles?.email ?? "—",
+        created_at: d.created_at,
+        provider: "google" as const,
+      }));
+    },
+  });
+
+  // ── Mutations ────────────────────────────────────────────────────────────
   const createUserMutation = useMutation({
     mutationFn: async () => {
       if (!fullName.trim() || !email.trim() || !password.trim()) {
         throw new Error("Preencha todos os campos obrigatórios.");
       }
-      if (password.length < 6) {
-        throw new Error("A senha deve ter no mínimo 6 caracteres.");
+      if (password.length < 8) {
+        throw new Error("A senha deve ter no mínimo 8 caracteres.");
       }
-
-      // Call postgres security definer function to create the user
+      if (password !== confirmPassword) {
+        throw new Error("As senhas não conferem.");
+      }
       const { data, error } = await supabase.rpc("create_new_user_by_admin", {
         p_email: email,
         p_password: password,
@@ -115,26 +168,20 @@ function UsuariosPage() {
         p_role: role,
         p_org_id: orgId,
       });
-
       if (error) throw error;
       return data;
     },
     onSuccess: () => {
-      toast.success("Usuário criado com sucesso!");
+      toast.success("Usuário criado e acesso liberado com sucesso!");
       qc.invalidateQueries({ queryKey: ["org_members"] });
       setOpen(false);
-      // Reset form fields
-      setEmail("");
-      setPassword("");
-      setFullName("");
-      setRole("vendedor");
+      resetForm();
     },
     onError: (err: { message?: string }) => {
       toast.error(err.message || "Erro ao criar usuário.");
     },
   });
 
-  // Mutation to update member role
   const updateRoleMutation = useMutation({
     mutationFn: async ({ memberId, newRole }: { memberId: string; newRole: string }) => {
       const { error } = await supabase
@@ -144,7 +191,7 @@ function UsuariosPage() {
       if (error) throw error;
     },
     onSuccess: () => {
-      toast.success("Regra de acesso do usuário atualizada!");
+      toast.success("Papel de acesso atualizado!");
       qc.invalidateQueries({ queryKey: ["org_members"] });
       setEditOpen(false);
       setEditingMember(null);
@@ -154,20 +201,44 @@ function UsuariosPage() {
     },
   });
 
-  // Mutation to remove member from organization
   const removeMemberMutation = useMutation({
     mutationFn: async (memberId: string) => {
       const { error } = await supabase.from("organization_members").delete().eq("id", memberId);
       if (error) throw error;
     },
     onSuccess: () => {
-      toast.success("Usuário removido da organização.");
+      toast.success("Acesso do usuário revogado.");
       qc.invalidateQueries({ queryKey: ["org_members"] });
+      qc.invalidateQueries({ queryKey: ["pending_users"] });
     },
     onError: (err: { message?: string }) => {
       toast.error(err.message || "Erro ao remover usuário.");
     },
   });
+
+  const approvePendingMutation = useMutation({
+    mutationFn: async ({ memberId, approvedRole }: { memberId: string; approvedRole: string }) => {
+      const { error } = await supabase
+        .from("organization_members")
+        .update({ role: approvedRole })
+        .eq("id", memberId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Usuário aprovado e acesso liberado!");
+      qc.invalidateQueries({ queryKey: ["org_members"] });
+      qc.invalidateQueries({ queryKey: ["pending_users"] });
+    },
+    onError: (err: { message?: string }) => {
+      toast.error(err.message || "Erro ao aprovar usuário.");
+    },
+  });
+
+  // ── Helpers ──────────────────────────────────────────────────────────────
+  function resetForm() {
+    setFullName(""); setEmail(""); setPassword(""); setConfirmPassword("");
+    setRole("digitador"); setShowPw(false); setShowConfirm(false);
+  }
 
   function handleCreateUser(e: React.FormEvent) {
     e.preventDefault();
@@ -177,106 +248,156 @@ function UsuariosPage() {
   function handleUpdateRole(e: React.FormEvent) {
     e.preventDefault();
     if (!editingMember) return;
-    updateRoleMutation.mutate({
-      memberId: editingMember.id,
-      newRole: editingMember.role,
-    });
+    updateRoleMutation.mutate({ memberId: editingMember.id, newRole: editingMember.role });
   }
 
-  const roleLabels: Record<string, string> = {
-    admin: "Administrador",
-    gerente: "Gerente",
-    vendedor: "Vendedor",
-    visualizador: "Visualizador",
-  };
+  const isAdmin = profile?.role === "admin";
+  const activeMembers = members.filter((m) => m.role !== "pendente");
 
-  const roleColors: Record<string, string> = {
-    admin: "bg-rose-50 text-rose-700 border-rose-200",
-    gerente: "bg-blue-50 text-blue-700 border-blue-200",
-    vendedor: "bg-emerald-50 text-emerald-700 border-emerald-200",
-    visualizador: "bg-slate-50 text-slate-700 border-slate-200",
-  };
-
-  // Only allow admin or gerente to see the registration options
-  const isAdminOrGerente = profile?.role === "admin" || profile?.role === "gerente";
-
+  // ── Render ────────────────────────────────────────────────────────────────
   return (
     <div className="space-y-6">
+      {/* Header */}
       <header className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-4 sm:flex sm:justify-between">
         <div className="min-w-0">
-          <h1 className="text-2xl md:text-3xl font-bold tracking-tight truncate">
-            Usuários do Sistema
-          </h1>
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight truncate">Usuários do Sistema</h1>
           <p className="text-muted-foreground text-sm">
-            Gerencie os acessos, cargos e permissões dos funcionários na sua empresa.
+            Cadastre e gerencie os acessos dos funcionários. Somente o Administrador Geral pode criar usuários.
           </p>
         </div>
-        {isAdminOrGerente && (
-          <Dialog open={open} onOpenChange={setOpen}>
+        {isAdmin && (
+          <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (!o) resetForm(); }}>
             <DialogTrigger asChild>
               <Button className="gradient-primary text-primary-foreground border-0">
                 <Plus className="mr-1 h-4 w-4" /> Cadastrar Usuário
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-md">
+            <DialogContent className="max-w-lg">
               <DialogHeader>
-                <DialogTitle>Novo Usuário</DialogTitle>
+                <DialogTitle className="flex items-center gap-2">
+                  <Users className="h-5 w-5 text-primary" /> Novo Usuário
+                </DialogTitle>
               </DialogHeader>
-              <form onSubmit={handleCreateUser} className="space-y-4 pt-2">
+
+              <form onSubmit={handleCreateUser} className="space-y-4 pt-1">
+                {/* Name */}
                 <div className="space-y-1">
                   <Label htmlFor="reg-name">Nome Completo *</Label>
                   <Input
                     id="reg-name"
-                    placeholder="Ex: João da Silva"
+                    placeholder="Ex: Maria da Silva"
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
                     required
                   />
                 </div>
+
+                {/* Email */}
                 <div className="space-y-1">
                   <Label htmlFor="reg-email">E-mail para Login *</Label>
                   <Input
                     id="reg-email"
                     type="email"
-                    placeholder="joao@empresa.com"
+                    placeholder="maria@loja.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
                   />
                 </div>
+
+                {/* Role */}
                 <div className="space-y-1">
-                  <Label htmlFor="reg-password">Senha de Acesso *</Label>
-                  <Input
-                    id="reg-password"
-                    type="password"
-                    placeholder="Mínimo 6 caracteres"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                  />
-                </div>
-                <div className="space-y-1">
-                  <Label htmlFor="reg-role">Nível de Permissão *</Label>
+                  <Label htmlFor="reg-role">Papel do Usuário *</Label>
                   <Select value={role} onValueChange={setRole}>
                     <SelectTrigger>
-                      <SelectValue placeholder="Selecione o cargo" />
+                      <SelectValue placeholder="Selecione o papel" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="admin">Administrador (Acesso total)</SelectItem>
-                      <SelectItem value="gerente">Gerente (Gestão operacional)</SelectItem>
-                      <SelectItem value="vendedor">Vendedor (Realiza vendas/orçamentos)</SelectItem>
-                      <SelectItem value="visualizador">Visualizador (Apenas leitura)</SelectItem>
+                      {ROLES.map((r) => (
+                        <SelectItem key={r.value} value={r.value}>
+                          <div className="flex flex-col">
+                            <span className="font-medium">{r.label}</span>
+                          </div>
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
+                  {/* Role description */}
+                  {role && getRoleInfo(role).desc && (
+                    <p className="text-xs text-muted-foreground mt-1 bg-muted/50 rounded px-2 py-1.5">
+                      {getRoleInfo(role).desc}
+                    </p>
+                  )}
                 </div>
+
+                {/* Password */}
+                <div className="space-y-1">
+                  <Label htmlFor="reg-password">Senha de Acesso * <span className="text-muted-foreground text-xs">(mín. 8 caracteres)</span></Label>
+                  <div className="relative">
+                    <Input
+                      id="reg-password"
+                      type={showPw ? "text" : "password"}
+                      placeholder="••••••••"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                      minLength={8}
+                      className="pr-10"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPw((v) => !v)}
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                      tabIndex={-1}
+                    >
+                      {showPw ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Confirm Password */}
+                <div className="space-y-1">
+                  <Label htmlFor="reg-confirm">Confirmação de Senha *</Label>
+                  <div className="relative">
+                    <Input
+                      id="reg-confirm"
+                      type={showConfirm ? "text" : "password"}
+                      placeholder="••••••••"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      required
+                      minLength={8}
+                      className={`pr-10 ${confirmPassword && confirmPassword !== password ? "border-destructive focus-visible:ring-destructive" : ""}`}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirm((v) => !v)}
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                      tabIndex={-1}
+                    >
+                      {showConfirm ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
+                  {confirmPassword && confirmPassword !== password && (
+                    <p className="text-xs text-destructive">As senhas não conferem.</p>
+                  )}
+                  {confirmPassword && confirmPassword === password && password.length >= 8 && (
+                    <p className="text-xs text-green-600 flex items-center gap-1">
+                      <CheckCircle2 className="h-3 w-3" /> Senhas conferem
+                    </p>
+                  )}
+                </div>
+
                 <DialogFooter className="pt-2">
-                  <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+                  <Button type="button" variant="outline" onClick={() => { setOpen(false); resetForm(); }}>
                     Cancelar
                   </Button>
-                  <Button type="submit" disabled={createUserMutation.isPending}>
-                    {createUserMutation.isPending && (
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    )}
+                  <Button
+                    type="submit"
+                    disabled={createUserMutation.isPending || (!!confirmPassword && confirmPassword !== password)}
+                    className="gradient-primary text-primary-foreground border-0"
+                  >
+                    {createUserMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     Criar e Liberar Acesso
                   </Button>
                 </DialogFooter>
@@ -286,16 +407,64 @@ function UsuariosPage() {
         )}
       </header>
 
+      {/* Role Info Cards */}
+      <div className="grid sm:grid-cols-2 gap-3">
+        {ROLES.map((r) => (
+          <Card key={r.value} className="shadow-card border">
+            <CardContent className="p-4 flex items-start gap-3">
+              <div className={`grid h-9 w-9 shrink-0 place-items-center rounded-lg ${r.bg}`}>
+                <r.icon className={`h-4 w-4 ${r.iconColor}`} />
+              </div>
+              <div>
+                <p className="font-semibold text-sm">{r.label}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">{r.desc}</p>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      {/* Pending Google Users */}
+      {pendingUsers.length > 0 && (
+        <Card className="shadow-card border-amber-200 bg-amber-50/50">
+          <CardHeader className="pb-2">
+            <CardTitle className="flex items-center gap-2 text-base text-amber-800">
+              <Clock className="h-4 w-4" />
+              Aguardando Aprovação do Administrador ({pendingUsers.length})
+            </CardTitle>
+            <CardDescription className="text-amber-700">
+              Estes usuários entraram via Google e aguardam aprovação para acessar o sistema.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="pt-0">
+            <div className="divide-y divide-amber-100">
+              {pendingUsers.map((u) => (
+                <PendingApprovalRow
+                  key={u.id}
+                  user={u}
+                  onApprove={(approvedRole) => approvePendingMutation.mutate({ memberId: u.id, approvedRole })}
+                  onReject={() => {
+                    if (confirm(`Recusar acesso de ${u.full_name}?`)) removeMemberMutation.mutate(u.id);
+                  }}
+                  isLoading={approvePendingMutation.isPending || removeMemberMutation.isPending}
+                />
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Members Table */}
       <Card className="shadow-card">
         <CardContent className="p-4">
           <div className="rounded-md border overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Nome</TableHead>
+                  <TableHead>Usuário</TableHead>
                   <TableHead>E-mail</TableHead>
-                  <TableHead>Nível de Acesso</TableHead>
-                  <TableHead>Data de Ingresso</TableHead>
+                  <TableHead>Papel</TableHead>
+                  <TableHead>Ingresso</TableHead>
                   <TableHead className="text-right">Ações</TableHead>
                 </TableRow>
               </TableHeader>
@@ -303,88 +472,86 @@ function UsuariosPage() {
                 {isLoading ? (
                   <TableRow>
                     <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
-                      Carregando usuários...
+                      <Loader2 className="h-4 w-4 animate-spin inline mr-2" />Carregando usuários…
                     </TableCell>
                   </TableRow>
-                ) : members.length === 0 ? (
+                ) : activeMembers.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={5} className="text-center py-12 text-muted-foreground">
-                      Nenhum usuário cadastrado.
+                      <Users className="mx-auto h-10 w-10 opacity-30 mb-2" />
+                      Nenhum usuário cadastrado ainda.
                     </TableCell>
                   </TableRow>
                 ) : (
-                  members.map((m) => (
-                    <TableRow key={m.id}>
-                      <TableCell className="font-medium flex items-center gap-2 py-4">
-                        <div className="h-8 w-8 rounded-full bg-slate-100 flex items-center justify-center font-bold text-slate-600">
-                          {m.profiles?.full_name?.[0]?.toUpperCase() || "?"}
-                        </div>
-                        <div>
-                          <p className="font-semibold text-slate-800">
-                            {m.profiles?.full_name || "Sem Nome"}
-                          </p>
-                          {m.user_id === profile?.id && (
-                            <span className="text-[10px] bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded font-medium">
-                              Você
-                            </span>
+                  activeMembers.map((m) => {
+                    const ri = getRoleInfo(m.role);
+                    return (
+                      <TableRow key={m.id}>
+                        <TableCell className="py-3">
+                          <div className="flex items-center gap-2.5">
+                            <div className={`h-9 w-9 rounded-full flex items-center justify-center font-bold text-sm shrink-0 ${ri.bg}`}>
+                              <span className={ri.iconColor}>
+                                {m.profiles?.full_name?.[0]?.toUpperCase() || "?"}
+                              </span>
+                            </div>
+                            <div>
+                              <p className="font-semibold text-sm leading-tight">
+                                {m.profiles?.full_name || "Sem Nome"}
+                              </p>
+                              {m.user_id === profile?.id && (
+                                <span className="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded font-medium">
+                                  Você
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-slate-600">
+                          <span className="flex items-center gap-1.5 text-sm">
+                            <Mail className="h-3.5 w-3.5 text-slate-400 shrink-0" />
+                            {m.profiles?.email}
+                          </span>
+                        </TableCell>
+                        <TableCell>
+                          <Badge
+                            variant="outline"
+                            className={`${ri.color} border font-semibold px-2 py-0.5 rounded-full text-xs flex items-center gap-1 w-fit`}
+                          >
+                            <ri.icon className="h-3 w-3" />
+                            {ri.label}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-slate-500 text-sm">
+                          {new Date(m.created_at).toLocaleDateString("pt-BR")}
+                        </TableCell>
+                        <TableCell className="text-right space-x-1">
+                          {isAdmin && m.user_id !== profile?.id ? (
+                            <>
+                              <Button
+                                size="icon" variant="ghost"
+                                onClick={() => { setEditingMember(m); setEditOpen(true); }}
+                                title="Alterar papel"
+                              >
+                                <Pencil className="h-4 w-4 text-slate-500" />
+                              </Button>
+                              <Button
+                                size="icon" variant="ghost"
+                                onClick={() => {
+                                  if (confirm(`Revogar acesso de ${m.profiles?.full_name}?`))
+                                    removeMemberMutation.mutate(m.id);
+                                }}
+                                title="Revogar acesso"
+                              >
+                                <UserX className="h-4 w-4 text-rose-500" />
+                              </Button>
+                            </>
+                          ) : (
+                            <span className="text-xs text-muted-foreground">—</span>
                           )}
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-slate-600">
-                        <span className="flex items-center gap-1.5 text-sm">
-                          <Mail className="h-3.5 w-3.5 text-slate-400" />
-                          {m.profiles?.email}
-                        </span>
-                      </TableCell>
-                      <TableCell>
-                        <Badge
-                          variant="outline"
-                          className={`${roleColors[m.role] || ""} border font-semibold px-2 py-0.5 rounded-full text-xs`}
-                        >
-                          {roleLabels[m.role] || m.role}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-slate-500 text-sm">
-                        {new Date(m.created_at).toLocaleDateString("pt-BR")}
-                      </TableCell>
-                      <TableCell className="text-right space-x-1">
-                        {isAdminOrGerente && m.user_id !== profile?.id && (
-                          <>
-                            <Button
-                              size="icon"
-                              variant="ghost"
-                              onClick={() => {
-                                setEditingMember(m);
-                                setEditOpen(true);
-                              }}
-                              title="Editar Permissão"
-                            >
-                              <Pencil className="h-4 w-4 text-slate-500" />
-                            </Button>
-                            <Button
-                              size="icon"
-                              variant="ghost"
-                              onClick={() => {
-                                if (
-                                  confirm(
-                                    `Tem certeza de que deseja revogar o acesso de ${m.profiles?.full_name}?`,
-                                  )
-                                ) {
-                                  removeMemberMutation.mutate(m.id);
-                                }
-                              }}
-                              title="Remover Usuário"
-                            >
-                              <UserX className="h-4 w-4 text-rose-500" />
-                            </Button>
-                          </>
-                        )}
-                        {(!isAdminOrGerente || m.user_id === profile?.id) && (
-                          <span className="text-xs text-muted-foreground">—</span>
-                        )}
-                      </TableCell>
-                    </TableRow>
-                  ))
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })
                 )}
               </TableBody>
             </Table>
@@ -393,49 +560,39 @@ function UsuariosPage() {
       </Card>
 
       {/* Edit Role Dialog */}
-      <Dialog
-        open={editOpen}
-        onOpenChange={(o) => {
-          setEditOpen(o);
-          if (!o) setEditingMember(null);
-        }}
-      >
+      <Dialog open={editOpen} onOpenChange={(o) => { setEditOpen(o); if (!o) setEditingMember(null); }}>
         <DialogContent className="max-w-sm">
           <DialogHeader>
-            <DialogTitle>Alterar Nível de Acesso</DialogTitle>
+            <DialogTitle>Alterar Papel de Acesso</DialogTitle>
           </DialogHeader>
           {editingMember && (
             <form onSubmit={handleUpdateRole} className="space-y-4 pt-2">
-              <div>
-                <p className="text-sm text-slate-600">
-                  Defina o cargo de <strong>{editingMember.profiles?.full_name}</strong>:
-                </p>
-              </div>
+              <p className="text-sm text-slate-600">
+                Alterar o papel de <strong>{editingMember.profiles?.full_name}</strong>:
+              </p>
               <div className="space-y-1">
-                <Label htmlFor="edit-role">Nível de Permissão</Label>
+                <Label>Papel *</Label>
                 <Select
                   value={editingMember.role}
                   onValueChange={(val) => setEditingMember({ ...editingMember, role: val })}
                 >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione" />
-                  </SelectTrigger>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="admin">Administrador (Acesso total)</SelectItem>
-                    <SelectItem value="gerente">Gerente (Gestão operacional)</SelectItem>
-                    <SelectItem value="vendedor">Vendedor (Realiza vendas/orçamentos)</SelectItem>
-                    <SelectItem value="visualizador">Visualizador (Apenas leitura)</SelectItem>
+                    {ROLES.map((r) => (
+                      <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
+                {editingMember.role && getRoleInfo(editingMember.role).desc && (
+                  <p className="text-xs text-muted-foreground bg-muted/50 rounded px-2 py-1.5">
+                    {getRoleInfo(editingMember.role).desc}
+                  </p>
+                )}
               </div>
               <DialogFooter className="pt-2">
-                <Button type="button" variant="outline" onClick={() => setEditOpen(false)}>
-                  Cancelar
-                </Button>
+                <Button type="button" variant="outline" onClick={() => setEditOpen(false)}>Cancelar</Button>
                 <Button type="submit" disabled={updateRoleMutation.isPending}>
-                  {updateRoleMutation.isPending && (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  )}
+                  {updateRoleMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                   Salvar Alteração
                 </Button>
               </DialogFooter>
@@ -443,6 +600,69 @@ function UsuariosPage() {
           )}
         </DialogContent>
       </Dialog>
+    </div>
+  );
+}
+
+// ── Pending Approval Row ───────────────────────────────────────────────────
+function PendingApprovalRow({
+  user,
+  onApprove,
+  onReject,
+  isLoading,
+}: {
+  user: PendingUser;
+  onApprove: (role: string) => void;
+  onReject: () => void;
+  isLoading: boolean;
+}) {
+  const [selectedRole, setSelectedRole] = useState("digitador");
+
+  return (
+    <div className="flex flex-col sm:flex-row sm:items-center gap-3 py-3">
+      <div className="flex items-center gap-2.5 flex-1 min-w-0">
+        <div className="h-9 w-9 rounded-full bg-amber-100 flex items-center justify-center font-bold text-amber-700 shrink-0">
+          {user.full_name[0]?.toUpperCase() || "G"}
+        </div>
+        <div className="min-w-0">
+          <p className="font-semibold text-sm truncate">{user.full_name}</p>
+          <p className="text-xs text-muted-foreground flex items-center gap-1">
+            <Mail className="h-3 w-3" /> {user.email}
+            <span className="ml-1 bg-amber-200 text-amber-800 text-[10px] px-1.5 py-0.5 rounded font-medium">
+              Google
+            </span>
+          </p>
+        </div>
+      </div>
+      <div className="flex items-center gap-2 shrink-0">
+        <Select value={selectedRole} onValueChange={setSelectedRole}>
+          <SelectTrigger className="w-44 h-8 text-xs">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {ROLES.map((r) => (
+              <SelectItem key={r.value} value={r.value} className="text-xs">{r.label}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Button
+          size="sm"
+          className="h-8 bg-green-600 hover:bg-green-700 text-white border-0 text-xs"
+          onClick={() => onApprove(selectedRole)}
+          disabled={isLoading}
+        >
+          <CheckCircle2 className="h-3.5 w-3.5 mr-1" /> Aprovar
+        </Button>
+        <Button
+          size="sm"
+          variant="ghost"
+          className="h-8 text-destructive hover:bg-destructive/10 text-xs"
+          onClick={onReject}
+          disabled={isLoading}
+        >
+          <XCircle className="h-3.5 w-3.5 mr-1" /> Recusar
+        </Button>
+      </div>
     </div>
   );
 }

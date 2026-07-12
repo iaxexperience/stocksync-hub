@@ -460,15 +460,6 @@ function Landing() {
                   Acessar Sistema
                 </Link>
               </li>
-              <li>
-                <Link
-                  to="/auth"
-                  search={{ mode: "signup" as const }}
-                  className="hover:text-pink-600 transition-colors"
-                >
-                  Registrar Empresa
-                </Link>
-              </li>
             </ul>
           </div>
           <div>
