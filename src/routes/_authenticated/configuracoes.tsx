@@ -243,21 +243,20 @@ function Configuracoes() {
     );
   };
 
-  if (isLoadingOrg || isLoadingSettings) {
-    return (
-      <div className="flex items-center justify-center py-20 text-muted-foreground text-xs gap-2">
-        <Loader2 className="h-4 w-4 animate-spin text-indigo-600" />
-        Carregando configurações de gerenciamento...
-      </div>
-    );
-  }
+  const isLoading = isLoadingOrg || isLoadingSettings;
 
   return (
     <div className="space-y-6 max-w-4xl animate-fade-in text-xs">
       <div className="flex justify-between items-center pb-2 border-b">
         <div>
-          <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight">
+          <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight flex items-center gap-2">
             Configurações do Sistema
+            {isLoading && (
+              <span className="text-slate-400 text-xs font-normal animate-pulse flex items-center gap-1.5 ml-2">
+                <Loader2 className="h-3.5 w-3.5 animate-spin text-indigo-500" />
+                Carregando dados...
+              </span>
+            )}
           </h1>
           <p className="text-slate-500 mt-1">
             Gerencie dados da empresa, conformidade com a LGPD, inatividade de sessões e integrações
@@ -267,7 +266,7 @@ function Configuracoes() {
         <Button
           onClick={() => saveAllSettings.mutate()}
           className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold flex items-center gap-1.5"
-          disabled={saveAllSettings.isPending}
+          disabled={saveAllSettings.isPending || isLoading}
         >
           {saveAllSettings.isPending ? (
             <Loader2 className="h-4 w-4 animate-spin" />
@@ -315,7 +314,7 @@ function Configuracoes() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
                   <Label htmlFor="org-name">Razão Social / Nome da Empresa</Label>
-                  <Input
+                  <Input disabled={isLoading || saveAllSettings.isPending}
                     id="org-name"
                     value={orgForm.name}
                     onChange={(e) => setOrgForm({ ...orgForm, name: e.target.value })}
@@ -323,7 +322,7 @@ function Configuracoes() {
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="org-doc">CNPJ</Label>
-                  <Input
+                  <Input disabled={isLoading || saveAllSettings.isPending}
                     id="org-doc"
                     placeholder="00.000.000/0001-00"
                     value={orgForm.document}
@@ -332,7 +331,7 @@ function Configuracoes() {
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="org-phone">Telefone de Contato</Label>
-                  <Input
+                  <Input disabled={isLoading || saveAllSettings.isPending}
                     id="org-phone"
                     value={orgForm.phone}
                     onChange={(e) => setOrgForm({ ...orgForm, phone: e.target.value })}
@@ -340,7 +339,7 @@ function Configuracoes() {
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="org-email">E-mail Comercial</Label>
-                  <Input
+                  <Input disabled={isLoading || saveAllSettings.isPending}
                     id="org-email"
                     type="email"
                     value={orgForm.email}
@@ -349,7 +348,7 @@ function Configuracoes() {
                 </div>
                 <div className="space-y-1.5 md:col-span-2">
                   <Label htmlFor="org-address">Endereço Comercial Completo</Label>
-                  <Input
+                  <Input disabled={isLoading || saveAllSettings.isPending}
                     id="org-address"
                     value={orgForm.address}
                     onChange={(e) => setOrgForm({ ...orgForm, address: e.target.value })}
@@ -368,7 +367,7 @@ function Configuracoes() {
                   <div className="space-y-2">
                     <Label>Cor Primária</Label>
                     <div className="flex gap-2 items-center">
-                      <Input
+                      <Input disabled={isLoading || saveAllSettings.isPending}
                         type="color"
                         value={settingsForm.primary_color}
                         onChange={(e) =>
@@ -376,7 +375,7 @@ function Configuracoes() {
                         }
                         className="h-9 w-12 p-0 border rounded-md cursor-pointer"
                       />
-                      <Input
+                      <Input disabled={isLoading || saveAllSettings.isPending}
                         type="text"
                         value={settingsForm.primary_color}
                         onChange={(e) =>
@@ -390,7 +389,7 @@ function Configuracoes() {
                   <div className="space-y-2">
                     <Label>Cor Secundária</Label>
                     <div className="flex gap-2 items-center">
-                      <Input
+                      <Input disabled={isLoading || saveAllSettings.isPending}
                         type="color"
                         value={settingsForm.secondary_color}
                         onChange={(e) =>
@@ -398,7 +397,7 @@ function Configuracoes() {
                         }
                         className="h-9 w-12 p-0 border rounded-md cursor-pointer"
                       />
-                      <Input
+                      <Input disabled={isLoading || saveAllSettings.isPending}
                         type="text"
                         value={settingsForm.secondary_color}
                         onChange={(e) =>
@@ -411,7 +410,7 @@ function Configuracoes() {
 
                   <div className="space-y-2">
                     <Label htmlFor="logo-url">URL do Logotipo da Empresa</Label>
-                    <Input
+                    <Input disabled={isLoading || saveAllSettings.isPending}
                       id="logo-url"
                       placeholder="https://suaempresa.com/logo.png"
                       value={settingsForm.company_logo_url}
@@ -475,7 +474,7 @@ function Configuracoes() {
                     clientes e operadores.
                   </p>
                 </div>
-                <Switch
+                <Switch disabled={isLoading || saveAllSettings.isPending}
                   checked={settingsForm.lgpd_cookies_enabled}
                   onCheckedChange={(checked) =>
                     setSettingsForm({ ...settingsForm, lgpd_cookies_enabled: checked })
@@ -489,7 +488,7 @@ function Configuracoes() {
                   Este texto é exibido logo acima da coleta da assinatura digital do contrato para
                   atestar conformidade jurídica.
                 </CardDescription>
-                <Textarea
+                <Textarea disabled={isLoading || saveAllSettings.isPending}
                   id="lgpd-text"
                   rows={4}
                   value={settingsForm.lgpd_consent_text}
@@ -503,7 +502,7 @@ function Configuracoes() {
                 <Label htmlFor="lgpd-deletion">
                   Instruções para Solicitação de Exclusão de Dados
                 </Label>
-                <Input
+                <Input disabled={isLoading || saveAllSettings.isPending}
                   id="lgpd-deletion"
                   value={settingsForm.lgpd_data_deletion_instructions}
                   onChange={(e) =>
@@ -527,6 +526,7 @@ function Configuracoes() {
                     type="button"
                     onClick={handleGdpExport}
                     className="flex items-center gap-1 text-slate-700"
+                    disabled={isLoading}
                   >
                     <Download className="h-4 w-4 text-primary" />
                     Gerar Exportação JSON dos Dados
@@ -536,6 +536,7 @@ function Configuracoes() {
                     type="button"
                     onClick={handleSimulateDeletion}
                     className="flex items-center gap-1 text-rose-700 bg-rose-50 border-rose-200 hover:bg-rose-100"
+                    disabled={isLoading}
                   >
                     <Trash2 className="h-4 w-4" />
                     Registrar Requisição de Exclusão
@@ -563,7 +564,7 @@ function Configuracoes() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <Label htmlFor="timeout-duration">Tempo de Inatividade Permitido</Label>
-                  <Select
+                  <Select disabled={isLoading || saveAllSettings.isPending}
                     value={String(settingsForm.inactivity_timeout_minutes)}
                     onValueChange={(val) =>
                       setSettingsForm({
@@ -587,7 +588,7 @@ function Configuracoes() {
 
                 <div className="space-y-2">
                   <Label htmlFor="timeout-action">Ação ao Atingir Limite</Label>
-                  <Select
+                  <Select disabled={isLoading || saveAllSettings.isPending}
                     value={settingsForm.inactivity_action}
                     onValueChange={(val) =>
                       setSettingsForm({ ...settingsForm, inactivity_action: val })
@@ -641,7 +642,7 @@ function Configuracoes() {
                     <Mail className="h-4 w-4 text-indigo-500" />
                     Servidor SMTP Próprio (E-mail)
                   </h3>
-                  <Switch
+                  <Switch disabled={isLoading || saveAllSettings.isPending}
                     checked={settingsForm.email_integration_enabled}
                     onCheckedChange={(checked) =>
                       setSettingsForm({ ...settingsForm, email_integration_enabled: checked })
@@ -654,7 +655,7 @@ function Configuracoes() {
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <div className="space-y-1.5">
                         <Label htmlFor="smtp-host">Host SMTP</Label>
-                        <Input
+                        <Input disabled={isLoading || saveAllSettings.isPending}
                           id="smtp-host"
                           placeholder="smtp.suaempresa.com"
                           value={settingsForm.smtp_host}
@@ -666,7 +667,7 @@ function Configuracoes() {
                       </div>
                       <div className="space-y-1.5">
                         <Label htmlFor="smtp-port">Porta SMTP</Label>
-                        <Input
+                        <Input disabled={isLoading || saveAllSettings.isPending}
                           id="smtp-port"
                           type="number"
                           value={settingsForm.smtp_port}
@@ -681,7 +682,7 @@ function Configuracoes() {
                       </div>
                       <div className="space-y-1.5">
                         <Label htmlFor="smtp-encryption">Criptografia</Label>
-                        <Select
+                        <Select disabled={isLoading || saveAllSettings.isPending}
                           value={settingsForm.smtp_encryption}
                           onValueChange={(val) =>
                             setSettingsForm({ ...settingsForm, smtp_encryption: val })
@@ -699,7 +700,7 @@ function Configuracoes() {
                       </div>
                       <div className="space-y-1.5 md:col-span-2">
                         <Label htmlFor="smtp-user">Usuário SMTP / E-mail</Label>
-                        <Input
+                        <Input disabled={isLoading || saveAllSettings.isPending}
                           id="smtp-user"
                           placeholder="contato@suaempresa.com"
                           value={settingsForm.smtp_user}
@@ -711,7 +712,7 @@ function Configuracoes() {
                       </div>
                       <div className="space-y-1.5">
                         <Label htmlFor="smtp-password">Senha SMTP</Label>
-                        <Input
+                        <Input disabled={isLoading || saveAllSettings.isPending}
                           id="smtp-password"
                           type="password"
                           placeholder="••••••••••••"
@@ -730,7 +731,7 @@ function Configuracoes() {
                         variant="secondary"
                         onClick={handleTestSmtp}
                         className="flex items-center gap-1.5"
-                        disabled={testingSmtp}
+                        disabled={testingSmtp || isLoading}
                       >
                         {testingSmtp ? (
                           <>
@@ -755,7 +756,7 @@ function Configuracoes() {
                     <code>{`{numero_contrato}`}</code>, <code>{`{valor_total}`}</code>,{" "}
                     <code>{`{link_contrato}`}</code>
                   </CardDescription>
-                  <Textarea
+                  <Textarea disabled={isLoading || saveAllSettings.isPending}
                     id="email-template"
                     rows={3}
                     value={settingsForm.email_template}
@@ -775,7 +776,7 @@ function Configuracoes() {
                     <MessageSquare className="h-4 w-4 text-emerald-600" />
                     Integração com WhatsApp Link API
                   </h3>
-                  <Switch
+                  <Switch disabled={isLoading || saveAllSettings.isPending}
                     checked={settingsForm.whatsapp_integration_enabled}
                     onCheckedChange={(checked) =>
                       setSettingsForm({ ...settingsForm, whatsapp_integration_enabled: checked })
@@ -789,7 +790,7 @@ function Configuracoes() {
                     Mensagem que será preenchida automaticamente no celular ao clicar para disparar
                     link no WhatsApp.
                   </CardDescription>
-                  <Textarea
+                  <Textarea disabled={isLoading || saveAllSettings.isPending}
                     id="whatsapp-template"
                     rows={3}
                     value={settingsForm.whatsapp_template}
