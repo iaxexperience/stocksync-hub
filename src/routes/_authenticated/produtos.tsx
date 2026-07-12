@@ -197,7 +197,11 @@ function Produtos() {
             <DialogHeader>
               <DialogTitle>{editing ? "Editar produto" : "Novo produto"}</DialogTitle>
             </DialogHeader>
-            <form key={editing?.id ?? "new"} onSubmit={submit} className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <form
+              key={editing?.id ?? "new"}
+              onSubmit={submit}
+              className="grid grid-cols-2 md:grid-cols-4 gap-3"
+            >
               <div className="col-span-2 md:col-span-2 space-y-1">
                 <Label>Nome *</Label>
                 <Input name="name" required defaultValue={editing?.name} />

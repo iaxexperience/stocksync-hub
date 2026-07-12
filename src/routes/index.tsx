@@ -231,7 +231,6 @@ function Landing() {
                   </ul>
                 </CardContent>
               </div>
-
             </Card>
 
             {/* Cama, Mesa e Banho */}
@@ -278,7 +277,6 @@ function Landing() {
                   </ul>
                 </CardContent>
               </div>
-
             </Card>
           </div>
         </div>

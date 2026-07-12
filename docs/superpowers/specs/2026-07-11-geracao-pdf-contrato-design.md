@@ -1,4 +1,5 @@
 # Geração de PDF do Contrato Assinado — Design Spec
+
 **Data:** 2026-07-11
 
 ---
@@ -41,6 +42,7 @@ O botão "Imprimir" de cada linha da tabela de assinaturas hoje só dispara `win
 ## Migração de banco
 
 Nova migration `supabase/migrations/<timestamp>_create_customer_contracts_bucket.sql`, espelhando `20260712020000_create_customer_photos_bucket.sql`:
+
 - `INSERT INTO storage.buckets (id, name, public) VALUES ('customer-contracts', 'customer-contracts', true)`
 - Policies: leitura pública, insert/update/delete para `authenticated`.
 

@@ -1,12 +1,35 @@
 import { Link, useRouter, useRouterState } from "@tanstack/react-router";
 import {
-  LayoutDashboard, Package, Warehouse, Tag, Building2, Truck,
-  ArrowDownToLine, ArrowUpFromLine, Ruler, LogOut, Boxes, Settings,
-  Users, UserPlus, ShieldCheck, History, CreditCard, FileSignature,
+  LayoutDashboard,
+  Package,
+  Warehouse,
+  Tag,
+  Building2,
+  Truck,
+  ArrowDownToLine,
+  ArrowUpFromLine,
+  Ruler,
+  LogOut,
+  Boxes,
+  Settings,
+  Users,
+  UserPlus,
+  ShieldCheck,
+  History,
+  CreditCard,
+  FileSignature,
 } from "lucide-react";
 import {
-  Sidebar, SidebarContent, SidebarGroup, SidebarGroupLabel, SidebarGroupContent,
-  SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarFooter, SidebarHeader,
+  Sidebar,
+  SidebarContent,
+  SidebarGroup,
+  SidebarGroupLabel,
+  SidebarGroupContent,
+  SidebarMenu,
+  SidebarMenuItem,
+  SidebarMenuButton,
+  SidebarFooter,
+  SidebarHeader,
   useSidebar,
 } from "@/components/ui/sidebar";
 import { supabase } from "@/integrations/supabase/client";
@@ -23,10 +46,25 @@ const groups = [
     items: [
       { title: "Lista de Clientes", to: "/clientes", search: { aba: "lista" }, icon: Users },
       { title: "Novo Cliente", to: "/clientes", search: { aba: "novo" }, icon: UserPlus },
-      { title: "Produtos Contratados", to: "/clientes", search: { aba: "produtos" }, icon: ShieldCheck },
-      { title: "Histórico de Compras", to: "/clientes", search: { aba: "historico" }, icon: History },
+      {
+        title: "Produtos Contratados",
+        to: "/clientes",
+        search: { aba: "produtos" },
+        icon: ShieldCheck,
+      },
+      {
+        title: "Histórico de Compras",
+        to: "/clientes",
+        search: { aba: "historico" },
+        icon: History,
+      },
       { title: "Pagamentos", to: "/clientes", search: { aba: "pagamentos" }, icon: CreditCard },
-      { title: "Documentos e Assinaturas", to: "/clientes", search: { aba: "documentos" }, icon: FileSignature },
+      {
+        title: "Documentos e Assinaturas",
+        to: "/clientes",
+        search: { aba: "documentos" },
+        icon: FileSignature,
+      },
     ],
   },
   {
@@ -34,7 +72,12 @@ const groups = [
     items: [
       { title: "Produtos", to: "/produtos", icon: Package },
       { title: "Controle de Estoque", to: "/estoque", icon: Boxes },
-      { title: "Entradas", to: "/movimentacoes", search: { tipo: "entrada" }, icon: ArrowDownToLine },
+      {
+        title: "Entradas",
+        to: "/movimentacoes",
+        search: { tipo: "entrada" },
+        icon: ArrowDownToLine,
+      },
       { title: "Saídas", to: "/movimentacoes", search: { tipo: "saida" }, icon: ArrowUpFromLine },
     ],
   },
@@ -44,8 +87,18 @@ const groups = [
       { title: "Categorias", to: "/cadastros/$tipo", params: { tipo: "categorias" }, icon: Tag },
       { title: "Marcas", to: "/cadastros/$tipo", params: { tipo: "marcas" }, icon: Building2 },
       { title: "Unidades", to: "/cadastros/$tipo", params: { tipo: "unidades" }, icon: Ruler },
-      { title: "Depósitos", to: "/cadastros/$tipo", params: { tipo: "depositos" }, icon: Warehouse },
-      { title: "Fornecedores", to: "/cadastros/$tipo", params: { tipo: "fornecedores" }, icon: Truck },
+      {
+        title: "Depósitos",
+        to: "/cadastros/$tipo",
+        params: { tipo: "depositos" },
+        icon: Warehouse,
+      },
+      {
+        title: "Fornecedores",
+        to: "/cadastros/$tipo",
+        params: { tipo: "fornecedores" },
+        icon: Truck,
+      },
       { title: "Usuários", to: "/usuarios", icon: Users },
     ],
   },
@@ -64,7 +117,12 @@ export function AppSidebar() {
     router.navigate({ to: "/auth", replace: true });
   }
 
-  const initials = (profile?.full_name || "?").split(" ").slice(0, 2).map((s) => s[0]).join("").toUpperCase();
+  const initials = (profile?.full_name || "?")
+    .split(" ")
+    .slice(0, 2)
+    .map((s) => s[0])
+    .join("")
+    .toUpperCase();
 
   return (
     <Sidebar collapsible="icon" className="border-r-sidebar-border">
@@ -112,12 +170,18 @@ export function AppSidebar() {
       <SidebarFooter className="border-t border-sidebar-border p-3">
         <div className="flex items-center gap-2 min-w-0">
           <Avatar className="h-8 w-8 shrink-0">
-            <AvatarFallback className="bg-sidebar-accent text-sidebar-accent-foreground text-xs">{initials}</AvatarFallback>
+            <AvatarFallback className="bg-sidebar-accent text-sidebar-accent-foreground text-xs">
+              {initials}
+            </AvatarFallback>
           </Avatar>
           {!collapsed && (
             <div className="min-w-0 flex-1">
-              <div className="truncate text-sm font-medium text-sidebar-foreground">{profile?.full_name}</div>
-              <div className="truncate text-xs text-sidebar-foreground/60">{(profile as any)?.organizations?.name}</div>
+              <div className="truncate text-sm font-medium text-sidebar-foreground">
+                {profile?.full_name}
+              </div>
+              <div className="truncate text-xs text-sidebar-foreground/60">
+                {(profile as any)?.organizations?.name}
+              </div>
             </div>
           )}
           <button

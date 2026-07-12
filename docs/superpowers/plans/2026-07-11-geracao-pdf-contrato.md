@@ -20,15 +20,18 @@
 ### Task 1: Install PDF dependencies and create the Storage bucket migration
 
 **Files:**
+
 - Modify: `package.json` (via `npm install`)
 - Create: `supabase/migrations/20260713000000_create_customer_contracts_bucket.sql`
 
 - [ ] **Step 1: Install the libraries**
 
 Run:
+
 ```bash
 npm install jspdf html2canvas-pro
 ```
+
 Expected: `package.json` and `package-lock.json` gain `jspdf` and `html2canvas-pro` entries; no errors.
 
 - [ ] **Step 2: Create the bucket migration**
@@ -68,9 +71,11 @@ USING (bucket_id = 'customer-contracts');
 - [ ] **Step 3: Apply the migration**
 
 Run:
+
 ```bash
 npx supabase db push
 ```
+
 Expected: output confirms the new migration was applied to project `fyvatfnpdoqowjckhtkb`. If `db push` fails because the CLI isn't linked/authenticated, open the Supabase SQL editor for this project and paste the migration's SQL directly, then confirm success there instead.
 
 - [ ] **Step 4: Verify the bucket exists**
@@ -89,9 +94,11 @@ git commit -m "chore: add jspdf/html2canvas-pro and customer-contracts storage b
 ### Task 2: PDF generation + upload helper module
 
 **Files:**
+
 - Create: `src/lib/contract-pdf.ts`
 
 **Interfaces:**
+
 - Produces: `generateContractPdf(elementId: string): Promise<Blob>` — renders the DOM element with the given id to a multi-page A4 PDF and returns it as a `Blob`. Throws if the element isn't found or if rendering fails.
 - Produces: `uploadContractPdf(organizationId: string, orderNumber: string, pdfBlob: Blob): Promise<string>` — uploads the blob to the `customer-contracts` bucket at `{organizationId}/{orderNumber}.pdf` (overwriting any previous version for that order) and returns the public URL. Throws on upload failure.
 - Consumes: `supabase` from `@/integrations/supabase/client` (already used throughout the codebase).
@@ -162,9 +169,11 @@ export async function uploadContractPdf(
 - [ ] **Step 2: Type-check the new file**
 
 Run:
+
 ```bash
 npx tsc --noEmit
 ```
+
 Expected: no new errors referencing `src/lib/contract-pdf.ts`.
 
 - [ ] **Step 3: Commit**
@@ -179,6 +188,7 @@ git commit -m "feat: add contract PDF generation and upload helper"
 ### Task 3: Wire real PDF generation into the signature flow
 
 **Files:**
+
 - Modify: `src/routes/_authenticated/clientes.tsx:69` (imports)
 - Modify: `src/routes/_authenticated/clientes.tsx:3852-3855` (SignatureCollector state)
 - Modify: `src/routes/_authenticated/clientes.tsx:4037-4058` (submitData / fake contract_url)
@@ -186,6 +196,7 @@ git commit -m "feat: add contract PDF generation and upload helper"
 - Modify: `src/routes/_authenticated/clientes.tsx:4115-4152` (success panel JSX)
 
 **Interfaces:**
+
 - Consumes: `generateContractPdf`, `uploadContractPdf` from `src/lib/contract-pdf.ts` (Task 2).
 
 - [ ] **Step 1: Import the helper module**
@@ -208,20 +219,20 @@ import { generateContractPdf, uploadContractPdf } from "@/lib/contract-pdf";
 Find this block inside `SignatureCollector` (currently lines 3852-3855):
 
 ```tsx
-  const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const [isDrawing, setIsDrawing] = useState(false);
-  const [termsAccepted, setTermsAccepted] = useState(false);
-  const [signedResult, setSignedResult] = useState<any | null>(null);
+const canvasRef = useRef<HTMLCanvasElement | null>(null);
+const [isDrawing, setIsDrawing] = useState(false);
+const [termsAccepted, setTermsAccepted] = useState(false);
+const [signedResult, setSignedResult] = useState<any | null>(null);
 ```
 
 Replace with:
 
 ```tsx
-  const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const [isDrawing, setIsDrawing] = useState(false);
-  const [termsAccepted, setTermsAccepted] = useState(false);
-  const [signedResult, setSignedResult] = useState<any | null>(null);
-  const [pdfStatus, setPdfStatus] = useState<"idle" | "generating" | "ready" | "error">("idle");
+const canvasRef = useRef<HTMLCanvasElement | null>(null);
+const [isDrawing, setIsDrawing] = useState(false);
+const [termsAccepted, setTermsAccepted] = useState(false);
+const [signedResult, setSignedResult] = useState<any | null>(null);
+const [pdfStatus, setPdfStatus] = useState<"idle" | "generating" | "ready" | "error">("idle");
 ```
 
 - [ ] **Step 3: Stop writing a fake contract_url on signature save, and add the PDF generation function**
@@ -308,27 +319,27 @@ Replace with (this closes `handleConfirmSignature` after `submitData`, then decl
 Find the existing canvas-init effect near the top of `SignatureCollector`:
 
 ```tsx
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (canvas) {
-      const ctx = canvas.getContext("2d");
-      if (ctx) {
-        ctx.strokeStyle = "#1e293b";
-        ctx.lineWidth = 3;
-        ctx.lineCap = "round";
-      }
+useEffect(() => {
+  const canvas = canvasRef.current;
+  if (canvas) {
+    const ctx = canvas.getContext("2d");
+    if (ctx) {
+      ctx.strokeStyle = "#1e293b";
+      ctx.lineWidth = 3;
+      ctx.lineCap = "round";
     }
-  }, [signedResult]);
+  }
+}, [signedResult]);
 ```
 
 Immediately after it, add a new effect:
 
 ```tsx
-  useEffect(() => {
-    if (signedResult && !signedResult.contract_url && pdfStatus === "idle") {
-      generateAndUploadContractPdf(signedResult.id);
-    }
-  }, [signedResult]);
+useEffect(() => {
+  if (signedResult && !signedResult.contract_url && pdfStatus === "idle") {
+    generateAndUploadContractPdf(signedResult.id);
+  }
+}, [signedResult]);
 ```
 
 - [ ] **Step 5: Use the real contract URL in WhatsApp/e-mail messages**
@@ -336,53 +347,53 @@ Immediately after it, add a new effect:
 Find (currently lines 4060-4077):
 
 ```tsx
-  // Links de simulação
-  function handleSendWhatsApp() {
-    const text = encodeURIComponent(
-      `Olá ${customer.name}, seu contrato digital #${order.order_number} do StockFlow foi assinado com sucesso! Visualize o PDF no link: https://stockflow.com/v/contrato-${order.order_number}`,
-    );
-    const phoneNum = customer.whatsapp ? customer.whatsapp.replace(/\D/g, "") : "";
-    window.open(`https://api.whatsapp.com/send?phone=${phoneNum}&text=${text}`, "_blank");
-  }
+// Links de simulação
+function handleSendWhatsApp() {
+  const text = encodeURIComponent(
+    `Olá ${customer.name}, seu contrato digital #${order.order_number} do StockFlow foi assinado com sucesso! Visualize o PDF no link: https://stockflow.com/v/contrato-${order.order_number}`,
+  );
+  const phoneNum = customer.whatsapp ? customer.whatsapp.replace(/\D/g, "") : "";
+  window.open(`https://api.whatsapp.com/send?phone=${phoneNum}&text=${text}`, "_blank");
+}
 
-  function handleSendEmail() {
-    const subject = encodeURIComponent(
-      `Contrato Assinado - Pedido #${order.order_number} - StockFlow`,
-    );
-    const body = encodeURIComponent(
-      `Prezado(a) ${customer.name},\n\nAgradecemos a contratação. Segue em anexo a cópia assinada digitalmente do seu contrato #${order.order_number}.\n\nAtenciosamente,\nEquipe StockFlow.`,
-    );
-    window.open(`mailto:${customer.email}?subject=${subject}&body=${body}`, "_blank");
-  }
+function handleSendEmail() {
+  const subject = encodeURIComponent(
+    `Contrato Assinado - Pedido #${order.order_number} - StockFlow`,
+  );
+  const body = encodeURIComponent(
+    `Prezado(a) ${customer.name},\n\nAgradecemos a contratação. Segue em anexo a cópia assinada digitalmente do seu contrato #${order.order_number}.\n\nAtenciosamente,\nEquipe StockFlow.`,
+  );
+  window.open(`mailto:${customer.email}?subject=${subject}&body=${body}`, "_blank");
+}
 ```
 
 Replace with:
 
 ```tsx
-  // Links de simulação
-  function handleSendWhatsApp() {
-    const linkText = signedResult?.contract_url
-      ? `Visualize o PDF no link: ${signedResult.contract_url}`
-      : "O PDF do contrato está sendo gerado e será enviado em breve.";
-    const text = encodeURIComponent(
-      `Olá ${customer.name}, seu contrato digital #${order.order_number} do StockFlow foi assinado com sucesso! ${linkText}`,
-    );
-    const phoneNum = customer.whatsapp ? customer.whatsapp.replace(/\D/g, "") : "";
-    window.open(`https://api.whatsapp.com/send?phone=${phoneNum}&text=${text}`, "_blank");
-  }
+// Links de simulação
+function handleSendWhatsApp() {
+  const linkText = signedResult?.contract_url
+    ? `Visualize o PDF no link: ${signedResult.contract_url}`
+    : "O PDF do contrato está sendo gerado e será enviado em breve.";
+  const text = encodeURIComponent(
+    `Olá ${customer.name}, seu contrato digital #${order.order_number} do StockFlow foi assinado com sucesso! ${linkText}`,
+  );
+  const phoneNum = customer.whatsapp ? customer.whatsapp.replace(/\D/g, "") : "";
+  window.open(`https://api.whatsapp.com/send?phone=${phoneNum}&text=${text}`, "_blank");
+}
 
-  function handleSendEmail() {
-    const subject = encodeURIComponent(
-      `Contrato Assinado - Pedido #${order.order_number} - StockFlow`,
-    );
-    const linkText = signedResult?.contract_url
-      ? `Baixe o PDF assinado em: ${signedResult.contract_url}`
-      : "O PDF assinado está sendo gerado e será enviado em breve.";
-    const body = encodeURIComponent(
-      `Prezado(a) ${customer.name},\n\nAgradecemos a contratação. ${linkText}\n\nAtenciosamente,\nEquipe StockFlow.`,
-    );
-    window.open(`mailto:${customer.email}?subject=${subject}&body=${body}`, "_blank");
-  }
+function handleSendEmail() {
+  const subject = encodeURIComponent(
+    `Contrato Assinado - Pedido #${order.order_number} - StockFlow`,
+  );
+  const linkText = signedResult?.contract_url
+    ? `Baixe o PDF assinado em: ${signedResult.contract_url}`
+    : "O PDF assinado está sendo gerado e será enviado em breve.";
+  const body = encodeURIComponent(
+    `Prezado(a) ${customer.name},\n\nAgradecemos a contratação. ${linkText}\n\nAtenciosamente,\nEquipe StockFlow.`,
+  );
+  window.open(`mailto:${customer.email}?subject=${subject}&body=${body}`, "_blank");
+}
 ```
 
 - [ ] **Step 6: Show PDF status and a download button in the success panel**
@@ -390,133 +401,142 @@ Replace with:
 Find (currently lines 4115-4152):
 
 ```tsx
-      {signedResult && (
-        <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-lg space-y-3 no-print">
-          <div className="flex items-center gap-2 text-emerald-800">
-            <Check className="h-5 w-5 bg-emerald-100 rounded-full p-0.5" />
-            <span className="font-bold">Contrato Assinado Digitalmente com Sucesso!</span>
-          </div>
-          <p className="text-[11px] text-emerald-700">
-            Protocolo: {signedResult.id} | IP: {signedResult.ip_address} | Data:{" "}
-            {new Date(signedResult.signed_at).toLocaleString("pt-BR")}
-          </p>
-          <div className="flex flex-wrap gap-2 pt-1">
-            <Button
-              variant="outline"
-              size="sm"
-              className="flex items-center gap-1"
-              onClick={() => window.print()}
-            >
-              <Printer className="h-3.5 w-3.5" /> Imprimir Contrato e Promissórias
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              className="flex items-center gap-1 text-emerald-700 bg-emerald-50"
-              onClick={handleSendWhatsApp}
-            >
-              <Share2 className="h-3.5 w-3.5" /> Enviar WhatsApp
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              className="flex items-center gap-1 text-indigo-700 bg-indigo-50"
-              onClick={handleSendEmail}
-            >
-              <Mail className="h-3.5 w-3.5" /> Enviar E-mail
-            </Button>
-          </div>
-        </div>
-      )}
+{
+  signedResult && (
+    <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-lg space-y-3 no-print">
+      <div className="flex items-center gap-2 text-emerald-800">
+        <Check className="h-5 w-5 bg-emerald-100 rounded-full p-0.5" />
+        <span className="font-bold">Contrato Assinado Digitalmente com Sucesso!</span>
+      </div>
+      <p className="text-[11px] text-emerald-700">
+        Protocolo: {signedResult.id} | IP: {signedResult.ip_address} | Data:{" "}
+        {new Date(signedResult.signed_at).toLocaleString("pt-BR")}
+      </p>
+      <div className="flex flex-wrap gap-2 pt-1">
+        <Button
+          variant="outline"
+          size="sm"
+          className="flex items-center gap-1"
+          onClick={() => window.print()}
+        >
+          <Printer className="h-3.5 w-3.5" /> Imprimir Contrato e Promissórias
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          className="flex items-center gap-1 text-emerald-700 bg-emerald-50"
+          onClick={handleSendWhatsApp}
+        >
+          <Share2 className="h-3.5 w-3.5" /> Enviar WhatsApp
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          className="flex items-center gap-1 text-indigo-700 bg-indigo-50"
+          onClick={handleSendEmail}
+        >
+          <Mail className="h-3.5 w-3.5" /> Enviar E-mail
+        </Button>
+      </div>
+    </div>
+  );
+}
 ```
 
 Replace with:
 
 ```tsx
-      {signedResult && (
-        <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-lg space-y-3 no-print">
-          <div className="flex items-center gap-2 text-emerald-800">
-            <Check className="h-5 w-5 bg-emerald-100 rounded-full p-0.5" />
-            <span className="font-bold">Contrato Assinado Digitalmente com Sucesso!</span>
-          </div>
-          <p className="text-[11px] text-emerald-700">
-            Protocolo: {signedResult.id} | IP: {signedResult.ip_address} | Data:{" "}
-            {new Date(signedResult.signed_at).toLocaleString("pt-BR")}
-          </p>
-          {pdfStatus === "generating" && (
-            <p className="text-[11px] text-emerald-700 flex items-center gap-1.5">
-              <Loader2 className="h-3.5 w-3.5 animate-spin" /> Gerando PDF do contrato assinado…
-            </p>
-          )}
-          {pdfStatus === "error" && (
-            <div className="text-[11px] text-destructive flex items-center gap-2">
-              <AlertCircle className="h-3.5 w-3.5" />
-              <span>PDF não pôde ser gerado.</span>
-              <Button
-                variant="link"
-                size="sm"
-                className="h-auto p-0 text-[11px] text-destructive underline"
-                onClick={() => generateAndUploadContractPdf(signedResult.id)}
-              >
-                Tentar novamente
-              </Button>
-            </div>
-          )}
-          <div className="flex flex-wrap gap-2 pt-1">
-            {signedResult.contract_url && (
-              <Button
-                variant="outline"
-                size="sm"
-                className="flex items-center gap-1 text-emerald-700 bg-emerald-50"
-                onClick={() => window.open(signedResult.contract_url, "_blank")}
-              >
-                <Download className="h-3.5 w-3.5" /> Baixar PDF
-              </Button>
-            )}
-            <Button
-              variant="outline"
-              size="sm"
-              className="flex items-center gap-1"
-              onClick={() => window.print()}
-            >
-              <Printer className="h-3.5 w-3.5" /> Imprimir Contrato e Promissórias
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              className="flex items-center gap-1 text-emerald-700 bg-emerald-50"
-              onClick={handleSendWhatsApp}
-            >
-              <Share2 className="h-3.5 w-3.5" /> Enviar WhatsApp
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              className="flex items-center gap-1 text-indigo-700 bg-indigo-50"
-              onClick={handleSendEmail}
-            >
-              <Mail className="h-3.5 w-3.5" /> Enviar E-mail
-            </Button>
-          </div>
+{
+  signedResult && (
+    <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-lg space-y-3 no-print">
+      <div className="flex items-center gap-2 text-emerald-800">
+        <Check className="h-5 w-5 bg-emerald-100 rounded-full p-0.5" />
+        <span className="font-bold">Contrato Assinado Digitalmente com Sucesso!</span>
+      </div>
+      <p className="text-[11px] text-emerald-700">
+        Protocolo: {signedResult.id} | IP: {signedResult.ip_address} | Data:{" "}
+        {new Date(signedResult.signed_at).toLocaleString("pt-BR")}
+      </p>
+      {pdfStatus === "generating" && (
+        <p className="text-[11px] text-emerald-700 flex items-center gap-1.5">
+          <Loader2 className="h-3.5 w-3.5 animate-spin" /> Gerando PDF do contrato assinado…
+        </p>
+      )}
+      {pdfStatus === "error" && (
+        <div className="text-[11px] text-destructive flex items-center gap-2">
+          <AlertCircle className="h-3.5 w-3.5" />
+          <span>PDF não pôde ser gerado.</span>
+          <Button
+            variant="link"
+            size="sm"
+            className="h-auto p-0 text-[11px] text-destructive underline"
+            onClick={() => generateAndUploadContractPdf(signedResult.id)}
+          >
+            Tentar novamente
+          </Button>
         </div>
       )}
+      <div className="flex flex-wrap gap-2 pt-1">
+        {signedResult.contract_url && (
+          <Button
+            variant="outline"
+            size="sm"
+            className="flex items-center gap-1 text-emerald-700 bg-emerald-50"
+            onClick={() => window.open(signedResult.contract_url, "_blank")}
+          >
+            <Download className="h-3.5 w-3.5" /> Baixar PDF
+          </Button>
+        )}
+        <Button
+          variant="outline"
+          size="sm"
+          className="flex items-center gap-1"
+          onClick={() => window.print()}
+        >
+          <Printer className="h-3.5 w-3.5" /> Imprimir Contrato e Promissórias
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          className="flex items-center gap-1 text-emerald-700 bg-emerald-50"
+          onClick={handleSendWhatsApp}
+        >
+          <Share2 className="h-3.5 w-3.5" /> Enviar WhatsApp
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          className="flex items-center gap-1 text-indigo-700 bg-indigo-50"
+          onClick={handleSendEmail}
+        >
+          <Mail className="h-3.5 w-3.5" /> Enviar E-mail
+        </Button>
+      </div>
+    </div>
+  );
+}
 ```
 
 - [ ] **Step 7: Type-check**
 
 Run:
+
 ```bash
 npx tsc --noEmit
 ```
+
 Expected: no new errors in `src/routes/_authenticated/clientes.tsx`.
 
 - [ ] **Step 8: Manual verification**
 
 Run:
+
 ```bash
 npm run dev
 ```
+
 In the browser: open `/clientes`, go to a customer with a pending contract order (or create one), open the signature dialog, accept the terms, draw a signature, confirm. Expected:
+
 - "Contrato Assinado Digitalmente com Sucesso!" panel appears immediately.
 - "Gerando PDF do contrato assinado…" appears briefly.
 - A "Baixar PDF" button appears; clicking it opens a real PDF in a new tab showing the full contract (all clauses, the product table, the signature image in the "COMPRADOR" box, and one promissory note per installment).
@@ -535,6 +555,7 @@ git commit -m "feat(clientes): generate and store a real signed contract PDF"
 ### Task 4: Replace the broken "Imprimir" button in the documents archive
 
 **Files:**
+
 - Modify: `src/routes/_authenticated/clientes.tsx:5374-5383` (`DocumentosList` row actions)
 
 - [ ] **Step 1: Replace the button**
@@ -542,46 +563,49 @@ git commit -m "feat(clientes): generate and store a real signed contract PDF"
 Find (currently lines 5374-5383):
 
 ```tsx
-                    <TableCell className="text-right">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="h-7 text-xs flex items-center gap-1 ml-auto"
-                        onClick={() => window.print()}
-                      >
-                        <Printer className="h-3 w-3" /> Imprimir
-                      </Button>
-                    </TableCell>
+<TableCell className="text-right">
+  <Button
+    size="sm"
+    variant="outline"
+    className="h-7 text-xs flex items-center gap-1 ml-auto"
+    onClick={() => window.print()}
+  >
+    <Printer className="h-3 w-3" /> Imprimir
+  </Button>
+</TableCell>
 ```
 
 Replace with:
 
 ```tsx
-                    <TableCell className="text-right">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="h-7 text-xs flex items-center gap-1 ml-auto"
-                        disabled={!sig.contract_url}
-                        title={sig.contract_url ? undefined : "PDF não disponível para este contrato"}
-                        onClick={() => sig.contract_url && window.open(sig.contract_url, "_blank")}
-                      >
-                        <Download className="h-3 w-3" /> Baixar PDF
-                      </Button>
-                    </TableCell>
+<TableCell className="text-right">
+  <Button
+    size="sm"
+    variant="outline"
+    className="h-7 text-xs flex items-center gap-1 ml-auto"
+    disabled={!sig.contract_url}
+    title={sig.contract_url ? undefined : "PDF não disponível para este contrato"}
+    onClick={() => sig.contract_url && window.open(sig.contract_url, "_blank")}
+  >
+    <Download className="h-3 w-3" /> Baixar PDF
+  </Button>
+</TableCell>
 ```
 
 - [ ] **Step 2: Type-check**
 
 Run:
+
 ```bash
 npx tsc --noEmit
 ```
+
 Expected: no new errors.
 
 - [ ] **Step 3: Manual verification**
 
 Run `npm run dev`, open `/clientes`, go to the "Assinaturas" tab. Expected:
+
 - The contract signed in Task 3's verification shows a working "Baixar PDF" button (opens the real PDF).
 - Any older signature rows (signed before this change, with the fake placeholder URL) show a disabled "Baixar PDF" button with the "PDF não disponível" tooltip.
 
