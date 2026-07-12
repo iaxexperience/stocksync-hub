@@ -139,7 +139,7 @@ function Landing() {
                 className="bg-pink-600 hover:bg-pink-700 text-white font-bold rounded-full px-8 py-6 shadow-lg shadow-pink-500/20 hover:scale-105 transition-all"
               >
                 <a
-                  href="https://wa.me/5583988059666"
+                  href="https://wa.me/5583988059666?text=Olá!%20Gostaria%20de%20saber%20mais%20sobre%20os%20produtos."
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center gap-2"
@@ -359,7 +359,7 @@ function Landing() {
                 asChild
                 className="bg-pink-600 hover:bg-pink-700 text-white font-bold rounded-full px-8 py-5"
               >
-                <a href="https://wa.me/5583988059666" target="_blank" rel="noopener noreferrer">
+                <a href="https://wa.me/5583988059666?text=Olá!%20Gostaria%20de%20saber%20mais%20sobre%20os%20produtos." target="_blank" rel="noopener noreferrer">
                   Falar Conosco
                 </a>
               </Button>
@@ -400,7 +400,7 @@ function Landing() {
               className="bg-pink-600 hover:bg-pink-700 text-white font-bold rounded-full px-10 py-6 shadow-lg shadow-pink-600/20 hover:scale-105 transition-all"
             >
               <a
-                href="https://wa.me/5583988059666"
+                href="https://wa.me/5583988059666?text=Olá!%20Gostaria%20de%20saber%20mais%20sobre%20os%20produtos."
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-2"
