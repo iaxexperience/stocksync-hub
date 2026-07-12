@@ -5283,6 +5283,9 @@ function DocumentosList({
   navegarAba: any;
 }) {
   const [search, setSearch] = useState("");
+  const [openSignModal, setOpenSignModal] = useState(false);
+  const [signingOrder, setSigningOrder] = useState<any | null>(null);
+  const [signingCustomer, setSigningCustomer] = useState<any | null>(null);
 
   const filtered = useMemo(() => {
     return signatures.filter((s) => {
@@ -5294,6 +5297,41 @@ function DocumentosList({
     });
   }, [signatures, search]);
 
+  // Contratos pendentes de assinatura (todos os clientes)
+  const pendingContracts = useMemo(() => {
+    const signedOrderIds = new Set(signatures.map((s: any) => s.order_id));
+    return (orders as any[])
+      .filter(
+        (o: any) =>
+          o.order_type === "contrato" &&
+          !signedOrderIds.has(o.id) &&
+          o.status !== "cancelado",
+      )
+      .map((o: any) => ({
+        ...o,
+        customer: customers.find((c: any) => c.id === o.customer_id),
+      }))
+      .filter((o: any) => {
+        if (!search) return true;
+        const q = search.toLowerCase();
+        return (
+          o.customer?.name?.toLowerCase().includes(q) ||
+          o.order_number?.toLowerCase().includes(q)
+        );
+      });
+  }, [orders, signatures, customers, search]);
+
+  function handleOpenSign(order: any) {
+    const cust = customers.find((c: any) => c.id === order.customer_id);
+    if (!cust) {
+      toast.error("Cliente não encontrado para este contrato.");
+      return;
+    }
+    setSigningCustomer(cust);
+    setSigningOrder(order);
+    setOpenSignModal(true);
+  }
+
   return (
     <Card className="shadow-sm animate-fade-in">
       <CardHeader>
@@ -5301,10 +5339,11 @@ function DocumentosList({
           Arquivo de Assinaturas e Contratos Digitais
         </CardTitle>
         <CardDescription>
-          Repositório de comprovações de aceites digitais coletados.
+          Assine contratos pendentes no tablet/celular e mantenha o repositório de aceites
+          coletados.
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-4 text-xs">
+      <CardContent className="space-y-6 text-xs">
         <div className="relative max-w-sm">
           <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
@@ -5315,82 +5354,178 @@ function DocumentosList({
           />
         </div>
 
-        <div className="border rounded overflow-hidden text-xs bg-white">
-          <Table>
-            <TableHeader className="bg-slate-50">
-              <TableRow>
-                <TableHead>Contrato Vinculado</TableHead>
-                <TableHead>Cliente</TableHead>
-                <TableHead>Assinado Em</TableHead>
-                <TableHead>Endereço IP</TableHead>
-                <TableHead>Geolocalização</TableHead>
-                <TableHead>Dispositivo Utilizado</TableHead>
-                <TableHead>Versão</TableHead>
-                <TableHead className="text-center">Assinatura</TableHead>
-                <TableHead className="text-right">Ação</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filtered.length === 0 ? (
+        {/* PENDENTES DE ASSINATURA */}
+        <div>
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="font-bold text-sm text-slate-800 flex items-center gap-1.5">
+              <AlertCircle className="h-4 w-4 text-amber-600" /> Contratos Pendentes de Assinatura
+            </h3>
+            <Badge variant="secondary" className="bg-amber-100 text-amber-800">
+              {pendingContracts.length} pendentes
+            </Badge>
+          </div>
+          <div className="border rounded overflow-hidden bg-white">
+            <Table>
+              <TableHeader className="bg-amber-50">
                 <TableRow>
-                  <TableCell colSpan={9} className="text-center py-10 text-muted-foreground">
-                    Nenhum contrato assinado localizado.
-                  </TableCell>
+                  <TableHead>Contrato</TableHead>
+                  <TableHead>Cliente</TableHead>
+                  <TableHead>CPF/CNPJ</TableHead>
+                  <TableHead>Data</TableHead>
+                  <TableHead className="text-right">Valor</TableHead>
+                  <TableHead className="text-right">Ação</TableHead>
                 </TableRow>
-              ) : (
-                filtered.map((sig: any) => (
-                  <TableRow key={sig.id} className="hover:bg-slate-50/50">
-                    <TableCell className="font-bold text-primary">
-                      #{sig.orders?.order_number}
-                    </TableCell>
-                    <TableCell
-                      className="font-semibold text-slate-800 cursor-pointer hover:underline"
-                      onClick={() => navegarAba("perfil", { id: sig.customer_id })}
-                    >
-                      {sig.customers?.name}
-                    </TableCell>
-                    <TableCell>{new Date(sig.signed_at).toLocaleString("pt-BR")}</TableCell>
-                    <TableCell className="font-mono text-[10px]">{sig.ip_address}</TableCell>
-                    <TableCell>
-                      {sig.latitude
-                        ? `${Number(sig.latitude).toFixed(4)}, ${Number(sig.longitude).toFixed(4)}`
-                        : "Não autorizado"}
-                    </TableCell>
-                    <TableCell className="truncate max-w-[150px]" title={sig.device_information}>
-                      {sig.device_information}
-                    </TableCell>
-                    <TableCell className="text-center font-mono font-bold">
-                      v{sig.contract_version}
-                    </TableCell>
-                    <TableCell className="text-center">
-                      <div className="h-9 w-24 border bg-white rounded p-0.5 mx-auto flex items-center justify-center shadow-inner">
-                        <img
-                          src={sig.signature_url}
-                          className="h-full object-contain"
-                          alt="Assinatura"
-                        />
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="h-7 text-xs flex items-center gap-1 ml-auto"
-                        onClick={() => window.print()}
-                      >
-                        <Printer className="h-3 w-3" /> Imprimir
-                      </Button>
+              </TableHeader>
+              <TableBody>
+                {pendingContracts.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={6} className="text-center py-6 text-muted-foreground">
+                      Nenhum contrato aguardando assinatura.
                     </TableCell>
                   </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
+                ) : (
+                  pendingContracts.map((o: any) => (
+                    <TableRow key={o.id} className="hover:bg-amber-50/40">
+                      <TableCell className="font-bold text-primary">#{o.order_number}</TableCell>
+                      <TableCell
+                        className="font-semibold cursor-pointer hover:underline"
+                        onClick={() => navegarAba("perfil", { id: o.customer_id })}
+                      >
+                        {o.customer?.name || "—"}
+                      </TableCell>
+                      <TableCell className="font-mono text-[10px]">
+                        {o.customer?.cpf_cnpj || "—"}
+                      </TableCell>
+                      <TableCell>
+                        {new Date(o.created_at).toLocaleDateString("pt-BR")}
+                      </TableCell>
+                      <TableCell className="text-right font-semibold">
+                        {Number(o.total_amount || 0).toLocaleString("pt-BR", {
+                          style: "currency",
+                          currency: "BRL",
+                        })}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Button
+                          size="sm"
+                          onClick={() => handleOpenSign(o)}
+                          className="h-8 bg-amber-600 hover:bg-amber-700 text-white font-semibold"
+                        >
+                          <FileSignature className="h-3.5 w-3.5 mr-1" /> Abrir Contrato & Assinar
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        </div>
+
+        {/* ASSINADOS */}
+        <div>
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="font-bold text-sm text-slate-800 flex items-center gap-1.5">
+              <Check className="h-4 w-4 text-emerald-600" /> Contratos Assinados
+            </h3>
+            <Badge variant="secondary">{filtered.length} registros</Badge>
+          </div>
+          <div className="border rounded overflow-hidden text-xs bg-white">
+            <Table>
+              <TableHeader className="bg-slate-50">
+                <TableRow>
+                  <TableHead>Contrato Vinculado</TableHead>
+                  <TableHead>Cliente</TableHead>
+                  <TableHead>Assinado Em</TableHead>
+                  <TableHead>Endereço IP</TableHead>
+                  <TableHead>Geolocalização</TableHead>
+                  <TableHead>Dispositivo Utilizado</TableHead>
+                  <TableHead>Versão</TableHead>
+                  <TableHead className="text-center">Assinatura</TableHead>
+                  <TableHead className="text-right">Ação</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filtered.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={9} className="text-center py-10 text-muted-foreground">
+                      Nenhum contrato assinado localizado.
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  filtered.map((sig: any) => (
+                    <TableRow key={sig.id} className="hover:bg-slate-50/50">
+                      <TableCell className="font-bold text-primary">
+                        #{sig.orders?.order_number}
+                      </TableCell>
+                      <TableCell
+                        className="font-semibold text-slate-800 cursor-pointer hover:underline"
+                        onClick={() => navegarAba("perfil", { id: sig.customer_id })}
+                      >
+                        {sig.customers?.name}
+                      </TableCell>
+                      <TableCell>{new Date(sig.signed_at).toLocaleString("pt-BR")}</TableCell>
+                      <TableCell className="font-mono text-[10px]">{sig.ip_address}</TableCell>
+                      <TableCell>
+                        {sig.latitude
+                          ? `${Number(sig.latitude).toFixed(4)}, ${Number(sig.longitude).toFixed(4)}`
+                          : "Não autorizado"}
+                      </TableCell>
+                      <TableCell className="truncate max-w-[150px]" title={sig.device_information}>
+                        {sig.device_information}
+                      </TableCell>
+                      <TableCell className="text-center font-mono font-bold">
+                        v{sig.contract_version}
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <div className="h-9 w-24 border bg-white rounded p-0.5 mx-auto flex items-center justify-center shadow-inner">
+                          <img
+                            src={sig.signature_url}
+                            className="h-full object-contain"
+                            alt="Assinatura"
+                          />
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-7 text-xs flex items-center gap-1 ml-auto"
+                          onClick={() => window.print()}
+                        >
+                          <Printer className="h-3 w-3" /> Imprimir
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
         </div>
       </CardContent>
+
+      {/* DIALOG DE ASSINATURA */}
+      <Dialog open={openSignModal} onOpenChange={setOpenSignModal}>
+        <DialogContent className="max-w-5xl w-[95vw] max-h-[95vh] overflow-y-auto">
+          {signingOrder && signingCustomer && (
+            <SignatureCollector
+              customer={signingCustomer}
+              order={signingOrder}
+              onClose={() => {
+                setOpenSignModal(false);
+                setSigningOrder(null);
+                setSigningCustomer(null);
+              }}
+              saveSignature={saveSignature}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 }
+
 
 // ============================================
 // HELPER UTILITY FUNCTIONS
