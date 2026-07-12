@@ -4118,11 +4118,22 @@ function SignatureCollector({
           .print-container, .print-container * {
             visibility: visible;
           }
+          html, body, [data-radix-portal], div[role="dialog"] {
+            position: static !important;
+            overflow: visible !important;
+            max-height: none !important;
+            height: auto !important;
+            width: 100% !important;
+            transform: none !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            box-shadow: none !important;
+          }
           .print-container {
-            position: absolute;
-            left: 0;
-            top: 0;
-            width: 100%;
+            position: absolute !important;
+            left: 0 !important;
+            top: 0 !important;
+            width: 100% !important;
             max-height: none !important;
             overflow: visible !important;
             border: none !important;
