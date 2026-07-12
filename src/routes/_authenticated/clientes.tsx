@@ -2710,7 +2710,9 @@ function ClienteForm({
                             )}
                             {projectedInstallments.map((ins, i) => (
                               <div key={i} className="flex justify-between border-b py-0.5">
-                                <span>Parcela {ins.installment_number}</span>
+                                <span>
+                                  Parcela {ins.installment_number} / {projectedInstallments.length}
+                                </span>
                                 <span className="font-semibold text-slate-800">
                                   {ins.amount.toLocaleString("pt-BR", {
                                     style: "currency",
@@ -2855,6 +2857,7 @@ function ClientePerfil({
             date: o.created_at,
             name: item.products?.name || "Desconhecido",
             sku: item.products?.sku || "—",
+            type: item.products?.type || "Produto",
             quantity: item.quantity,
             price: item.unit_price,
             discount: item.discount,
@@ -3206,6 +3209,7 @@ function ClientePerfil({
                     <TableHeader className="bg-slate-50">
                       <TableRow>
                         <TableHead>Produto</TableHead>
+                        <TableHead>Tipo</TableHead>
                         <TableHead>SKU</TableHead>
                         <TableHead className="text-center">Quantidade</TableHead>
                         <TableHead className="text-right">Preço Unitário</TableHead>
@@ -3217,7 +3221,7 @@ function ClientePerfil({
                     <TableBody>
                       {customerProducts.length === 0 ? (
                         <TableRow>
-                          <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                          <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
                             Nenhum produto adquirido ou faturado para este cliente.
                           </TableCell>
                         </TableRow>
@@ -3232,6 +3236,7 @@ function ClientePerfil({
                           return (
                             <TableRow key={i} className="hover:bg-slate-50/50">
                               <TableCell className="font-semibold">{p.name}</TableCell>
+                              <TableCell className="capitalize text-[10px]">{p.type}</TableCell>
                               <TableCell className="font-mono text-[10px]">{p.sku}</TableCell>
                               <TableCell className="text-center">{p.quantity}</TableCell>
                               <TableCell className="text-right">
@@ -3401,7 +3406,7 @@ function ClientePerfil({
                           return (
                             <TableRow key={ins.id} className="hover:bg-slate-50/50">
                               <TableCell className="font-semibold text-center">
-                                {ins.installment_number}ª
+                                {ins.installment_number} / {ins.orders?.installments || 1}
                               </TableCell>
                               <TableCell className="font-bold">
                                 #{ins.orders?.order_number}
@@ -3670,7 +3675,7 @@ function ClientePerfil({
                 </p>
                 <p>
                   <span className="font-semibold text-muted-foreground">Parcela:</span>{" "}
-                  {payingIns.installment_number}ª Parcela
+                  {payingIns.installment_number} / {payingIns.orders?.installments || 1} Parcela
                 </p>
                 <p>
                   <span className="font-semibold text-muted-foreground">Vencimento:</span>{" "}
@@ -3868,6 +3873,16 @@ function SignatureCollector({
   const [isDrawing, setIsDrawing] = useState(false);
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [signedResult, setSignedResult] = useState<any | null>(null);
+
+  const productTypeMap: Record<string, string> = {
+    eletrodomestico: "Eletrodoméstico",
+    material: "Material",
+    outro: "Outro",
+  };
+
+  function getProductTypeLabel(type?: string) {
+    return type ? productTypeMap[type] || type : "Outro";
+  }
 
   // Fetch active organization details for the contract
   const { data: organization } = useQuery({
@@ -4262,6 +4277,7 @@ function SignatureCollector({
             <thead>
               <tr className="bg-slate-100">
                 <th className="border border-slate-300 p-1 text-left">Produto</th>
+                <th className="border border-slate-300 p-1 text-left">Tipo</th>
                 <th className="border border-slate-300 p-1 text-left">Marca</th>
                 <th className="border border-slate-300 p-1 text-left">Modelo</th>
                 <th className="border border-slate-300 p-1 text-left">Nº Série</th>
@@ -4275,6 +4291,9 @@ function SignatureCollector({
                 <tr key={idx}>
                   <td className="border border-slate-300 p-1">
                     {item.products?.name || "Produto"}
+                  </td>
+                  <td className="border border-slate-300 p-1">
+                    {getProductTypeLabel(item.products?.product_type)}
                   </td>
                   <td className="border border-slate-300 p-1">
                     {item.products?.brand || "Genérica"}
@@ -4308,7 +4327,13 @@ function SignatureCollector({
               style: "currency",
               currency: "BRL",
             })}{" "}
-            ({numberToWords(Number(order.total_amount))}).
+            ({numberToWords(Number(order.total_amount))}), dividido em {installmentsCount} parcelas
+            mensais de{" "}
+            {installmentAmount.toLocaleString("pt-BR", {
+              style: "currency",
+              currency: "BRL",
+            })}
+            .
           </p>
         </div>
 
@@ -5138,7 +5163,7 @@ function PagamentosControle({
                   return (
                     <TableRow key={ins.id} className="hover:bg-slate-50/50">
                       <TableCell className="font-semibold text-center">
-                        {ins.installment_number}ª
+                        {ins.installment_number} / {ins.orders?.installments || 1}
                       </TableCell>
                       <TableCell className="font-bold">#{ins.orders?.order_number}</TableCell>
                       <TableCell
@@ -5218,7 +5243,7 @@ function PagamentosControle({
                 </p>
                 <p>
                   <span className="font-semibold text-muted-foreground">Parcela:</span>{" "}
-                  {payingIns.installment_number}ª Parcela
+                  {payingIns.installment_number} / {payingIns.orders?.installments || 1} Parcela
                 </p>
                 <p>
                   <span className="font-semibold text-muted-foreground">Vencimento:</span>{" "}
