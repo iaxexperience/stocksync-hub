@@ -1873,7 +1873,7 @@ function ClienteForm({
   }
 
   // Finalizar Cobrança (Gerar orçamento, pedido ou contrato)
-  async function handleFinalizarVenda(type: "orcamento" | "pedido" | "contrato") {
+  async function handleFinalizarVenda(type: "orcamento" | "pedido" | "contrato" | "salvo") {
     if (cartItems.length === 0) {
       toast.error("O carrinho está vazio. Adicione pelo menos um produto.");
       return;
@@ -1952,7 +1952,7 @@ function ClienteForm({
       total_amount: cartTotals.total,
       payment_method: paymentMethod,
       installments: installmentsCount,
-      status: type === "orcamento" ? "Rascunho" : "Pendente", // Pedido e Contratos iniciam pendentes para aprovação
+      status: type === "orcamento" ? "Rascunho" : type === "salvo" ? "Salvo" : "Pendente",
       payment_status: "Pendente",
       delivery_date: null,
       notes: notes,
@@ -2727,6 +2727,14 @@ function ClienteForm({
                     <div className="flex flex-wrap gap-2 justify-end border-t pt-3">
                       <Button variant="outline" onClick={() => setActiveTab("dados")}>
                         Voltar
+                      </Button>
+
+                      <Button
+                        variant="outline"
+                        onClick={() => handleFinalizarVenda("salvo")}
+                        className="border-green-500 text-green-700 hover:bg-green-50 hover:text-green-800"
+                      >
+                        💾 Salvar Cadastro
                       </Button>
 
                       <Button
