@@ -3863,16 +3863,18 @@ function SignatureCollector({
   order,
   onClose,
   saveSignature,
+  prefilledSignature,
 }: {
   customer: any;
   order: any;
   onClose: any;
-  saveSignature: any;
+  saveSignature?: any;
+  prefilledSignature?: any;
 }) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [isDrawing, setIsDrawing] = useState(false);
-  const [termsAccepted, setTermsAccepted] = useState(false);
-  const [signedResult, setSignedResult] = useState<any | null>(null);
+  const [termsAccepted, setTermsAccepted] = useState(prefilledSignature ? true : false);
+  const [signedResult, setSignedResult] = useState<any | null>(prefilledSignature || null);
 
   const productTypeMap: Record<string, string> = {
     eletrodomestico: "Eletrodoméstico",
@@ -4176,6 +4178,14 @@ function SignatureCollector({
               onClick={handleSendEmail}
             >
               <Mail className="h-3.5 w-3.5" /> Enviar E-mail
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex items-center gap-1 text-slate-700 bg-slate-50 ml-auto no-print"
+              onClick={onClose}
+            >
+              <X className="h-3.5 w-3.5" /> Fechar
             </Button>
           </div>
         </div>
@@ -5327,6 +5337,7 @@ function DocumentosList({
   const [openSignModal, setOpenSignModal] = useState(false);
   const [signingOrder, setSigningOrder] = useState<any | null>(null);
   const [signingCustomer, setSigningCustomer] = useState<any | null>(null);
+  const [viewingPrefilledSignature, setViewingPrefilledSignature] = useState<any | null>(null);
 
   const filtered = useMemo(() => {
     return signatures.filter((s) => {
@@ -5527,7 +5538,17 @@ function DocumentosList({
                           size="sm"
                           variant="outline"
                           className="h-7 text-xs flex items-center gap-1 ml-auto"
-                          onClick={() => window.print()}
+                          onClick={() => {
+                            const fullOrder = orders.find((o) => o.id === sig.order_id);
+                            if (fullOrder) {
+                              setSigningCustomer(sig.customers);
+                              setSigningOrder(fullOrder);
+                              setViewingPrefilledSignature(sig);
+                              setOpenSignModal(true);
+                            } else {
+                              toast.error("Pedido não localizado.");
+                            }
+                          }}
                         >
                           <Printer className="h-3 w-3" /> Imprimir
                         </Button>
@@ -5542,7 +5563,17 @@ function DocumentosList({
       </CardContent>
 
       {/* DIALOG DE ASSINATURA */}
-      <Dialog open={openSignModal} onOpenChange={setOpenSignModal}>
+      <Dialog
+        open={openSignModal}
+        onOpenChange={(open) => {
+          setOpenSignModal(open);
+          if (!open) {
+            setSigningOrder(null);
+            setSigningCustomer(null);
+            setViewingPrefilledSignature(null);
+          }
+        }}
+      >
         <DialogContent className="max-w-5xl w-[95vw] max-h-[95vh] overflow-y-auto">
           {signingOrder && signingCustomer && (
             <SignatureCollector
@@ -5552,8 +5583,10 @@ function DocumentosList({
                 setOpenSignModal(false);
                 setSigningOrder(null);
                 setSigningCustomer(null);
+                setViewingPrefilledSignature(null);
               }}
               saveSignature={saveSignature}
+              prefilledSignature={viewingPrefilledSignature}
             />
           )}
         </DialogContent>
