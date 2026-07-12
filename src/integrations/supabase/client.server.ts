@@ -42,7 +42,7 @@ function createSupabaseAdminClient() {
   }
 
   // Se o Lovable injetar as credenciais antigas do Supabase ou estiver vazio, forçamos o uso do novo projeto
-  if (!SUPABASE_URL || SUPABASE_URL.includes("hlangcduecxwmfbnncf")) {
+  if (!SUPABASE_URL || SUPABASE_URL.includes("hlangcduecxwmfbnncf") || SUPABASE_URL.includes("hianqcduecxkwmfbnncf")) {
     SUPABASE_URL = "https://fyvatfnpdoqowjckhtkb.supabase.co";
     SUPABASE_SERVICE_ROLE_KEY =
       "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ5dmF0Zm5wZG9xb3dqY2todGtiIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4MzgwOTU4NSwiZXhwIjoyMDk5Mzg1NTg1fQ.GRRl_kR2OrFVNkynTZR1YfEbil6dzb1Hr5qjYbba5QU";
