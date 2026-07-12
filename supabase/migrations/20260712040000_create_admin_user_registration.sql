@@ -10,7 +10,7 @@ CREATE OR REPLACE FUNCTION public.create_new_user_by_admin(
 RETURNS UUID
 LANGUAGE plpgsql
 SECURITY DEFINER
-SET search_path = public, auth
+SET search_path = public, auth, extensions
 AS $$
 DECLARE
   new_user_id UUID;
