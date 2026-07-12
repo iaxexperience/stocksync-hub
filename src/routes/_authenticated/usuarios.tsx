@@ -60,7 +60,7 @@ const ROLES = [
     bg: "bg-rose-50",
   },
   {
-    value: "digitador",
+    value: "estoquista",
     label: "Digitador",
     desc: "Acesso restrito ao cadastro de produtos e consulta de estoque. Sem acesso a clientes, financeiro ou usuários.",
     icon: Keyboard,
@@ -98,7 +98,7 @@ function UsuariosPage() {
   // Form state
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
-  const [role, setRole] = useState("digitador");
+  const [role, setRole] = useState("estoquista");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPw, setShowPw] = useState(false);
@@ -230,7 +230,7 @@ function UsuariosPage() {
   // ── Helpers ──────────────────────────────────────────────────────────────
   function resetForm() {
     setFullName(""); setEmail(""); setPassword(""); setConfirmPassword("");
-    setRole("digitador"); setShowPw(false); setShowConfirm(false);
+    setRole("estoquista"); setShowPw(false); setShowConfirm(false);
   }
 
   function handleCreateUser(e: React.FormEvent) {
@@ -648,7 +648,7 @@ function PendingApprovalRow({
   onReject: () => void;
   isLoading: boolean;
 }) {
-  const [selectedRole, setSelectedRole] = useState("digitador");
+  const [selectedRole, setSelectedRole] = useState("estoquista");
   return (
     <div className="flex flex-col sm:flex-row sm:items-center gap-2 py-2 border-t border-amber-100 first:border-t-0">
       <div className="flex items-center gap-2 flex-1 min-w-0">

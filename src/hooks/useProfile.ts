@@ -24,7 +24,21 @@ export function useProfile() {
         .eq("id", userData.user.id)
         .maybeSingle();
       if (error) throw error;
-      return data;
+      if (!data) return null;
+
+      let role = null;
+      if (data.active_org_id) {
+        const { data: memberData } = await supabase
+          .from("organization_members")
+          .select("role")
+          .eq("organization_id", data.active_org_id)
+          .eq("user_id", userData.user.id)
+          .maybeSingle();
+        if (memberData) {
+          role = memberData.role;
+        }
+      }
+      return { ...data, role };
     },
     staleTime: 60_000,
   });
