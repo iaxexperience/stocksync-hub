@@ -1,4 +1,6 @@
 -- Migration: Fix create_new_user_by_admin search path to include extensions schema for pgcrypto functions
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+
 CREATE OR REPLACE FUNCTION public.create_new_user_by_admin(
   p_email TEXT,
   p_password TEXT,
