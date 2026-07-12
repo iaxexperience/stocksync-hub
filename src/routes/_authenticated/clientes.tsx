@@ -4079,7 +4079,7 @@ function SignatureCollector({
       };
 
       try {
-        const result = await saveSignature.mutateAsync(signatureObj);
+        const result = await saveSignature(signatureObj);
         setSignedResult(result);
       } catch (err: any) {
         toast.error("Erro ao assinar contrato: " + err.message);
