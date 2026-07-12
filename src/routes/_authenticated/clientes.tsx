@@ -321,7 +321,11 @@ function ClientesLayout() {
       return newOrder;
     },
     onSuccess: (newOrder) => {
-      toast.success(`Venda registrada com sucesso! Número: #${newOrder.order_number}`);
+      if (newOrder.order_type === "salvo") {
+        toast.success(`Cadastro salvo com sucesso! Número: #${newOrder.order_number}`);
+      } else {
+        toast.success(`Venda registrada com sucesso! Número: #${newOrder.order_number}`);
+      }
       qc.invalidateQueries({ queryKey: ["orders"] });
       qc.invalidateQueries({ queryKey: ["products"] });
       qc.invalidateQueries({ queryKey: ["all_installments"] });
@@ -2901,6 +2905,9 @@ function ClientePerfil({
       } else if (o.order_type === "contrato") {
         icon = FileSignature;
         label = "Contrato";
+      } else if (o.order_type === "salvo") {
+        icon = FileText;
+        label = "Cadastro Salvo";
       }
 
       list.push({
