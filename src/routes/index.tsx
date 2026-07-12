@@ -36,8 +36,17 @@ export const Route = createFileRoute("/")({
       },
     ],
   }),
-  component: Landing,
 });
+
+const WhatsAppIcon = ({ className = "h-5 w-5" }: { className?: string }) => (
+  <svg
+    className={className}
+    viewBox="0 0 24 24"
+    fill="currentColor"
+  >
+    <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.514 2.266 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.5-5.739-1.453L0 24zm6.59-4.846c1.6.95 3.188 1.449 4.825 1.451 5.436 0 9.86-4.42 9.864-9.864.002-2.637-1.03-5.115-2.906-6.99C16.255 1.876 13.779 .843 11.45 .843 6.015.843 1.59 5.263 1.587 10.702c-.001 1.706.467 3.371 1.354 4.839l-.995 3.635 3.72-.975zm11.187-6.842c-.302-.15-1.787-.882-2.057-.981-.27-.099-.465-.15-.66.15-.195.3-.75.954-.92 1.149-.17.195-.338.22-.64.07-.302-.15-1.274-.469-2.426-1.496-.897-.8-1.502-1.787-1.68-2.087-.177-.3-.02-.461.13-.611.137-.135.302-.35.454-.525.15-.175.2-.299.302-.498.102-.2.05-.374-.025-.524-.075-.15-.66-1.59-.904-2.179-.237-.57-.48-.493-.66-.502-.17-.008-.364-.01-.559-.01-.195 0-.514.074-.783.374-.27.3-1.03 1.008-1.03 2.457 0 1.45 1.055 2.85 1.202 3.05.148.2 2.077 3.173 5.034 4.453.703.304 1.253.486 1.68.623.707.225 1.35.193 1.86.117.567-.085 1.787-.732 2.037-1.438.25-.706.25-1.314.175-1.439-.075-.125-.27-.2-.572-.35z" />
+  </svg>
+);
 
 function Landing() {
   const [isAuthed, setIsAuthed] = useState(false);
@@ -93,17 +102,22 @@ function Landing() {
                 <Button
                   asChild
                   variant="ghost"
-                  className="text-slate-700 hover:text-pink-600 font-bold hidden sm:inline-flex"
+                  className="text-slate-700 hover:text-pink-600 font-bold"
                 >
                   <Link to="/auth">Entrar</Link>
                 </Button>
                 <Button
                   asChild
-                  className="bg-pink-600 hover:bg-pink-700 text-white font-bold rounded-full px-6 py-5 transition-all shadow-md"
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-full px-5 py-5 transition-all shadow-md flex items-center gap-1.5"
                 >
-                  <Link to="/auth" search={{ mode: "signup" as const }}>
-                    Fazer Cadastro
-                  </Link>
+                  <a
+                    href="https://wa.me/5583988059666?text=Olá!%20Gostaria%20de%20saber%20mais%20sobre%20os%20produtos."
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <WhatsAppIcon className="h-4 w-4" />
+                    <span>Falar no WhatsApp</span>
+                  </a>
                 </Button>
               </>
             )}
@@ -144,7 +158,7 @@ function Landing() {
                   rel="noopener noreferrer"
                   className="flex items-center gap-2"
                 >
-                  <Phone className="h-5 w-5" /> Falar no WhatsApp
+                  <WhatsAppIcon className="h-5 w-5" /> Falar no WhatsApp
                 </a>
               </Button>
               <Button
@@ -407,7 +421,7 @@ function Landing() {
                 rel="noopener noreferrer"
                 className="flex items-center gap-2"
               >
-                <Phone className="h-5 w-5" /> Entrar em Contato: (83) 98805-9666
+                <WhatsAppIcon className="h-5 w-5" /> Entrar em Contato: (83) 98805-9666
               </a>
             </Button>
           </div>
@@ -480,6 +494,17 @@ function Landing() {
           © {new Date().getFullYear()} Josi & Jó Eletrodomésticos. Todos os direitos reservados.
         </div>
       </footer>
+
+      {/* Floating WhatsApp Button */}
+      <a
+        href="https://wa.me/5583988059666?text=Olá!%20Gostaria%20de%20saber%20mais%20sobre%20os%20produtos."
+        target="_blank"
+        rel="noopener noreferrer"
+        className="fixed bottom-6 right-6 z-50 bg-emerald-500 hover:bg-emerald-600 text-white p-4 rounded-full shadow-lg hover:scale-110 transition-all duration-300 flex items-center justify-center"
+        title="Falar no WhatsApp"
+      >
+        <WhatsAppIcon className="h-6 w-6" />
+      </a>
     </div>
   );
 }
