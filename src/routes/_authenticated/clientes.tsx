@@ -3817,7 +3817,7 @@ function ClientePerfil({
 
       {/* DIALOG DE ASSINATURA DIGITAL (SIMULAÇÃO DE TOUCH/MOUSE CANVAS) */}
       <Dialog open={openSignModal} onOpenChange={setOpenSignModal}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-5xl w-[95vw] max-h-[95vh] overflow-y-auto">
           {signingOrder && (
             <SignatureCollector
               customer={customer}
