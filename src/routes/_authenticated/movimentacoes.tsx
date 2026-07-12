@@ -7,11 +7,31 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, ArrowDownToLine, ArrowUpFromLine, Settings2 } from "lucide-react";
+import { Plus, ArrowDownToLine, ArrowUpFromLine, Settings2, Pencil, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -20,7 +40,9 @@ type Search = { tipo?: "entrada" | "saida" | "ajuste" | "todos" };
 
 export const Route = createFileRoute("/_authenticated/movimentacoes")({
   validateSearch: (s: Record<string, unknown>): Search => ({
-    tipo: (["entrada","saida","ajuste","todos"].includes(s.tipo as string) ? s.tipo : "todos") as any,
+    tipo: (["entrada", "saida", "ajuste", "todos"].includes(s.tipo as string)
+      ? s.tipo
+      : "todos") as any,
   }),
   head: () => ({ meta: [{ title: "Movimentações · StockFlow" }] }),
   component: Movimentacoes,
@@ -33,12 +55,20 @@ function Movimentacoes() {
   const orgId = profile?.active_org_id;
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [editingMove, setEditingMove] = useState<any>(null);
 
   const { data: moves = [], isLoading } = useQuery({
     queryKey: ["movimentacoes", orgId, tipo],
     enabled: !!orgId,
     queryFn: async () => {
-      let q = supabase.from("stock_movements").select("*, products(name, sku), warehouses(name)").eq("organization_id", orgId!).order("created_at", { ascending: false }).limit(200);
+      let q = supabase
+        .from("stock_movements")
+        .select("*, products(name, sku), warehouses(name)")
+        .eq("organization_id", orgId!)
+        .order("created_at", { ascending: false })
+        .limit(200);
       if (tipo && tipo !== "todos") q = q.eq("movement_type", tipo);
       const { data, error } = await q;
       if (error) throw error;
@@ -47,12 +77,23 @@ function Movimentacoes() {
   });
 
   const { data: products = [] } = useQuery({
-    queryKey: ["products-select", orgId], enabled: !!orgId,
-    queryFn: async () => (await supabase.from("products").select("id,name,sku,cost_price").eq("organization_id", orgId!).order("name")).data ?? [],
+    queryKey: ["products-select", orgId],
+    enabled: !!orgId,
+    queryFn: async () =>
+      (
+        await supabase
+          .from("products")
+          .select("id,name,sku,cost_price")
+          .eq("organization_id", orgId!)
+          .order("name")
+      ).data ?? [],
   });
   const { data: warehouses = [] } = useQuery({
-    queryKey: ["warehouses-select", orgId], enabled: !!orgId,
-    queryFn: async () => (await supabase.from("warehouses").select("id,name").eq("organization_id", orgId!)).data ?? [],
+    queryKey: ["warehouses-select", orgId],
+    enabled: !!orgId,
+    queryFn: async () =>
+      (await supabase.from("warehouses").select("id,name").eq("organization_id", orgId!)).data ??
+      [],
   });
 
   const create = useMutation({
@@ -83,15 +124,86 @@ function Movimentacoes() {
     onError: (e: any) => toast.error(e.message),
   });
 
+  const updateMove = useMutation({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    mutationFn: async (values: any) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const payload: any = {
+        product_id: values.product_id,
+        warehouse_id: values.warehouse_id === "none" ? null : values.warehouse_id,
+        movement_type: values.movement_type,
+        quantity: Number(values.quantity),
+        unit_cost: Number(values.unit_cost || 0),
+        reason: values.reason || null,
+        reference: values.reference || null,
+      };
+      const { error } = await supabase
+        .from("stock_movements")
+        .update(payload)
+        .eq("id", editingMove.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Movimentação atualizada");
+      qc.invalidateQueries({ queryKey: ["movimentacoes"] });
+      qc.invalidateQueries({ queryKey: ["products"] });
+      qc.invalidateQueries({ queryKey: ["estoque"] });
+      qc.invalidateQueries({ queryKey: ["dashboard-stats"] });
+      setEditOpen(false);
+      setEditingMove(null);
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+
+  const deleteMove = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("stock_movements").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Movimentação excluída");
+      qc.invalidateQueries({ queryKey: ["movimentacoes"] });
+      qc.invalidateQueries({ queryKey: ["products"] });
+      qc.invalidateQueries({ queryKey: ["estoque"] });
+      qc.invalidateQueries({ queryKey: ["dashboard-stats"] });
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+
   function submit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const fd = new FormData(e.currentTarget);
     create.mutate(Object.fromEntries(fd));
   }
 
-  const iconFor = (t: string) => t === "entrada" ? <ArrowDownToLine className="h-3.5 w-3.5" /> : t === "saida" ? <ArrowUpFromLine className="h-3.5 w-3.5" /> : <Settings2 className="h-3.5 w-3.5" />;
-  const labelFor = (t: string) => t === "entrada" ? "Entrada" : t === "saida" ? "Saída" : t === "ajuste" ? "Ajuste" : "Transferência";
-  const colorFor = (t: string) => t === "entrada" ? "bg-success text-success-foreground hover:bg-success" : t === "saida" ? "bg-destructive text-destructive-foreground hover:bg-destructive" : "bg-warning text-warning-foreground hover:bg-warning";
+  function submitEdit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const fd = new FormData(e.currentTarget);
+    updateMove.mutate(Object.fromEntries(fd));
+  }
+
+  const iconFor = (t: string) =>
+    t === "entrada" ? (
+      <ArrowDownToLine className="h-3.5 w-3.5" />
+    ) : t === "saida" ? (
+      <ArrowUpFromLine className="h-3.5 w-3.5" />
+    ) : (
+      <Settings2 className="h-3.5 w-3.5" />
+    );
+  const labelFor = (t: string) =>
+    t === "entrada"
+      ? "Entrada"
+      : t === "saida"
+        ? "Saída"
+        : t === "ajuste"
+          ? "Ajuste"
+          : "Transferência";
+  const colorFor = (t: string) =>
+    t === "entrada"
+      ? "bg-success text-success-foreground hover:bg-success"
+      : t === "saida"
+        ? "bg-destructive text-destructive-foreground hover:bg-destructive"
+        : "bg-warning text-warning-foreground hover:bg-warning";
 
   return (
     <div className="space-y-6">
@@ -102,15 +214,24 @@ function Movimentacoes() {
         </div>
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
-            <Button className="gradient-primary text-primary-foreground border-0"><Plus className="mr-1 h-4 w-4" /> Nova movimentação</Button>
+            <Button className="gradient-primary text-primary-foreground border-0">
+              <Plus className="mr-1 h-4 w-4" /> Nova movimentação
+            </Button>
           </DialogTrigger>
           <DialogContent>
-            <DialogHeader><DialogTitle>Nova movimentação</DialogTitle></DialogHeader>
+            <DialogHeader>
+              <DialogTitle>Nova movimentação</DialogTitle>
+            </DialogHeader>
             <form onSubmit={submit} className="space-y-3">
               <div className="space-y-1">
                 <Label>Tipo *</Label>
-                <Select name="movement_type" defaultValue={tipo === "todos" || !tipo ? "entrada" : tipo}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
+                <Select
+                  name="movement_type"
+                  defaultValue={tipo === "todos" || !tipo ? "entrada" : tipo}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="entrada">Entrada</SelectItem>
                     <SelectItem value="saida">Saída</SelectItem>
@@ -121,31 +242,60 @@ function Movimentacoes() {
               <div className="space-y-1">
                 <Label>Produto *</Label>
                 <Select name="product_id" required>
-                  <SelectTrigger><SelectValue placeholder="Selecione…" /></SelectTrigger>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione…" />
+                  </SelectTrigger>
                   <SelectContent>
-                    {products.map((p: any) => <SelectItem key={p.id} value={p.id}>{p.name}{p.sku ? ` · ${p.sku}` : ""}</SelectItem>)}
+                    {products.map((p: any) => (
+                      <SelectItem key={p.id} value={p.id}>
+                        {p.name}
+                        {p.sku ? ` · ${p.sku}` : ""}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
               <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1"><Label>Quantidade *</Label><Input name="quantity" type="number" step="0.001" required /></div>
-                <div className="space-y-1"><Label>Custo unitário</Label><Input name="unit_cost" type="number" step="0.01" defaultValue={0} /></div>
+                <div className="space-y-1">
+                  <Label>Quantidade *</Label>
+                  <Input name="quantity" type="number" step="0.001" required />
+                </div>
+                <div className="space-y-1">
+                  <Label>Custo unitário</Label>
+                  <Input name="unit_cost" type="number" step="0.01" defaultValue={0} />
+                </div>
               </div>
               <div className="space-y-1">
                 <Label>Depósito</Label>
                 <Select name="warehouse_id" defaultValue="none">
-                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="none">—</SelectItem>
-                    {warehouses.map((w: any) => <SelectItem key={w.id} value={w.id}>{w.name}</SelectItem>)}
+                    {warehouses.map((w: any) => (
+                      <SelectItem key={w.id} value={w.id}>
+                        {w.name}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
-              <div className="space-y-1"><Label>Referência (NF, OC…)</Label><Input name="reference" /></div>
-              <div className="space-y-1"><Label>Observação</Label><Textarea name="reason" /></div>
+              <div className="space-y-1">
+                <Label>Referência (NF, OC…)</Label>
+                <Input name="reference" />
+              </div>
+              <div className="space-y-1">
+                <Label>Observação</Label>
+                <Textarea name="reason" />
+              </div>
               <DialogFooter>
-                <Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>
-                <Button type="submit" disabled={create.isPending}>Registrar</Button>
+                <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+                  Cancelar
+                </Button>
+                <Button type="submit" disabled={create.isPending}>
+                  Registrar
+                </Button>
               </DialogFooter>
             </form>
           </DialogContent>
@@ -174,29 +324,182 @@ function Movimentacoes() {
                   <TableHead>Referência</TableHead>
                   <TableHead className="text-right">Quantidade</TableHead>
                   <TableHead className="text-right">Custo un.</TableHead>
+                  <TableHead className="text-right">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {isLoading ? (
-                  <TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground">Carregando…</TableCell></TableRow>
-                ) : moves.length === 0 ? (
-                  <TableRow><TableCell colSpan={7} className="text-center py-12 text-muted-foreground">Nenhuma movimentação registrada.</TableCell></TableRow>
-                ) : moves.map((m: any) => (
-                  <TableRow key={m.id}>
-                    <TableCell className="text-sm text-muted-foreground">{new Date(m.created_at).toLocaleString("pt-BR")}</TableCell>
-                    <TableCell><Badge className={colorFor(m.movement_type)}>{iconFor(m.movement_type)}<span className="ml-1">{labelFor(m.movement_type)}</span></Badge></TableCell>
-                    <TableCell className="font-medium">{m.products?.name ?? "—"}</TableCell>
-                    <TableCell className="text-sm">{m.warehouses?.name ?? "—"}</TableCell>
-                    <TableCell className="text-sm text-muted-foreground">{m.reference ?? "—"}</TableCell>
-                    <TableCell className="text-right font-semibold">{Number(m.quantity).toLocaleString("pt-BR")}</TableCell>
-                    <TableCell className="text-right">{Number(m.unit_cost).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</TableCell>
+                  <TableRow>
+                    <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                      Carregando…
+                    </TableCell>
                   </TableRow>
-                ))}
+                ) : moves.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={8} className="text-center py-12 text-muted-foreground">
+                      Nenhuma movimentação registrada.
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  moves.map((m: any) => (
+                    <TableRow key={m.id}>
+                      <TableCell className="text-sm text-muted-foreground">
+                        {new Date(m.created_at).toLocaleString("pt-BR")}
+                      </TableCell>
+                      <TableCell>
+                        <Badge className={colorFor(m.movement_type)}>
+                          {iconFor(m.movement_type)}
+                          <span className="ml-1">{labelFor(m.movement_type)}</span>
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="font-medium">{m.products?.name ?? "—"}</TableCell>
+                      <TableCell className="text-sm">{m.warehouses?.name ?? "—"}</TableCell>
+                      <TableCell className="text-sm text-muted-foreground">
+                        {m.reference ?? "—"}
+                      </TableCell>
+                      <TableCell className="text-right font-semibold">
+                        {Number(m.quantity).toLocaleString("pt-BR")}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        {Number(m.unit_cost).toLocaleString("pt-BR", {
+                          style: "currency",
+                          currency: "BRL",
+                        })}
+                      </TableCell>
+                      <TableCell className="text-right space-x-1">
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          onClick={() => {
+                            setEditingMove(m);
+                            setEditOpen(true);
+                          }}
+                          title="Editar movimentação"
+                        >
+                          <Pencil className="h-4 w-4 text-slate-500" />
+                        </Button>
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          onClick={() => {
+                            if (confirm("Deseja realmente excluir esta movimentação?")) {
+                              deleteMove.mutate(m.id);
+                            }
+                          }}
+                          title="Excluir movimentação"
+                        >
+                          <Trash2 className="h-4 w-4 text-rose-500" />
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
               </TableBody>
             </Table>
           </div>
         </CardContent>
       </Card>
+
+      {/* Edit Dialog */}
+      <Dialog
+        open={editOpen}
+        onOpenChange={(o) => {
+          setEditOpen(o);
+          if (!o) setEditingMove(null);
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Editar movimentação</DialogTitle>
+          </DialogHeader>
+          {editingMove && (
+            <form onSubmit={submitEdit} className="space-y-3">
+              <div className="space-y-1">
+                <Label>Tipo *</Label>
+                <Select name="movement_type" defaultValue={editingMove.movement_type}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="entrada">Entrada</SelectItem>
+                    <SelectItem value="saida">Saída</SelectItem>
+                    <SelectItem value="ajuste">Ajuste (+/-)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1">
+                <Label>Produto *</Label>
+                <Select name="product_id" defaultValue={editingMove.product_id} required>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione…" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {products.map((p: any) => (
+                      <SelectItem key={p.id} value={p.id}>
+                        {p.name}
+                        {p.sku ? ` · ${p.sku}` : ""}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <Label>Quantidade *</Label>
+                  <Input
+                    name="quantity"
+                    type="number"
+                    step="0.001"
+                    defaultValue={editingMove.quantity}
+                    required
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label>Custo unitário</Label>
+                  <Input
+                    name="unit_cost"
+                    type="number"
+                    step="0.01"
+                    defaultValue={editingMove.unit_cost}
+                  />
+                </div>
+              </div>
+              <div className="space-y-1">
+                <Label>Depósito</Label>
+                <Select name="warehouse_id" defaultValue={editingMove.warehouse_id || "none"}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">—</SelectItem>
+                    {warehouses.map((w: any) => (
+                      <SelectItem key={w.id} value={w.id}>
+                        {w.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1">
+                <Label>Referência (NF, OC…)</Label>
+                <Input name="reference" defaultValue={editingMove.reference || ""} />
+              </div>
+              <div className="space-y-1">
+                <Label>Observação</Label>
+                <Textarea name="reason" defaultValue={editingMove.reason || ""} />
+              </div>
+              <DialogFooter>
+                <Button type="button" variant="outline" onClick={() => setEditOpen(false)}>
+                  Cancelar
+                </Button>
+                <Button type="submit" disabled={updateMove.isPending}>
+                  Salvar
+                </Button>
+              </DialogFooter>
+            </form>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -4,11 +4,30 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
-  LayoutDashboard, Users, Package, Boxes, ArrowDownToLine,
-  ArrowUpFromLine, Tag, UserCog, FileSignature, HelpCircle,
-  ChevronDown, ChevronRight, Download, MessageCircle, Phone,
-  BookOpen, Zap, Shield, TrendingUp, CheckCircle2, Star,
-  Settings, Loader2, FileText,
+  LayoutDashboard,
+  Users,
+  Package,
+  Boxes,
+  ArrowDownToLine,
+  ArrowUpFromLine,
+  Tag,
+  UserCog,
+  FileSignature,
+  HelpCircle,
+  ChevronDown,
+  ChevronRight,
+  Download,
+  MessageCircle,
+  Phone,
+  BookOpen,
+  Zap,
+  Shield,
+  TrendingUp,
+  CheckCircle2,
+  Star,
+  Settings,
+  Loader2,
+  FileText,
 } from "lucide-react";
 import jsPDF from "jspdf";
 
@@ -218,12 +237,42 @@ const faqs = [
 ];
 
 const quickSteps = [
-  { step: 1, title: "Configure os cadastros", desc: "Crie suas Categorias, Marcas, Unidades e Depósitos antes de tudo", icon: Settings },
-  { step: 2, title: "Cadastre seus produtos", desc: "Adicione todos os eletrodomésticos e produtos com preço e estoque mínimo", icon: Package },
-  { step: 3, title: "Dê entrada no estoque", desc: "Registre as entradas de mercadoria para inicializar o inventário", icon: ArrowDownToLine },
-  { step: 4, title: "Cadastre clientes", desc: "Adicione clientes com CPF válido, endereço e dados de contato", icon: Users },
-  { step: 5, title: "Faça vendas", desc: "Registre saídas de estoque e gere contratos assinados digitalmente", icon: ArrowUpFromLine },
-  { step: 6, title: "Monitore o Dashboard", desc: "Acompanhe KPIs, alertas e tendências de movimentação", icon: TrendingUp },
+  {
+    step: 1,
+    title: "Configure os cadastros",
+    desc: "Crie suas Categorias, Marcas, Unidades e Depósitos antes de tudo",
+    icon: Settings,
+  },
+  {
+    step: 2,
+    title: "Cadastre seus produtos",
+    desc: "Adicione todos os eletrodomésticos e produtos com preço e estoque mínimo",
+    icon: Package,
+  },
+  {
+    step: 3,
+    title: "Dê entrada no estoque",
+    desc: "Registre as entradas de mercadoria para inicializar o inventário",
+    icon: ArrowDownToLine,
+  },
+  {
+    step: 4,
+    title: "Cadastre clientes",
+    desc: "Adicione clientes com CPF válido, endereço e dados de contato",
+    icon: Users,
+  },
+  {
+    step: 5,
+    title: "Faça vendas",
+    desc: "Registre saídas de estoque e gere contratos assinados digitalmente",
+    icon: ArrowUpFromLine,
+  },
+  {
+    step: 6,
+    title: "Monitore o Dashboard",
+    desc: "Acompanhe KPIs, alertas e tendências de movimentação",
+    icon: TrendingUp,
+  },
 ];
 
 // ────────────────────────────────────────────────────────────
@@ -238,11 +287,11 @@ function generatePortfolioPDF() {
 
   // ── helpers ──────────────────────────────────────────────
   const hex = (color: string) => color;
-  const primary = "#1e3a8a";    // blue-900
-  const accent  = "#db2777";    // pink-600
-  const light   = "#f1f5f9";    // slate-100
-  const dark    = "#1e293b";    // slate-800
-  const muted   = "#64748b";    // slate-500
+  const primary = "#1e3a8a"; // blue-900
+  const accent = "#db2777"; // pink-600
+  const light = "#f1f5f9"; // slate-100
+  const dark = "#1e293b"; // slate-800
+  const muted = "#64748b"; // slate-500
 
   let y = 0;
 
@@ -338,15 +387,22 @@ function generatePortfolioPDF() {
   doc.setFontSize(11);
   doc.setFont("helvetica", "normal");
   doc.setTextColor(muted);
-  doc.text("StockFlow — ERP Completo para Eletrodomésticos e Enxovais", W / 2, y, { align: "center" });
+  doc.text("StockFlow — ERP Completo para Eletrodomésticos e Enxovais", W / 2, y, {
+    align: "center",
+  });
 
   y += 14;
   // Tag boxes
-  const tags = ["Gestão de Estoque", "Controle de Clientes", "Contratos Digitais", "Dashboard em Tempo Real"];
+  const tags = [
+    "Gestão de Estoque",
+    "Controle de Clientes",
+    "Contratos Digitais",
+    "Dashboard em Tempo Real",
+  ];
   const tagW = 42;
   const totalTagW = tags.length * tagW + (tags.length - 1) * 4;
   let tx = (W - totalTagW) / 2;
-  tags.forEach(tag => {
+  tags.forEach((tag) => {
     doc.setFillColor(light);
     doc.roundedRect(tx, y, tagW, 8, 2, 2, "F");
     doc.setTextColor(primary);
@@ -362,7 +418,7 @@ function generatePortfolioPDF() {
   // About section
   sectionTitle("📋  Sobre a Empresa");
   bodyText(
-    "A Josi & Jó Eletrodomésticos é uma empresa especializada na comercialização de eletrodomésticos e enxovais de cama, mesa e banho, com atendimento humanizado e qualidade garantida. Localizada em Tibiri/Santa Rita, Paraíba, a empresa conta com um sistema de gestão moderno e integrado para controlar todo o fluxo de vendas, estoque e clientes."
+    "A Josi & Jó Eletrodomésticos é uma empresa especializada na comercialização de eletrodomésticos e enxovais de cama, mesa e banho, com atendimento humanizado e qualidade garantida. Localizada em Tibiri/Santa Rita, Paraíba, a empresa conta com um sistema de gestão moderno e integrado para controlar todo o fluxo de vendas, estoque e clientes.",
   );
   y += 3;
   bodyText("📞  (83) 98805-9666     📍  Tibiri/Santa Rita, Paraíba, Brasil", 0, 9, muted);
@@ -372,14 +428,50 @@ function generatePortfolioPDF() {
   sectionTitle("🗂️  Módulos do Sistema");
 
   const moduleData = [
-    { name: "Dashboard", desc: "KPIs em tempo real, gráficos de movimentação e alertas de estoque baixo.", features: ["Cards de indicadores", "Gráfico de barras e pizza", "Central de alertas"] },
-    { name: "Gestão de Clientes", desc: "Cadastro completo de clientes com validação de CPF/CNPJ e endereço por CEP.", features: ["Dados pessoais e contato", "Validação matemática de CPF", "Busca de endereço por CEP"] },
-    { name: "Histórico & Pagamentos", desc: "Rastreamento completo de compras, pagamentos e parcelas por cliente.", features: ["Histórico de compras", "Controle de pagamentos", "Gestão de parcelas"] },
-    { name: "Contratos Digitais", desc: "Contrato de compra e venda com reserva de domínio e assinatura digital.", features: ["Preenchimento automático", "Assinatura via tablet", "Armazenamento seguro"] },
-    { name: "Produtos & Estoque", desc: "Catálogo completo com SKU, código de barras, preços e controle de estoque.", features: ["SKU e código de barras", "Estoque mín./máx.", "Alertas automáticos"] },
-    { name: "Movimentações", desc: "Registro de entradas, saídas e ajustes com rastreabilidade completa.", features: ["Entrada de mercadoria", "Saída por venda", "Ajuste de inventário"] },
-    { name: "Cadastros Auxiliares", desc: "Categorias, marcas, unidades, depósitos e fornecedores.", features: ["Categorias e marcas", "Unidades de medida", "Fornecedores (CNPJ)"] },
-    { name: "Gestão de Usuários", desc: "Controle de acesso com papéis de Administrador e Operador.", features: ["Convite por e-mail", "Papéis de acesso", "Ativação/desativação"] },
+    {
+      name: "Dashboard",
+      desc: "KPIs em tempo real, gráficos de movimentação e alertas de estoque baixo.",
+      features: ["Cards de indicadores", "Gráfico de barras e pizza", "Central de alertas"],
+    },
+    {
+      name: "Gestão de Clientes",
+      desc: "Cadastro completo de clientes com validação de CPF/CNPJ e endereço por CEP.",
+      features: [
+        "Dados pessoais e contato",
+        "Validação matemática de CPF",
+        "Busca de endereço por CEP",
+      ],
+    },
+    {
+      name: "Histórico & Pagamentos",
+      desc: "Rastreamento completo de compras, pagamentos e parcelas por cliente.",
+      features: ["Histórico de compras", "Controle de pagamentos", "Gestão de parcelas"],
+    },
+    {
+      name: "Contratos Digitais",
+      desc: "Contrato de compra e venda com reserva de domínio e assinatura digital.",
+      features: ["Preenchimento automático", "Assinatura via tablet", "Armazenamento seguro"],
+    },
+    {
+      name: "Produtos & Estoque",
+      desc: "Catálogo completo com SKU, código de barras, preços e controle de estoque.",
+      features: ["SKU e código de barras", "Estoque mín./máx.", "Alertas automáticos"],
+    },
+    {
+      name: "Movimentações",
+      desc: "Registro de entradas, saídas e ajustes com rastreabilidade completa.",
+      features: ["Entrada de mercadoria", "Saída por venda", "Ajuste de inventário"],
+    },
+    {
+      name: "Cadastros Auxiliares",
+      desc: "Categorias, marcas, unidades, depósitos e fornecedores.",
+      features: ["Categorias e marcas", "Unidades de medida", "Fornecedores (CNPJ)"],
+    },
+    {
+      name: "Gestão de Usuários",
+      desc: "Controle de acesso com papéis de Administrador e Operador.",
+      features: ["Convite por e-mail", "Papéis de acesso", "Ativação/desativação"],
+    },
   ];
 
   moduleData.forEach((mod, i) => {
@@ -415,7 +507,7 @@ function generatePortfolioPDF() {
     // Feature chips
     let cx = margin + 14;
     const chipY = y + 21;
-    mod.features.forEach(feat => {
+    mod.features.forEach((feat) => {
       const fw = doc.getTextWidth(feat) + 6;
       doc.setFillColor("#dbeafe");
       doc.roundedRect(cx, chipY - 3.5, fw, 5.5, 1, 1, "F");
@@ -434,15 +526,33 @@ function generatePortfolioPDF() {
   sectionTitle("⭐  Diferenciais do Sistema", accent);
 
   const diffs = [
-    { title: "100% na Nuvem", desc: "Acesse de qualquer dispositivo, a qualquer hora, com segurança total de dados." },
-    { title: "Validação de CPF/CNPJ", desc: "Algoritmo matemático garante que somente documentos reais sejam cadastrados." },
-    { title: "Assinatura Digital", desc: "Contratos assinados diretamente em tablet, sem papel e com validade jurídica." },
-    { title: "Alertas em Tempo Real", desc: "Notificações automáticas de estoque baixo para nunca perder uma venda." },
-    { title: "Multi-usuário", desc: "Múltiplos colaboradores com controle de acesso por papel (admin/operador)." },
-    { title: "Relatórios Visuais", desc: "Gráficos interativos de movimentação e produtos mais vendidos." },
+    {
+      title: "100% na Nuvem",
+      desc: "Acesse de qualquer dispositivo, a qualquer hora, com segurança total de dados.",
+    },
+    {
+      title: "Validação de CPF/CNPJ",
+      desc: "Algoritmo matemático garante que somente documentos reais sejam cadastrados.",
+    },
+    {
+      title: "Assinatura Digital",
+      desc: "Contratos assinados diretamente em tablet, sem papel e com validade jurídica.",
+    },
+    {
+      title: "Alertas em Tempo Real",
+      desc: "Notificações automáticas de estoque baixo para nunca perder uma venda.",
+    },
+    {
+      title: "Multi-usuário",
+      desc: "Múltiplos colaboradores com controle de acesso por papel (admin/operador).",
+    },
+    {
+      title: "Relatórios Visuais",
+      desc: "Gráficos interativos de movimentação e produtos mais vendidos.",
+    },
   ];
 
-  diffs.forEach(d => {
+  diffs.forEach((d) => {
     checkSpace(16);
     doc.setFillColor("#eff6ff");
     doc.roundedRect(margin, y, contentW, 13, 2, 2, "F");
@@ -483,7 +593,12 @@ function generatePortfolioPDF() {
     doc.setFontSize(8);
     doc.setFont("helvetica", "normal");
     doc.setTextColor(muted);
-    doc.text(`Josi & Jó Eletrodomésticos  ·  Sistema StockFlow  ·  Página ${i} de ${pageCount}`, W / 2, 285, { align: "center" });
+    doc.text(
+      `Josi & Jó Eletrodomésticos  ·  Sistema StockFlow  ·  Página ${i} de ${pageCount}`,
+      W / 2,
+      285,
+      { align: "center" },
+    );
   }
 
   doc.save("portfolio-josi-e-jo.pdf");
@@ -502,7 +617,11 @@ function AccordionItem({ q, a }: { q: string; a: string }) {
         onClick={() => setOpen(!open)}
       >
         <span className="font-medium text-sm pr-4">{q}</span>
-        {open ? <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" /> : <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />}
+        {open ? (
+          <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" />
+        ) : (
+          <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
+        )}
       </button>
       {open && (
         <div className="px-4 pb-4 pt-1 text-sm text-muted-foreground leading-relaxed border-t bg-muted/10">
@@ -533,18 +652,28 @@ function AjudaPage() {
     <div className="space-y-8 max-w-5xl mx-auto pb-12">
       {/* ── HERO ── */}
       <div className="relative rounded-2xl overflow-hidden bg-gradient-to-br from-blue-900 via-blue-800 to-indigo-900 text-white p-8 md:p-10">
-        <div className="absolute inset-0 opacity-10"
-          style={{ backgroundImage: "radial-gradient(circle at 20% 50%, #fff 1px, transparent 1px), radial-gradient(circle at 80% 20%, #fff 1px, transparent 1px)", backgroundSize: "40px 40px" }}
+        <div
+          className="absolute inset-0 opacity-10"
+          style={{
+            backgroundImage:
+              "radial-gradient(circle at 20% 50%, #fff 1px, transparent 1px), radial-gradient(circle at 80% 20%, #fff 1px, transparent 1px)",
+            backgroundSize: "40px 40px",
+          }}
         />
         <div className="relative flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
           <div>
             <div className="flex items-center gap-2 mb-3">
               <HelpCircle className="h-6 w-6 text-blue-300" />
-              <Badge className="bg-blue-700/60 text-blue-100 hover:bg-blue-700/60 border-blue-600/40">Central de Ajuda</Badge>
+              <Badge className="bg-blue-700/60 text-blue-100 hover:bg-blue-700/60 border-blue-600/40">
+                Central de Ajuda
+              </Badge>
             </div>
-            <h1 className="text-3xl md:text-4xl font-bold tracking-tight mb-2">Como podemos ajudar?</h1>
+            <h1 className="text-3xl md:text-4xl font-bold tracking-tight mb-2">
+              Como podemos ajudar?
+            </h1>
             <p className="text-blue-200 text-sm md:text-base max-w-lg">
-              Guia completo do sistema StockFlow — conheça todos os módulos, tire dúvidas e baixe o portfólio da Josi & Jó Eletrodomésticos.
+              Guia completo do sistema StockFlow — conheça todos os módulos, tire dúvidas e baixe o
+              portfólio da Josi & Jó Eletrodomésticos.
             </p>
           </div>
           <div className="flex flex-col gap-3 shrink-0">
@@ -554,17 +683,26 @@ function AjudaPage() {
               onClick={handleDownload}
               disabled={downloading}
             >
-              {downloading
-                ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Gerando PDF…</>
-                : <><Download className="h-4 w-4 mr-2" /> Baixar Portfólio PDF</>
-              }
+              {downloading ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" /> Gerando PDF…
+                </>
+              ) : (
+                <>
+                  <Download className="h-4 w-4 mr-2" /> Baixar Portfólio PDF
+                </>
+              )}
             </Button>
             <a
               href="https://wa.me/5583988059666?text=Olá!%20Preciso%20de%20suporte%20no%20sistema."
               target="_blank"
               rel="noopener noreferrer"
             >
-              <Button variant="outline" size="lg" className="w-full border-white/30 text-white hover:bg-white/10 hover:text-white">
+              <Button
+                variant="outline"
+                size="lg"
+                className="w-full border-white/30 text-white hover:bg-white/10 hover:text-white"
+              >
                 <MessageCircle className="h-4 w-4 mr-2" /> Suporte via WhatsApp
               </Button>
             </a>
@@ -639,7 +777,9 @@ function AjudaPage() {
             <div key={section.section}>
               <div className="flex items-center gap-2 mb-2">
                 <section.icon className={`h-4 w-4 ${section.color}`} />
-                <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">{section.section}</h3>
+                <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">
+                  {section.section}
+                </h3>
               </div>
               <div className="space-y-2">
                 {section.items.map((item) => (
@@ -659,13 +799,18 @@ function AjudaPage() {
               <FileText className="h-8 w-8" />
             </div>
             <div className="flex-1 text-center md:text-left">
-              <h3 className="text-lg font-bold mb-1">Portfólio Completo — Josi & Jó Eletrodomésticos</h3>
+              <h3 className="text-lg font-bold mb-1">
+                Portfólio Completo — Josi & Jó Eletrodomésticos
+              </h3>
               <p className="text-sm text-muted-foreground">
-                Documento PDF profissional com apresentação da empresa, todos os módulos do sistema, diferenciais e informações de contato. Ideal para apresentar a clientes e parceiros.
+                Documento PDF profissional com apresentação da empresa, todos os módulos do sistema,
+                diferenciais e informações de contato. Ideal para apresentar a clientes e parceiros.
               </p>
               <div className="flex flex-wrap gap-2 mt-3 justify-center md:justify-start">
-                {["8 Módulos", "Diferenciais", "Contato", "Formato A4"].map(tag => (
-                  <Badge key={tag} variant="secondary" className="text-xs">{tag}</Badge>
+                {["8 Módulos", "Diferenciais", "Contato", "Formato A4"].map((tag) => (
+                  <Badge key={tag} variant="secondary" className="text-xs">
+                    {tag}
+                  </Badge>
                 ))}
               </div>
             </div>
@@ -675,10 +820,15 @@ function AjudaPage() {
               onClick={handleDownload}
               disabled={downloading}
             >
-              {downloading
-                ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Gerando…</>
-                : <><Download className="h-4 w-4 mr-2" /> Baixar PDF</>
-              }
+              {downloading ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" /> Gerando…
+                </>
+              ) : (
+                <>
+                  <Download className="h-4 w-4 mr-2" /> Baixar PDF
+                </>
+              )}
             </Button>
           </CardContent>
         </Card>
@@ -694,8 +844,15 @@ function AjudaPage() {
             <div>
               <div className="font-bold text-sm mb-0.5">Suporte via WhatsApp</div>
               <div className="text-xs text-muted-foreground mb-2">Tire dúvidas rapidamente</div>
-              <a href="https://wa.me/5583988059666?text=Olá!%20Preciso%20de%20suporte%20no%20sistema." target="_blank" rel="noopener noreferrer">
-                <Button size="sm" className="bg-green-600 hover:bg-green-700 text-white border-0 text-xs">
+              <a
+                href="https://wa.me/5583988059666?text=Olá!%20Preciso%20de%20suporte%20no%20sistema."
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <Button
+                  size="sm"
+                  className="bg-green-600 hover:bg-green-700 text-white border-0 text-xs"
+                >
                   <MessageCircle className="h-3.5 w-3.5 mr-1.5" /> Abrir WhatsApp
                 </Button>
               </a>
@@ -711,7 +868,10 @@ function AjudaPage() {
               <div className="font-bold text-sm mb-0.5">Telefone / Ligação</div>
               <div className="text-xs text-muted-foreground mb-2">(83) 98805-9666</div>
               <a href="tel:+5583988059666">
-                <Button size="sm" className="bg-blue-700 hover:bg-blue-800 text-white border-0 text-xs">
+                <Button
+                  size="sm"
+                  className="bg-blue-700 hover:bg-blue-800 text-white border-0 text-xs"
+                >
                   <Phone className="h-3.5 w-3.5 mr-1.5" /> Ligar agora
                 </Button>
               </a>
@@ -723,7 +883,10 @@ function AjudaPage() {
       {/* ── FOOTER INFO ── */}
       <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground pt-2">
         <Star className="h-3.5 w-3.5 text-yellow-400" />
-        <span>StockFlow Gestão · Desenvolvido para Josi & Jó Eletrodomésticos · Tibiri/Santa Rita, Paraíba</span>
+        <span>
+          StockFlow Gestão · Desenvolvido para Josi & Jó Eletrodomésticos · Tibiri/Santa Rita,
+          Paraíba
+        </span>
         <Star className="h-3.5 w-3.5 text-yellow-400" />
       </div>
     </div>

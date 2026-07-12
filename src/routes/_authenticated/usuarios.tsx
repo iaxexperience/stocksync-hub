@@ -8,17 +8,42 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import {
-  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
 } from "@/components/ui/table";
 import {
-  Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle,
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
 } from "@/components/ui/dialog";
 import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@/components/ui/select";
 import {
-  Plus, Pencil, UserX, Loader2, Mail, Eye, EyeOff,
-  ShieldCheck, Keyboard, Users, CheckCircle2, Clock, XCircle, UserPlus,
+  Plus,
+  Pencil,
+  UserX,
+  Loader2,
+  Mail,
+  Eye,
+  EyeOff,
+  ShieldCheck,
+  Keyboard,
+  Users,
+  CheckCircle2,
+  Clock,
+  XCircle,
+  UserPlus,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
@@ -73,14 +98,16 @@ const ROLES = [
 const roleMap = Object.fromEntries(ROLES.map((r) => [r.value, r]));
 
 function getRoleInfo(role: string) {
-  return roleMap[role] ?? {
-    label: role,
-    color: "bg-slate-50 text-slate-700 border-slate-200",
-    icon: Users,
-    iconColor: "text-slate-500",
-    bg: "bg-slate-50",
-    desc: "",
-  };
+  return (
+    roleMap[role] ?? {
+      label: role,
+      color: "bg-slate-50 text-slate-700 border-slate-200",
+      icon: Users,
+      iconColor: "text-slate-500",
+      bg: "bg-slate-50",
+      desc: "",
+    }
+  );
 }
 
 // ── Route ────────────────────────────────────────────────────────────────
@@ -115,7 +142,9 @@ function UsuariosPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("organization_members")
-        .select(`id, role, created_at, user_id, profiles:profiles ( id, full_name, email, phone, is_active )`)
+        .select(
+          `id, role, created_at, user_id, profiles:profiles ( id, full_name, email, phone, is_active )`,
+        )
         .eq("organization_id", orgId!);
       if (error) throw error;
       return (data as unknown as Member[]) ?? [];
@@ -229,8 +258,13 @@ function UsuariosPage() {
 
   // ── Helpers ──────────────────────────────────────────────────────────────
   function resetForm() {
-    setFullName(""); setEmail(""); setPassword(""); setConfirmPassword("");
-    setRole("estoquista"); setShowPw(false); setShowConfirm(false);
+    setFullName("");
+    setEmail("");
+    setPassword("");
+    setConfirmPassword("");
+    setRole("estoquista");
+    setShowPw(false);
+    setShowConfirm(false);
   }
 
   function handleCreateUser(e: React.FormEvent) {
@@ -255,7 +289,8 @@ function UsuariosPage() {
       <div>
         <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Usuários do Sistema</h1>
         <p className="text-muted-foreground text-sm">
-          Cadastre e gerencie os acessos dos funcionários. Somente o Administrador Geral pode criar usuários.
+          Cadastre e gerencie os acessos dos funcionários. Somente o Administrador Geral pode criar
+          usuários.
         </p>
       </div>
 
@@ -276,7 +311,6 @@ function UsuariosPage() {
             </CardHeader>
             <CardContent>
               <form onSubmit={handleCreateUser} className="space-y-4">
-
                 {/* Nome */}
                 <div className="space-y-1.5">
                   <Label htmlFor="reg-name">
@@ -338,7 +372,9 @@ function UsuariosPage() {
                 <div className="space-y-1.5">
                   <Label htmlFor="reg-password">
                     Senha <span className="text-destructive">*</span>
-                    <span className="text-muted-foreground font-normal text-xs ml-1">(mín. 8 caracteres)</span>
+                    <span className="text-muted-foreground font-normal text-xs ml-1">
+                      (mín. 8 caracteres)
+                    </span>
                   </Label>
                   <div className="relative">
                     <Input
@@ -369,9 +405,11 @@ function UsuariosPage() {
                           key={i}
                           className={`h-1 flex-1 rounded-full transition-colors ${
                             password.length >= i * 3
-                              ? password.length >= 12 ? "bg-green-500"
-                              : password.length >= 8 ? "bg-yellow-400"
-                              : "bg-orange-400"
+                              ? password.length >= 12
+                                ? "bg-green-500"
+                                : password.length >= 8
+                                  ? "bg-yellow-400"
+                                  : "bg-orange-400"
                               : "bg-muted"
                           }`}
                         />
@@ -398,8 +436,8 @@ function UsuariosPage() {
                         passwordsDontMatch
                           ? "border-destructive focus-visible:ring-destructive"
                           : passwordsMatch
-                          ? "border-green-500 focus-visible:ring-green-500"
-                          : ""
+                            ? "border-green-500 focus-visible:ring-green-500"
+                            : ""
                       }`}
                     />
                     <button
@@ -441,9 +479,13 @@ function UsuariosPage() {
                     disabled={createUserMutation.isPending || !!passwordsDontMatch}
                   >
                     {createUserMutation.isPending ? (
-                      <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Cadastrando…</>
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Cadastrando…
+                      </>
                     ) : (
-                      <><UserPlus className="mr-2 h-4 w-4" /> Cadastrar</>
+                      <>
+                        <UserPlus className="mr-2 h-4 w-4" /> Cadastrar
+                      </>
                     )}
                   </Button>
                 </div>
@@ -454,7 +496,6 @@ function UsuariosPage() {
 
         {/* ── RIGHT: List + Pending ── */}
         <div className={`space-y-4 ${isAdmin ? "lg:col-span-3" : "lg:col-span-5"}`}>
-
           {/* Pending Google approvals */}
           {pendingUsers.length > 0 && (
             <Card className="border-amber-200 bg-amber-50/50 shadow-card">
@@ -504,7 +545,8 @@ function UsuariosPage() {
                     {isLoading ? (
                       <TableRow>
                         <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
-                          <Loader2 className="h-4 w-4 animate-spin inline mr-2" />Carregando…
+                          <Loader2 className="h-4 w-4 animate-spin inline mr-2" />
+                          Carregando…
                         </TableCell>
                       </TableRow>
                     ) : activeMembers.length === 0 ? (
@@ -521,15 +563,21 @@ function UsuariosPage() {
                           <TableRow key={m.id}>
                             <TableCell className="py-3">
                               <div className="flex items-center gap-2.5">
-                                <div className={`h-9 w-9 rounded-full flex items-center justify-center font-bold text-sm shrink-0 ${ri.bg}`}>
+                                <div
+                                  className={`h-9 w-9 rounded-full flex items-center justify-center font-bold text-sm shrink-0 ${ri.bg}`}
+                                >
                                   <span className={ri.iconColor}>
                                     {m.profiles?.full_name?.[0]?.toUpperCase() || "?"}
                                   </span>
                                 </div>
                                 <div>
-                                  <p className="font-semibold text-sm">{m.profiles?.full_name || "Sem Nome"}</p>
+                                  <p className="font-semibold text-sm">
+                                    {m.profiles?.full_name || "Sem Nome"}
+                                  </p>
                                   {m.user_id === profile?.id && (
-                                    <span className="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded font-medium">Você</span>
+                                    <span className="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded font-medium">
+                                      Você
+                                    </span>
                                   )}
                                 </div>
                               </div>
@@ -556,14 +604,19 @@ function UsuariosPage() {
                               {isAdmin && m.user_id !== profile?.id ? (
                                 <>
                                   <Button
-                                    size="icon" variant="ghost"
-                                    onClick={() => { setEditingMember(m); setEditOpen(true); }}
+                                    size="icon"
+                                    variant="ghost"
+                                    onClick={() => {
+                                      setEditingMember(m);
+                                      setEditOpen(true);
+                                    }}
                                     title="Alterar papel"
                                   >
                                     <Pencil className="h-4 w-4 text-slate-500" />
                                   </Button>
                                   <Button
-                                    size="icon" variant="ghost"
+                                    size="icon"
+                                    variant="ghost"
                                     onClick={() => {
                                       if (confirm(`Revogar acesso de ${m.profiles?.full_name}?`))
                                         removeMemberMutation.mutate(m.id);
@@ -590,7 +643,13 @@ function UsuariosPage() {
       </div>
 
       {/* Edit Role Dialog */}
-      <Dialog open={editOpen} onOpenChange={(o) => { setEditOpen(o); if (!o) setEditingMember(null); }}>
+      <Dialog
+        open={editOpen}
+        onOpenChange={(o) => {
+          setEditOpen(o);
+          if (!o) setEditingMember(null);
+        }}
+      >
         <DialogContent className="max-w-sm">
           <DialogHeader>
             <DialogTitle>Alterar Papel de Acesso</DialogTitle>
@@ -606,7 +665,9 @@ function UsuariosPage() {
                   value={editingMember.role}
                   onValueChange={(val) => setEditingMember({ ...editingMember, role: val })}
                 >
-                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
                   <SelectContent>
                     {ROLES.map((r) => (
                       <SelectItem key={r.value} value={r.value}>
@@ -625,9 +686,13 @@ function UsuariosPage() {
                 )}
               </div>
               <DialogFooter>
-                <Button type="button" variant="outline" onClick={() => setEditOpen(false)}>Cancelar</Button>
+                <Button type="button" variant="outline" onClick={() => setEditOpen(false)}>
+                  Cancelar
+                </Button>
                 <Button type="submit" disabled={updateRoleMutation.isPending}>
-                  {updateRoleMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  {updateRoleMutation.isPending && (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  )}
                   Salvar
                 </Button>
               </DialogFooter>
@@ -641,7 +706,10 @@ function UsuariosPage() {
 
 // ── Pending Row ──────────────────────────────────────────────────────────
 function PendingApprovalRow({
-  user, onApprove, onReject, isLoading,
+  user,
+  onApprove,
+  onReject,
+  isLoading,
 }: {
   user: PendingUser;
   onApprove: (role: string) => void;
@@ -662,16 +730,35 @@ function PendingApprovalRow({
       </div>
       <div className="flex items-center gap-2 shrink-0">
         <Select value={selectedRole} onValueChange={setSelectedRole}>
-          <SelectTrigger className="w-40 h-8 text-xs"><SelectValue /></SelectTrigger>
+          <SelectTrigger className="w-40 h-8 text-xs">
+            <SelectValue />
+          </SelectTrigger>
           <SelectContent>
-            {ROLES.map((r) => <SelectItem key={r.value} value={r.value} className="text-xs">{r.label}</SelectItem>)}
+            {ROLES.map((r) => (
+              <SelectItem key={r.value} value={r.value} className="text-xs">
+                {r.label}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
-        <Button size="sm" className="h-8 bg-green-600 hover:bg-green-700 text-white border-0 text-xs px-2" onClick={() => onApprove(selectedRole)} disabled={isLoading}>
-          <CheckCircle2 className="h-3.5 w-3.5 mr-1" />Aprovar
+        <Button
+          size="sm"
+          className="h-8 bg-green-600 hover:bg-green-700 text-white border-0 text-xs px-2"
+          onClick={() => onApprove(selectedRole)}
+          disabled={isLoading}
+        >
+          <CheckCircle2 className="h-3.5 w-3.5 mr-1" />
+          Aprovar
         </Button>
-        <Button size="sm" variant="ghost" className="h-8 text-destructive hover:bg-destructive/10 text-xs px-2" onClick={onReject} disabled={isLoading}>
-          <XCircle className="h-3.5 w-3.5 mr-1" />Recusar
+        <Button
+          size="sm"
+          variant="ghost"
+          className="h-8 text-destructive hover:bg-destructive/10 text-xs px-2"
+          onClick={onReject}
+          disabled={isLoading}
+        >
+          <XCircle className="h-3.5 w-3.5 mr-1" />
+          Recusar
         </Button>
       </div>
     </div>

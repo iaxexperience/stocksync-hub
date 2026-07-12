@@ -5318,9 +5318,7 @@ function DocumentosList({
     return (orders as any[])
       .filter(
         (o: any) =>
-          o.order_type === "contrato" &&
-          !signedOrderIds.has(o.id) &&
-          o.status !== "cancelado",
+          o.order_type === "contrato" && !signedOrderIds.has(o.id) && o.status !== "cancelado",
       )
       .map((o: any) => ({
         ...o,
@@ -5330,8 +5328,7 @@ function DocumentosList({
         if (!search) return true;
         const q = search.toLowerCase();
         return (
-          o.customer?.name?.toLowerCase().includes(q) ||
-          o.order_number?.toLowerCase().includes(q)
+          o.customer?.name?.toLowerCase().includes(q) || o.order_number?.toLowerCase().includes(q)
         );
       });
   }, [orders, signatures, customers, search]);
@@ -5411,9 +5408,7 @@ function DocumentosList({
                       <TableCell className="font-mono text-[10px]">
                         {o.customer?.cpf_cnpj || "—"}
                       </TableCell>
-                      <TableCell>
-                        {new Date(o.created_at).toLocaleDateString("pt-BR")}
-                      </TableCell>
+                      <TableCell>{new Date(o.created_at).toLocaleDateString("pt-BR")}</TableCell>
                       <TableCell className="text-right font-semibold">
                         {Number(o.total_amount || 0).toLocaleString("pt-BR", {
                           style: "currency",
@@ -5540,7 +5535,6 @@ function DocumentosList({
     </Card>
   );
 }
-
 
 // ============================================
 // HELPER UTILITY FUNCTIONS

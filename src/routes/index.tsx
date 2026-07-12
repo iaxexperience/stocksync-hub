@@ -231,7 +231,6 @@ function Landing() {
                   </ul>
                 </CardContent>
               </div>
-
             </Card>
 
             {/* Cama, Mesa e Banho */}
@@ -278,7 +277,6 @@ function Landing() {
                   </ul>
                 </CardContent>
               </div>
-
             </Card>
           </div>
         </div>
@@ -359,7 +357,11 @@ function Landing() {
                 asChild
                 className="bg-pink-600 hover:bg-pink-700 text-white font-bold rounded-full px-8 py-5"
               >
-                <a href="https://wa.me/5583988059666?text=Olá!%20Gostaria%20de%20saber%20mais%20sobre%20os%20produtos." target="_blank" rel="noopener noreferrer">
+                <a
+                  href="https://wa.me/5583988059666?text=Olá!%20Gostaria%20de%20saber%20mais%20sobre%20os%20produtos."
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
                   Falar Conosco
                 </a>
               </Button>
