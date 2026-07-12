@@ -105,6 +105,10 @@ const groups = [
     ],
   },
   {
+    label: "Configurações",
+    items: [{ title: "Configurações", to: "/configuracoes", icon: Settings }],
+  },
+  {
     label: "Suporte",
     items: [{ title: "Ajuda & Portfólio", to: "/ajuda", icon: HelpCircle }],
   },
