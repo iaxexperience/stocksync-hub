@@ -20,6 +20,7 @@ import {
   FileSignature,
   HelpCircle,
   BookOpen,
+  TrendingUp,
 } from "lucide-react";
 import {
   Sidebar,
@@ -41,7 +42,10 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 const groups = [
   {
     label: "Visão geral",
-    items: [{ title: "Dashboard", to: "/dashboard", icon: LayoutDashboard }],
+    items: [
+      { title: "Dashboard", to: "/dashboard", icon: LayoutDashboard },
+      { title: "Financeiro & Caixa", to: "/financeiro", icon: TrendingUp },
+    ],
   },
   {
     label: "Clientes",
