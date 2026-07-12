@@ -479,7 +479,7 @@ function Landing() {
               <li className="flex items-center gap-2">
                 <Phone className="h-4 w-4 text-pink-600" /> (83) 98805-9666
               </li>
-              <li className="text-slate-500 font-normal">João Pessoa, Paraíba - PB</li>
+              <li className="text-slate-500 font-normal">Tibiri/Santa Rita, Paraíba, Brasil</li>
             </ul>
           </div>
         </div>
