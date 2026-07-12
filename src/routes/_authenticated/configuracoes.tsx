@@ -19,6 +19,15 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import {
   Building2,
   Palette,
   Shield,
@@ -33,6 +42,7 @@ import {
   Trash2,
   Send,
   Loader2,
+  Plus,
 } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/configuracoes")({
@@ -46,6 +56,75 @@ function Configuracoes() {
 
   // Active Tab State
   const [activeTab, setActiveTab] = useState("empresa");
+
+  // Query: All accessible organizations
+  const { data: organizationsList = [], isLoading: isLoadingOrgs } = useQuery({
+    queryKey: ["user_organizations"],
+    enabled: !!profile,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("organizations")
+        .select("*")
+        .order("name");
+      if (error) throw error;
+      return data || [];
+    },
+  });
+
+  // Create New Org Form State
+  const [newOrgName, setNewOrgName] = useState("");
+  const [newOrgDocument, setNewOrgDocument] = useState("");
+  const [newOrgPhone, setNewOrgPhone] = useState("");
+  const [newOrgEmail, setNewOrgEmail] = useState("");
+
+  // Mutation: Create Organization
+  const createOrg = useMutation({
+    mutationFn: async () => {
+      if (!newOrgName.trim()) {
+        throw new Error("O nome da organização é obrigatório.");
+      }
+      const { data, error } = await supabase.rpc("create_new_organization", {
+        org_name: newOrgName.trim(),
+        org_document: newOrgDocument.trim() || null,
+        org_phone: newOrgPhone.trim() || null,
+        org_email: newOrgEmail.trim() || null,
+      });
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      toast.success("Organização criada e ativada com sucesso!");
+      setNewOrgName("");
+      setNewOrgDocument("");
+      setNewOrgPhone("");
+      setNewOrgEmail("");
+      queryClient.invalidateQueries({ queryKey: ["user_organizations"] });
+      queryClient.invalidateQueries({ queryKey: ["profile"] });
+      window.location.reload();
+    },
+    onError: (err: any) => {
+      toast.error("Erro ao criar organização: " + err.message);
+    },
+  });
+
+  // Mutation: Switch Active Organization
+  const switchOrg = useMutation({
+    mutationFn: async (targetOrgId: string) => {
+      if (!profile?.id) throw new Error("Usuário não carregado.");
+      const { error } = await supabase
+        .from("profiles")
+        .update({ active_org_id: targetOrgId })
+        .eq("id", profile.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Organização ativa alterada!");
+      window.location.reload();
+    },
+    onError: (err: any) => {
+      toast.error("Erro ao alterar organização: " + err.message);
+    },
+  });
 
   // Query: Organization Details
   const { data: organization, isLoading: isLoadingOrg } = useQuery({
@@ -421,6 +500,10 @@ function Configuracoes() {
           <TabsTrigger value="integracoes" className="flex items-center gap-1.5">
             <Mail className="h-3.5 w-3.5" />
             E-mail & WhatsApp
+          </TabsTrigger>
+          <TabsTrigger value="organizacoes" className="flex items-center gap-1.5">
+            <Building2 className="h-3.5 w-3.5 text-indigo-600" />
+            Organizações (Multi-empresa)
           </TabsTrigger>
         </TabsList>
 
@@ -1148,6 +1231,193 @@ function Configuracoes() {
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        {/* TAB 5: ORGANIZACOES (MULTI-EMPRESA) */}
+        <TabsContent value="organizacoes">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Col 1 & 2: Minhas Organizações */}
+            <div className="lg:col-span-2 space-y-6">
+              <Card className="shadow-sm">
+                <CardHeader>
+                  <CardTitle className="text-base font-bold flex items-center gap-1.5 text-slate-900">
+                    <Building2 className="h-5 w-5 text-indigo-600" />
+                    Minhas Organizações
+                  </CardTitle>
+                  <CardDescription>
+                    Visualize e gerencie as organizações às quais você possui acesso. As informações de cada empresa são 100% isoladas de forma invisível.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {profile?.email === "maxrangelformiga@gmail.com" && (
+                    <div className="p-4 rounded-lg bg-indigo-50 border border-indigo-100 space-y-1">
+                      <h4 className="font-bold text-indigo-900 text-xs flex items-center gap-1.5">
+                        <Sparkles className="h-4 w-4 text-indigo-500 animate-pulse" />
+                        Acesso de Administrador Global Ativo
+                      </h4>
+                      <p className="text-slate-600 text-[10px] leading-relaxed">
+                        Sua conta <strong>maxrangelformiga@gmail.com</strong> possui privilégios de superadministrador. Você pode ver, alternar e gerenciar todas as organizações do sistema. O isolamento de dados de RLS (Row Level Security) garante que uma organização normal nunca possa enxergar os dados de outra.
+                      </p>
+                    </div>
+                  )}
+
+                  {isLoadingOrgs ? (
+                    <div className="flex flex-col items-center justify-center py-8 text-slate-400 gap-2">
+                      <Loader2 className="h-6 w-6 animate-spin text-indigo-500" />
+                      <span>Carregando organizações...</span>
+                    </div>
+                  ) : organizationsList.length === 0 ? (
+                    <div className="text-center py-8 text-slate-400">
+                      Nenhuma organização vinculada à sua conta.
+                    </div>
+                  ) : (
+                    <div className="border rounded-md overflow-hidden">
+                      <Table>
+                        <TableHeader className="bg-slate-50">
+                          <TableRow>
+                            <TableHead className="font-semibold text-slate-700">Nome / ID</TableHead>
+                            <TableHead className="font-semibold text-slate-700">Documento / CNPJ</TableHead>
+                            <TableHead className="font-semibold text-slate-700">Contato</TableHead>
+                            <TableHead className="font-semibold text-slate-700 text-right">Ação</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {organizationsList.map((org) => {
+                            const isActive = org.id === orgId;
+                            return (
+                              <TableRow key={org.id} className={isActive ? "bg-emerald-50/20" : ""}>
+                                <TableCell className="font-medium">
+                                  <div className="space-y-0.5">
+                                    <div className="text-slate-900 flex items-center gap-1.5">
+                                      {org.name}
+                                      {isActive && (
+                                        <Badge className="bg-emerald-100 hover:bg-emerald-100 text-emerald-800 text-[9px] border-none font-bold py-0 h-4">
+                                          Ativa
+                                        </Badge>
+                                      )}
+                                    </div>
+                                    <div className="text-[10px] text-slate-400 font-mono select-all">
+                                      ID: {org.id}
+                                    </div>
+                                  </div>
+                                </TableCell>
+                                <TableCell className="text-slate-600 font-mono text-[10px]">
+                                  {org.document || "—"}
+                                </TableCell>
+                                <TableCell className="text-slate-600">
+                                  <div className="space-y-0.5 text-[10px]">
+                                    {org.email && <div>{org.email}</div>}
+                                    {org.phone && <div className="text-slate-400">{org.phone}</div>}
+                                    {!org.email && !org.phone && "—"}
+                                  </div>
+                                </TableCell>
+                                <TableCell className="text-right">
+                                  {isActive ? (
+                                    <Button variant="ghost" disabled size="sm" className="text-emerald-600 bg-emerald-50/50">
+                                      <Check className="h-3.5 w-3.5 mr-1" />
+                                      Ativa
+                                    </Button>
+                                  ) : (
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => switchOrg.mutate(org.id)}
+                                      disabled={switchOrg.isPending}
+                                      className="text-indigo-600 border-indigo-200 hover:bg-indigo-50/50"
+                                    >
+                                      Alternar
+                                    </Button>
+                                  )}
+                                </TableCell>
+                              </TableRow>
+                            );
+                          })}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Col 3: Criar Organização */}
+            <div>
+              <Card className="shadow-sm">
+                <CardHeader>
+                  <CardTitle className="text-base font-bold flex items-center gap-1.5 text-slate-900">
+                    Criar Organização
+                  </CardTitle>
+                  <CardDescription>
+                    Cadastre uma nova empresa independente no sistema. Ela terá seu próprio banco de dados isolado via RLS.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="new-org-name">Nome da Organização *</Label>
+                    <Input
+                      id="new-org-name"
+                      placeholder="Ex: Minha Nova Empresa"
+                      value={newOrgName}
+                      onChange={(e) => setNewOrgName(e.target.value)}
+                      className="bg-white"
+                      disabled={createOrg.isPending}
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="new-org-document">CNPJ / Documento</Label>
+                    <Input
+                      id="new-org-document"
+                      placeholder="Ex: 00.000.000/0001-00"
+                      value={newOrgDocument}
+                      onChange={(e) => setNewOrgDocument(e.target.value)}
+                      className="bg-white"
+                      disabled={createOrg.isPending}
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="new-org-phone">Telefone de Contato</Label>
+                    <Input
+                      id="new-org-phone"
+                      placeholder="Ex: (83) 98805-9666"
+                      value={newOrgPhone}
+                      onChange={(e) => setNewOrgPhone(e.target.value)}
+                      className="bg-white"
+                      disabled={createOrg.isPending}
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="new-org-email">E-mail Comercial</Label>
+                    <Input
+                      id="new-org-email"
+                      type="email"
+                      placeholder="Ex: comercial@novaempresa.com"
+                      value={newOrgEmail}
+                      onChange={(e) => setNewOrgEmail(e.target.value)}
+                      className="bg-white"
+                      disabled={createOrg.isPending}
+                    />
+                  </div>
+                  <Button
+                    onClick={() => createOrg.mutate()}
+                    className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold flex items-center justify-center gap-1.5 mt-2"
+                    disabled={createOrg.isPending || !newOrgName.trim()}
+                  >
+                    {createOrg.isPending ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Criando...
+                      </>
+                    ) : (
+                      <>
+                        <Plus className="h-4 w-4" />
+                        Cadastrar & Ativar
+                      </>
+                    )}
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
         </TabsContent>
       </Tabs>
     </div>
