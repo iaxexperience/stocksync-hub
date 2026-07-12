@@ -231,21 +231,7 @@ function Landing() {
                   </ul>
                 </CardContent>
               </div>
-              <div className="p-8 pt-0">
-                <Button
-                  asChild
-                  className="w-full bg-blue-900 hover:bg-blue-800 text-white font-bold rounded-xl py-6 shadow-sm"
-                >
-                  <a
-                    href="https://wa.me/5583988059666?text=Olá,%20gostaria%20de%20ver%20os%20eletrodomésticos%20disponíveis."
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center justify-center gap-2"
-                  >
-                    Consultar Eletros <ArrowRight className="h-4 w-4" />
-                  </a>
-                </Button>
-              </div>
+
             </Card>
 
             {/* Cama, Mesa e Banho */}
@@ -292,21 +278,7 @@ function Landing() {
                   </ul>
                 </CardContent>
               </div>
-              <div className="p-8 pt-0">
-                <Button
-                  asChild
-                  className="w-full bg-pink-600 hover:bg-pink-700 text-white font-bold rounded-xl py-6 shadow-sm"
-                >
-                  <a
-                    href="https://wa.me/5583988059666?text=Olá,%20gostaria%20de%20ver%20os%20produtos%20de%20cama,%20mesa%20e%20banho%20disponíveis."
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center justify-center gap-2"
-                  >
-                    Ver Cama, Mesa & Banho <ArrowRight className="h-4 w-4" />
-                  </a>
-                </Button>
-              </div>
+
             </Card>
           </div>
         </div>
