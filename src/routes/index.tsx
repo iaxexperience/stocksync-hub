@@ -21,6 +21,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
 
 export const Route = createFileRoute("/")({
+  component: Landing,
   head: () => ({
     meta: [
       { title: "Josi & Jó Eletrodomésticos — Tudo para o seu Lar" },
