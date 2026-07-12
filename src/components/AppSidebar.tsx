@@ -181,16 +181,16 @@ export function AppSidebar() {
           </SidebarGroup>
         ))}
       </SidebarContent>
-      <SidebarFooter className="border-t border-sidebar-border p-3">
+      <SidebarFooter className="border-t border-sidebar-border p-3 flex flex-col gap-2">
         <div className="flex items-center gap-2 min-w-0">
           <Avatar className="h-8 w-8 shrink-0">
-            <AvatarFallback className="bg-sidebar-accent text-sidebar-accent-foreground text-xs">
+            <AvatarFallback className="bg-sidebar-accent text-sidebar-accent-foreground text-xs font-semibold">
               {initials}
             </AvatarFallback>
           </Avatar>
           {!collapsed && (
             <div className="min-w-0 flex-1">
-              <div className="truncate text-sm font-medium text-sidebar-foreground">
+              <div className="truncate text-sm font-semibold text-sidebar-foreground">
                 {profile?.full_name}
               </div>
               <div className="truncate text-xs text-sidebar-foreground/60">
@@ -198,14 +198,15 @@ export function AppSidebar() {
               </div>
             </div>
           )}
-          <button
-            onClick={handleSignOut}
-            className="grid h-8 w-8 shrink-0 place-items-center rounded-md text-sidebar-foreground/80 hover:bg-sidebar-accent"
-            title="Sair"
-          >
-            <LogOut className="h-4 w-4" />
-          </button>
         </div>
+        <button
+          onClick={handleSignOut}
+          className="flex items-center justify-center gap-2 w-full px-3 py-2 rounded-md text-sm font-medium border border-input bg-background hover:bg-destructive/10 hover:text-destructive text-sidebar-foreground transition-all duration-200"
+          title="Sair do Sistema"
+        >
+          <LogOut className="h-4 w-4 shrink-0" />
+          {!collapsed && <span>Sair</span>}
+        </button>
       </SidebarFooter>
     </Sidebar>
   );

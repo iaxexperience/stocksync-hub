@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { useProfile } from "@/hooks/useProfile";
-import { Clock } from "lucide-react";
+import { Clock, LogOut } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogContent,
@@ -32,6 +32,11 @@ function AuthenticatedLayout() {
 
   const [showWarnDialog, setShowWarnDialog] = useState(false);
   const [countdown, setCountdown] = useState(60);
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    window.location.href = "/auth";
+  };
 
   // Query settings to read the inactivity duration & action
   const { data: settings } = useQuery({
@@ -128,9 +133,19 @@ function AuthenticatedLayout() {
       <div className="min-h-screen flex w-full bg-background">
         <AppSidebar />
         <div className="flex-1 flex flex-col min-w-0">
-          <header className="h-14 flex items-center gap-3 border-b bg-card/50 backdrop-blur px-4">
-            <SidebarTrigger />
-            <div className="text-sm font-medium text-muted-foreground">StockFlow Gestão</div>
+          <header className="h-14 flex items-center justify-between border-b bg-card/50 backdrop-blur px-4">
+            <div className="flex items-center gap-3">
+              <SidebarTrigger />
+              <div className="text-sm font-medium text-muted-foreground">StockFlow Gestão</div>
+            </div>
+            <button
+              onClick={handleSignOut}
+              className="flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all duration-200"
+              title="Sair do Sistema"
+            >
+              <LogOut className="h-4 w-4" />
+              <span className="hidden sm:inline">Sair</span>
+            </button>
           </header>
           <main className="flex-1 p-4 md:p-6 overflow-x-hidden">
             <Outlet />
