@@ -11,19 +11,19 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import {
-  Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger,
+  Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import {
   Plus, Pencil, UserX, Loader2, Mail, Eye, EyeOff,
-  ShieldCheck, Keyboard, Users, CheckCircle2, Clock, XCircle,
+  ShieldCheck, Keyboard, Users, CheckCircle2, Clock, XCircle, UserPlus,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 
-// ── Types ──────────────────────────────────────────────────────────────────
+// ── Types ────────────────────────────────────────────────────────────────
 interface Profile {
   id: string;
   full_name: string;
@@ -40,7 +40,6 @@ interface Member {
   profiles: Profile | null;
 }
 
-// pending_google_users simulated via a local table (or organization_members with status='pending')
 interface PendingUser {
   id: string;
   full_name: string;
@@ -49,7 +48,7 @@ interface PendingUser {
   provider: "google" | "email";
 }
 
-// ── Role config ────────────────────────────────────────────────────────────
+// ── Role config ──────────────────────────────────────────────────────────
 const ROLES = [
   {
     value: "admin",
@@ -84,24 +83,19 @@ function getRoleInfo(role: string) {
   };
 }
 
-// ── Route ──────────────────────────────────────────────────────────────────
+// ── Route ────────────────────────────────────────────────────────────────
 export const Route = createFileRoute("/_authenticated/usuarios")({
   head: () => ({ meta: [{ title: "Usuários · StockFlow" }] }),
   component: UsuariosPage,
 });
 
-// ── Component ──────────────────────────────────────────────────────────────
+// ── Page ─────────────────────────────────────────────────────────────────
 function UsuariosPage() {
   const { data: profile } = useProfile();
   const orgId = profile?.active_org_id;
   const qc = useQueryClient();
 
-  // Dialog state
-  const [open, setOpen] = useState(false);
-  const [editOpen, setEditOpen] = useState(false);
-  const [editingMember, setEditingMember] = useState<Member | null>(null);
-
-  // Form state — new user
+  // Form state
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [role, setRole] = useState("digitador");
@@ -110,29 +104,29 @@ function UsuariosPage() {
   const [showPw, setShowPw] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
 
-  // ── Fetch members ────────────────────────────────────────────────────────
+  // Edit dialog
+  const [editOpen, setEditOpen] = useState(false);
+  const [editingMember, setEditingMember] = useState<Member | null>(null);
+
+  // ── Fetch members ───────────────────────────────────────────────────────
   const { data: members = [], isLoading } = useQuery<Member[]>({
     queryKey: ["org_members", orgId],
     enabled: !!orgId,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("organization_members")
-        .select(`
-          id, role, created_at, user_id,
-          profiles:profiles ( id, full_name, email, phone, is_active )
-        `)
+        .select(`id, role, created_at, user_id, profiles:profiles ( id, full_name, email, phone, is_active )`)
         .eq("organization_id", orgId!);
       if (error) throw error;
       return (data as unknown as Member[]) ?? [];
     },
   });
 
-  // ── Fetch pending Google approvals ───────────────────────────────────────
+  // ── Fetch pending Google users ───────────────────────────────────────────
   const { data: pendingUsers = [] } = useQuery<PendingUser[]>({
     queryKey: ["pending_users", orgId],
     enabled: !!orgId,
     queryFn: async () => {
-      // Pending users = organization_members with role = 'pendente'
       const { data, error } = await supabase
         .from("organization_members")
         .select(`id, created_at, profiles:profiles ( full_name, email )`)
@@ -174,7 +168,6 @@ function UsuariosPage() {
     onSuccess: () => {
       toast.success("Usuário criado e acesso liberado com sucesso!");
       qc.invalidateQueries({ queryKey: ["org_members"] });
-      setOpen(false);
       resetForm();
     },
     onError: (err: { message?: string }) => {
@@ -252,37 +245,43 @@ function UsuariosPage() {
   }
 
   const isAdmin = profile?.role === "admin";
+  const passwordsMatch = password && confirmPassword && password === confirmPassword;
+  const passwordsDontMatch = password && confirmPassword && password !== confirmPassword;
   const activeMembers = members.filter((m) => m.role !== "pendente");
 
-  // ── Render ────────────────────────────────────────────────────────────────
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <header className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-4 sm:flex sm:justify-between">
-        <div className="min-w-0">
-          <h1 className="text-2xl md:text-3xl font-bold tracking-tight truncate">Usuários do Sistema</h1>
-          <p className="text-muted-foreground text-sm">
-            Cadastre e gerencie os acessos dos funcionários. Somente o Administrador Geral pode criar usuários.
-          </p>
-        </div>
-        {isAdmin && (
-          <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (!o) resetForm(); }}>
-            <DialogTrigger asChild>
-              <Button className="gradient-primary text-primary-foreground border-0">
-                <Plus className="mr-1 h-4 w-4" /> Cadastrar Usuário
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-lg">
-              <DialogHeader>
-                <DialogTitle className="flex items-center gap-2">
-                  <Users className="h-5 w-5 text-primary" /> Novo Usuário
-                </DialogTitle>
-              </DialogHeader>
+      {/* Title */}
+      <div>
+        <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Usuários do Sistema</h1>
+        <p className="text-muted-foreground text-sm">
+          Cadastre e gerencie os acessos dos funcionários. Somente o Administrador Geral pode criar usuários.
+        </p>
+      </div>
 
-              <form onSubmit={handleCreateUser} className="space-y-4 pt-1">
-                {/* Name */}
-                <div className="space-y-1">
-                  <Label htmlFor="reg-name">Nome Completo *</Label>
+      <div className="grid lg:grid-cols-5 gap-6 items-start">
+        {/* ── LEFT: Registration Form ── */}
+        {isAdmin && (
+          <Card className="shadow-card lg:col-span-2 border-primary/20">
+            <CardHeader className="pb-4">
+              <CardTitle className="flex items-center gap-2 text-base">
+                <div className="grid h-8 w-8 place-items-center rounded-lg bg-primary/10">
+                  <UserPlus className="h-4 w-4 text-primary" />
+                </div>
+                Cadastrar Novo Usuário
+              </CardTitle>
+              <CardDescription>
+                Preencha os dados e clique em cadastrar para liberar o acesso.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleCreateUser} className="space-y-4">
+
+                {/* Nome */}
+                <div className="space-y-1.5">
+                  <Label htmlFor="reg-name">
+                    Nome Completo <span className="text-destructive">*</span>
+                  </Label>
                   <Input
                     id="reg-name"
                     placeholder="Ex: Maria da Silva"
@@ -292,9 +291,11 @@ function UsuariosPage() {
                   />
                 </div>
 
-                {/* Email */}
-                <div className="space-y-1">
-                  <Label htmlFor="reg-email">E-mail para Login *</Label>
+                {/* E-mail */}
+                <div className="space-y-1.5">
+                  <Label htmlFor="reg-email">
+                    E-mail para Login <span className="text-destructive">*</span>
+                  </Label>
                   <Input
                     id="reg-email"
                     type="email"
@@ -305,34 +306,40 @@ function UsuariosPage() {
                   />
                 </div>
 
-                {/* Role */}
-                <div className="space-y-1">
-                  <Label htmlFor="reg-role">Papel do Usuário *</Label>
+                {/* Papel */}
+                <div className="space-y-1.5">
+                  <Label htmlFor="reg-role">
+                    Papel do Usuário <span className="text-destructive">*</span>
+                  </Label>
                   <Select value={role} onValueChange={setRole}>
-                    <SelectTrigger>
+                    <SelectTrigger id="reg-role">
                       <SelectValue placeholder="Selecione o papel" />
                     </SelectTrigger>
                     <SelectContent>
                       {ROLES.map((r) => (
                         <SelectItem key={r.value} value={r.value}>
-                          <div className="flex flex-col">
-                            <span className="font-medium">{r.label}</span>
+                          <div className="flex items-center gap-2">
+                            <r.icon className={`h-3.5 w-3.5 ${r.iconColor}`} />
+                            <span>{r.label}</span>
                           </div>
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                   {/* Role description */}
-                  {role && getRoleInfo(role).desc && (
-                    <p className="text-xs text-muted-foreground mt-1 bg-muted/50 rounded px-2 py-1.5">
+                  {role && (
+                    <p className="text-xs text-muted-foreground bg-muted/40 rounded px-2.5 py-1.5 leading-relaxed">
                       {getRoleInfo(role).desc}
                     </p>
                   )}
                 </div>
 
-                {/* Password */}
-                <div className="space-y-1">
-                  <Label htmlFor="reg-password">Senha de Acesso * <span className="text-muted-foreground text-xs">(mín. 8 caracteres)</span></Label>
+                {/* Senha */}
+                <div className="space-y-1.5">
+                  <Label htmlFor="reg-password">
+                    Senha <span className="text-destructive">*</span>
+                    <span className="text-muted-foreground font-normal text-xs ml-1">(mín. 8 caracteres)</span>
+                  </Label>
                   <div className="relative">
                     <Input
                       id="reg-password"
@@ -347,17 +354,37 @@ function UsuariosPage() {
                     <button
                       type="button"
                       onClick={() => setShowPw((v) => !v)}
-                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                       tabIndex={-1}
+                      title={showPw ? "Ocultar senha" : "Visualizar senha"}
                     >
                       {showPw ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </button>
                   </div>
+                  {/* Password strength indicator */}
+                  {password.length > 0 && (
+                    <div className="flex gap-1 mt-1">
+                      {[1, 2, 3, 4].map((i) => (
+                        <div
+                          key={i}
+                          className={`h-1 flex-1 rounded-full transition-colors ${
+                            password.length >= i * 3
+                              ? password.length >= 12 ? "bg-green-500"
+                              : password.length >= 8 ? "bg-yellow-400"
+                              : "bg-orange-400"
+                              : "bg-muted"
+                          }`}
+                        />
+                      ))}
+                    </div>
+                  )}
                 </div>
 
-                {/* Confirm Password */}
-                <div className="space-y-1">
-                  <Label htmlFor="reg-confirm">Confirmação de Senha *</Label>
+                {/* Confirmar Senha */}
+                <div className="space-y-1.5">
+                  <Label htmlFor="reg-confirm">
+                    Confirmar Senha <span className="text-destructive">*</span>
+                  </Label>
                   <div className="relative">
                     <Input
                       id="reg-confirm"
@@ -367,197 +394,200 @@ function UsuariosPage() {
                       onChange={(e) => setConfirmPassword(e.target.value)}
                       required
                       minLength={8}
-                      className={`pr-10 ${confirmPassword && confirmPassword !== password ? "border-destructive focus-visible:ring-destructive" : ""}`}
+                      className={`pr-10 ${
+                        passwordsDontMatch
+                          ? "border-destructive focus-visible:ring-destructive"
+                          : passwordsMatch
+                          ? "border-green-500 focus-visible:ring-green-500"
+                          : ""
+                      }`}
                     />
                     <button
                       type="button"
                       onClick={() => setShowConfirm((v) => !v)}
-                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                       tabIndex={-1}
+                      title={showConfirm ? "Ocultar senha" : "Visualizar senha"}
                     >
                       {showConfirm ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </button>
                   </div>
-                  {confirmPassword && confirmPassword !== password && (
-                    <p className="text-xs text-destructive">As senhas não conferem.</p>
+                  {passwordsDontMatch && (
+                    <p className="text-xs text-destructive flex items-center gap-1">
+                      <XCircle className="h-3 w-3" /> As senhas não conferem
+                    </p>
                   )}
-                  {confirmPassword && confirmPassword === password && password.length >= 8 && (
+                  {passwordsMatch && (
                     <p className="text-xs text-green-600 flex items-center gap-1">
                       <CheckCircle2 className="h-3 w-3" /> Senhas conferem
                     </p>
                   )}
                 </div>
 
-                <DialogFooter className="pt-2">
-                  <Button type="button" variant="outline" onClick={() => { setOpen(false); resetForm(); }}>
-                    Cancelar
+                {/* Actions */}
+                <div className="flex gap-2 pt-1">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="flex-1"
+                    onClick={resetForm}
+                    disabled={createUserMutation.isPending}
+                  >
+                    Limpar
                   </Button>
                   <Button
                     type="submit"
-                    disabled={createUserMutation.isPending || (!!confirmPassword && confirmPassword !== password)}
-                    className="gradient-primary text-primary-foreground border-0"
+                    className="flex-1 gradient-primary text-primary-foreground border-0"
+                    disabled={createUserMutation.isPending || !!passwordsDontMatch}
                   >
-                    {createUserMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    Criar e Liberar Acesso
+                    {createUserMutation.isPending ? (
+                      <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Cadastrando…</>
+                    ) : (
+                      <><UserPlus className="mr-2 h-4 w-4" /> Cadastrar</>
+                    )}
                   </Button>
-                </DialogFooter>
+                </div>
               </form>
-            </DialogContent>
-          </Dialog>
+            </CardContent>
+          </Card>
         )}
-      </header>
 
-      {/* Role Info Cards */}
-      <div className="grid sm:grid-cols-2 gap-3">
-        {ROLES.map((r) => (
-          <Card key={r.value} className="shadow-card border">
-            <CardContent className="p-4 flex items-start gap-3">
-              <div className={`grid h-9 w-9 shrink-0 place-items-center rounded-lg ${r.bg}`}>
-                <r.icon className={`h-4 w-4 ${r.iconColor}`} />
-              </div>
-              <div>
-                <p className="font-semibold text-sm">{r.label}</p>
-                <p className="text-xs text-muted-foreground mt-0.5">{r.desc}</p>
+        {/* ── RIGHT: List + Pending ── */}
+        <div className={`space-y-4 ${isAdmin ? "lg:col-span-3" : "lg:col-span-5"}`}>
+
+          {/* Pending Google approvals */}
+          {pendingUsers.length > 0 && (
+            <Card className="border-amber-200 bg-amber-50/50 shadow-card">
+              <CardHeader className="pb-2">
+                <CardTitle className="flex items-center gap-2 text-base text-amber-800">
+                  <Clock className="h-4 w-4" />
+                  Aguardando Aprovação ({pendingUsers.length})
+                </CardTitle>
+                <CardDescription className="text-amber-700 text-xs">
+                  Usuários que entraram via Google aguardam aprovação para acessar o sistema.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="pt-0 space-y-1">
+                {pendingUsers.map((u) => (
+                  <PendingApprovalRow
+                    key={u.id}
+                    user={u}
+                    onApprove={(approvedRole) =>
+                      approvePendingMutation.mutate({ memberId: u.id, approvedRole })
+                    }
+                    onReject={() => {
+                      if (confirm(`Recusar acesso de ${u.full_name}?`))
+                        removeMemberMutation.mutate(u.id);
+                    }}
+                    isLoading={approvePendingMutation.isPending || removeMemberMutation.isPending}
+                  />
+                ))}
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Members table */}
+          <Card className="shadow-card">
+            <CardContent className="p-4">
+              <div className="rounded-md border overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Usuário</TableHead>
+                      <TableHead>E-mail</TableHead>
+                      <TableHead>Papel</TableHead>
+                      <TableHead>Ingresso</TableHead>
+                      <TableHead className="text-right">Ações</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {isLoading ? (
+                      <TableRow>
+                        <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                          <Loader2 className="h-4 w-4 animate-spin inline mr-2" />Carregando…
+                        </TableCell>
+                      </TableRow>
+                    ) : activeMembers.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={5} className="text-center py-12 text-muted-foreground">
+                          <Users className="mx-auto h-10 w-10 opacity-30 mb-2" />
+                          Nenhum usuário cadastrado ainda.
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      activeMembers.map((m) => {
+                        const ri = getRoleInfo(m.role);
+                        return (
+                          <TableRow key={m.id}>
+                            <TableCell className="py-3">
+                              <div className="flex items-center gap-2.5">
+                                <div className={`h-9 w-9 rounded-full flex items-center justify-center font-bold text-sm shrink-0 ${ri.bg}`}>
+                                  <span className={ri.iconColor}>
+                                    {m.profiles?.full_name?.[0]?.toUpperCase() || "?"}
+                                  </span>
+                                </div>
+                                <div>
+                                  <p className="font-semibold text-sm">{m.profiles?.full_name || "Sem Nome"}</p>
+                                  {m.user_id === profile?.id && (
+                                    <span className="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded font-medium">Você</span>
+                                  )}
+                                </div>
+                              </div>
+                            </TableCell>
+                            <TableCell className="text-sm text-slate-600">
+                              <span className="flex items-center gap-1.5">
+                                <Mail className="h-3.5 w-3.5 text-slate-400 shrink-0" />
+                                {m.profiles?.email}
+                              </span>
+                            </TableCell>
+                            <TableCell>
+                              <Badge
+                                variant="outline"
+                                className={`${ri.color} border font-semibold px-2 py-0.5 rounded-full text-xs flex items-center gap-1 w-fit`}
+                              >
+                                <ri.icon className="h-3 w-3" />
+                                {ri.label}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="text-slate-500 text-sm">
+                              {new Date(m.created_at).toLocaleDateString("pt-BR")}
+                            </TableCell>
+                            <TableCell className="text-right space-x-1">
+                              {isAdmin && m.user_id !== profile?.id ? (
+                                <>
+                                  <Button
+                                    size="icon" variant="ghost"
+                                    onClick={() => { setEditingMember(m); setEditOpen(true); }}
+                                    title="Alterar papel"
+                                  >
+                                    <Pencil className="h-4 w-4 text-slate-500" />
+                                  </Button>
+                                  <Button
+                                    size="icon" variant="ghost"
+                                    onClick={() => {
+                                      if (confirm(`Revogar acesso de ${m.profiles?.full_name}?`))
+                                        removeMemberMutation.mutate(m.id);
+                                    }}
+                                    title="Revogar acesso"
+                                  >
+                                    <UserX className="h-4 w-4 text-rose-500" />
+                                  </Button>
+                                </>
+                              ) : (
+                                <span className="text-xs text-muted-foreground">—</span>
+                              )}
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })
+                    )}
+                  </TableBody>
+                </Table>
               </div>
             </CardContent>
           </Card>
-        ))}
+        </div>
       </div>
-
-      {/* Pending Google Users */}
-      {pendingUsers.length > 0 && (
-        <Card className="shadow-card border-amber-200 bg-amber-50/50">
-          <CardHeader className="pb-2">
-            <CardTitle className="flex items-center gap-2 text-base text-amber-800">
-              <Clock className="h-4 w-4" />
-              Aguardando Aprovação do Administrador ({pendingUsers.length})
-            </CardTitle>
-            <CardDescription className="text-amber-700">
-              Estes usuários entraram via Google e aguardam aprovação para acessar o sistema.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="pt-0">
-            <div className="divide-y divide-amber-100">
-              {pendingUsers.map((u) => (
-                <PendingApprovalRow
-                  key={u.id}
-                  user={u}
-                  onApprove={(approvedRole) => approvePendingMutation.mutate({ memberId: u.id, approvedRole })}
-                  onReject={() => {
-                    if (confirm(`Recusar acesso de ${u.full_name}?`)) removeMemberMutation.mutate(u.id);
-                  }}
-                  isLoading={approvePendingMutation.isPending || removeMemberMutation.isPending}
-                />
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Members Table */}
-      <Card className="shadow-card">
-        <CardContent className="p-4">
-          <div className="rounded-md border overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Usuário</TableHead>
-                  <TableHead>E-mail</TableHead>
-                  <TableHead>Papel</TableHead>
-                  <TableHead>Ingresso</TableHead>
-                  <TableHead className="text-right">Ações</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {isLoading ? (
-                  <TableRow>
-                    <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
-                      <Loader2 className="h-4 w-4 animate-spin inline mr-2" />Carregando usuários…
-                    </TableCell>
-                  </TableRow>
-                ) : activeMembers.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={5} className="text-center py-12 text-muted-foreground">
-                      <Users className="mx-auto h-10 w-10 opacity-30 mb-2" />
-                      Nenhum usuário cadastrado ainda.
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  activeMembers.map((m) => {
-                    const ri = getRoleInfo(m.role);
-                    return (
-                      <TableRow key={m.id}>
-                        <TableCell className="py-3">
-                          <div className="flex items-center gap-2.5">
-                            <div className={`h-9 w-9 rounded-full flex items-center justify-center font-bold text-sm shrink-0 ${ri.bg}`}>
-                              <span className={ri.iconColor}>
-                                {m.profiles?.full_name?.[0]?.toUpperCase() || "?"}
-                              </span>
-                            </div>
-                            <div>
-                              <p className="font-semibold text-sm leading-tight">
-                                {m.profiles?.full_name || "Sem Nome"}
-                              </p>
-                              {m.user_id === profile?.id && (
-                                <span className="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded font-medium">
-                                  Você
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-slate-600">
-                          <span className="flex items-center gap-1.5 text-sm">
-                            <Mail className="h-3.5 w-3.5 text-slate-400 shrink-0" />
-                            {m.profiles?.email}
-                          </span>
-                        </TableCell>
-                        <TableCell>
-                          <Badge
-                            variant="outline"
-                            className={`${ri.color} border font-semibold px-2 py-0.5 rounded-full text-xs flex items-center gap-1 w-fit`}
-                          >
-                            <ri.icon className="h-3 w-3" />
-                            {ri.label}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-slate-500 text-sm">
-                          {new Date(m.created_at).toLocaleDateString("pt-BR")}
-                        </TableCell>
-                        <TableCell className="text-right space-x-1">
-                          {isAdmin && m.user_id !== profile?.id ? (
-                            <>
-                              <Button
-                                size="icon" variant="ghost"
-                                onClick={() => { setEditingMember(m); setEditOpen(true); }}
-                                title="Alterar papel"
-                              >
-                                <Pencil className="h-4 w-4 text-slate-500" />
-                              </Button>
-                              <Button
-                                size="icon" variant="ghost"
-                                onClick={() => {
-                                  if (confirm(`Revogar acesso de ${m.profiles?.full_name}?`))
-                                    removeMemberMutation.mutate(m.id);
-                                }}
-                                title="Revogar acesso"
-                              >
-                                <UserX className="h-4 w-4 text-rose-500" />
-                              </Button>
-                            </>
-                          ) : (
-                            <span className="text-xs text-muted-foreground">—</span>
-                          )}
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })
-                )}
-              </TableBody>
-            </Table>
-          </div>
-        </CardContent>
-      </Card>
 
       {/* Edit Role Dialog */}
       <Dialog open={editOpen} onOpenChange={(o) => { setEditOpen(o); if (!o) setEditingMember(null); }}>
@@ -570,7 +600,7 @@ function UsuariosPage() {
               <p className="text-sm text-slate-600">
                 Alterar o papel de <strong>{editingMember.profiles?.full_name}</strong>:
               </p>
-              <div className="space-y-1">
+              <div className="space-y-1.5">
                 <Label>Papel *</Label>
                 <Select
                   value={editingMember.role}
@@ -579,21 +609,26 @@ function UsuariosPage() {
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
                     {ROLES.map((r) => (
-                      <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>
+                      <SelectItem key={r.value} value={r.value}>
+                        <div className="flex items-center gap-2">
+                          <r.icon className={`h-3.5 w-3.5 ${r.iconColor}`} />
+                          {r.label}
+                        </div>
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
-                {editingMember.role && getRoleInfo(editingMember.role).desc && (
+                {editingMember.role && (
                   <p className="text-xs text-muted-foreground bg-muted/50 rounded px-2 py-1.5">
                     {getRoleInfo(editingMember.role).desc}
                   </p>
                 )}
               </div>
-              <DialogFooter className="pt-2">
+              <DialogFooter>
                 <Button type="button" variant="outline" onClick={() => setEditOpen(false)}>Cancelar</Button>
                 <Button type="submit" disabled={updateRoleMutation.isPending}>
                   {updateRoleMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  Salvar Alteração
+                  Salvar
                 </Button>
               </DialogFooter>
             </form>
@@ -604,12 +639,9 @@ function UsuariosPage() {
   );
 }
 
-// ── Pending Approval Row ───────────────────────────────────────────────────
+// ── Pending Row ──────────────────────────────────────────────────────────
 function PendingApprovalRow({
-  user,
-  onApprove,
-  onReject,
-  isLoading,
+  user, onApprove, onReject, isLoading,
 }: {
   user: PendingUser;
   onApprove: (role: string) => void;
@@ -617,50 +649,29 @@ function PendingApprovalRow({
   isLoading: boolean;
 }) {
   const [selectedRole, setSelectedRole] = useState("digitador");
-
   return (
-    <div className="flex flex-col sm:flex-row sm:items-center gap-3 py-3">
-      <div className="flex items-center gap-2.5 flex-1 min-w-0">
-        <div className="h-9 w-9 rounded-full bg-amber-100 flex items-center justify-center font-bold text-amber-700 shrink-0">
+    <div className="flex flex-col sm:flex-row sm:items-center gap-2 py-2 border-t border-amber-100 first:border-t-0">
+      <div className="flex items-center gap-2 flex-1 min-w-0">
+        <div className="h-8 w-8 rounded-full bg-amber-100 flex items-center justify-center font-bold text-amber-700 shrink-0 text-sm">
           {user.full_name[0]?.toUpperCase() || "G"}
         </div>
         <div className="min-w-0">
           <p className="font-semibold text-sm truncate">{user.full_name}</p>
-          <p className="text-xs text-muted-foreground flex items-center gap-1">
-            <Mail className="h-3 w-3" /> {user.email}
-            <span className="ml-1 bg-amber-200 text-amber-800 text-[10px] px-1.5 py-0.5 rounded font-medium">
-              Google
-            </span>
-          </p>
+          <p className="text-xs text-muted-foreground truncate">{user.email}</p>
         </div>
       </div>
       <div className="flex items-center gap-2 shrink-0">
         <Select value={selectedRole} onValueChange={setSelectedRole}>
-          <SelectTrigger className="w-44 h-8 text-xs">
-            <SelectValue />
-          </SelectTrigger>
+          <SelectTrigger className="w-40 h-8 text-xs"><SelectValue /></SelectTrigger>
           <SelectContent>
-            {ROLES.map((r) => (
-              <SelectItem key={r.value} value={r.value} className="text-xs">{r.label}</SelectItem>
-            ))}
+            {ROLES.map((r) => <SelectItem key={r.value} value={r.value} className="text-xs">{r.label}</SelectItem>)}
           </SelectContent>
         </Select>
-        <Button
-          size="sm"
-          className="h-8 bg-green-600 hover:bg-green-700 text-white border-0 text-xs"
-          onClick={() => onApprove(selectedRole)}
-          disabled={isLoading}
-        >
-          <CheckCircle2 className="h-3.5 w-3.5 mr-1" /> Aprovar
+        <Button size="sm" className="h-8 bg-green-600 hover:bg-green-700 text-white border-0 text-xs px-2" onClick={() => onApprove(selectedRole)} disabled={isLoading}>
+          <CheckCircle2 className="h-3.5 w-3.5 mr-1" />Aprovar
         </Button>
-        <Button
-          size="sm"
-          variant="ghost"
-          className="h-8 text-destructive hover:bg-destructive/10 text-xs"
-          onClick={onReject}
-          disabled={isLoading}
-        >
-          <XCircle className="h-3.5 w-3.5 mr-1" /> Recusar
+        <Button size="sm" variant="ghost" className="h-8 text-destructive hover:bg-destructive/10 text-xs px-2" onClick={onReject} disabled={isLoading}>
+          <XCircle className="h-3.5 w-3.5 mr-1" />Recusar
         </Button>
       </div>
     </div>
