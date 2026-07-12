@@ -4658,11 +4658,23 @@ function SignatureCollector({
                         {ins.id.slice(0, 10).toUpperCase()}
                       </p>
                     </div>
-                    <div className="text-center w-1/2">
-                      <p className="text-[8px] text-slate-500 mb-6">
+                    <div className="text-center w-1/2 flex flex-col items-center justify-end">
+                      <p className="text-[8px] text-slate-500 mb-1">
                         {customer.customer_addresses?.[0]?.city || "Cidade"},{" "}
                         {new Date(order.created_at).toLocaleDateString("pt-BR")}
                       </p>
+                      <div className="h-8 w-full flex items-center justify-center mb-1">
+                        {(signedResult || order.customer_signatures?.[0]) && (
+                          <img
+                            src={
+                              signedResult?.signature_url ||
+                              order.customer_signatures?.[0]?.signature_url
+                            }
+                            className="max-h-full object-contain"
+                            alt="Assinatura Emitente"
+                          />
+                        )}
+                      </div>
                       <div className="border-t border-slate-400 w-4/5 mx-auto pt-0.5">
                         <span className="text-[8px] font-bold block">{customer.name}</span>
                         <span className="text-[7px] text-slate-500 block">
