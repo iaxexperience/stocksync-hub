@@ -2877,7 +2877,7 @@ function ClienteForm({
 
                       <Button
                         variant="outline"
-                        onClick={() => handleFinalizarVenda("salvo")}
+                        onClick={handleSaveCustomerOnly}
                         className="border-green-500 text-green-700 hover:bg-green-50 hover:text-green-800"
                       >
                         💾 Salvar Cadastro
