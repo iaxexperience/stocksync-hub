@@ -21,6 +21,7 @@ import {
   HelpCircle,
   BookOpen,
   TrendingUp,
+  FileBarChart,
 } from "lucide-react";
 import {
   Sidebar,
@@ -107,6 +108,10 @@ const groups = [
       },
       { title: "Usuários", to: "/usuarios", icon: Users },
     ],
+  },
+  {
+    label: "Relatórios",
+    items: [{ title: "Relatório de Vendas", to: "/relatorios", icon: FileBarChart }],
   },
   {
     label: "Configurações",

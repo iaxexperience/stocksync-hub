@@ -19,7 +19,9 @@
       "Bash(grep -iE \"\\\\.\\(png|jpg|jpeg|webp\\)$\")",
       "Bash(file \"/c/Users/maxra/AppData/Local/Temp/josenildo e josi.jpg\")",
       "Bash(cp \"/c/Users/maxra/AppData/Local/Temp/josenildo e josi.jpg\" \"/d/stocksync-hub/public/logo.jpg\" && ls -la /d/stocksync-hub/public/logo.jpg)",
-      "Bash(npx tsc *)"
+      "Bash(npx tsc *)",
+      "Bash(node -e \"require\\('fs'\\).readFileSync\\('/d/stocksync-hub/src/routeTree.gen.ts','utf8'\\)\")",
+      "Bash(node --check /d/stocksync-hub/src/routeTree.gen.ts)"
     ],
     "additionalDirectories": [
       "C:\\Users\\maxra\\AppData\\Local\\Temp"
