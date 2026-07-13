@@ -61,11 +61,6 @@ function Landing() {
       <header className="fixed top-0 inset-x-0 z-40 border-b border-slate-200 bg-white/90 backdrop-blur-md shadow-sm">
         <div className="mx-auto max-w-7xl px-4 h-20 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-3">
-            <img
-              src="/logo.jpg"
-              alt="Josi & Jó Eletrodomésticos"
-              className="h-14 w-14 rounded-full border-2 border-pink-500 object-cover shadow-sm"
-            />
             <div className="flex flex-col">
               <span className="font-extrabold text-lg text-blue-900 leading-none">Josi & Jó</span>
               <span className="text-xs font-semibold text-pink-600 tracking-wider uppercase">
