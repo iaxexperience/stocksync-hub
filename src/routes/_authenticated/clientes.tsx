@@ -774,7 +774,14 @@ function ClientesLayout() {
                 navegarAba={navegarAba}
               />
             )}
-            {aba === "historico" && <HistoricoCompras orders={orders} navegarAba={navegarAba} />}
+            {aba === "historico" && (
+              <HistoricoCompras
+                orders={orders}
+                navegarAba={navegarAba}
+                updateOrder={updateOrder.mutateAsync}
+                deleteOrder={deleteOrder.mutateAsync}
+              />
+            )}
             {aba === "pagamentos" && (
               <PagamentosControle
                 installments={installments}
