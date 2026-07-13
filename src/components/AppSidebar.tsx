@@ -111,7 +111,10 @@ const groups = [
   },
   {
     label: "Relatórios",
-    items: [{ title: "Relatório de Vendas", to: "/relatorios", icon: FileBarChart }],
+    items: [
+      { title: "Relatório de Vendas", to: "/relatorios", icon: FileBarChart },
+      { title: "Relatório de Estoque", to: "/relatorios-estoque", icon: Boxes },
+    ],
   },
   {
     label: "Configurações",

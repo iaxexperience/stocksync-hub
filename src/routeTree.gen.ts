@@ -14,6 +14,7 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedUsuariosRouteImport } from './routes/_authenticated/usuarios'
 import { Route as AuthenticatedRelatoriosRouteImport } from './routes/_authenticated/relatorios'
+import { Route as AuthenticatedRelatoriosEstoqueRouteImport } from './routes/_authenticated/relatorios-estoque'
 import { Route as AuthenticatedProdutosRouteImport } from './routes/_authenticated/produtos'
 import { Route as AuthenticatedMovimentacoesRouteImport } from './routes/_authenticated/movimentacoes'
 import { Route as AuthenticatedFinanceiroRouteImport } from './routes/_authenticated/financeiro'
@@ -48,6 +49,12 @@ const AuthenticatedRelatoriosRoute = AuthenticatedRelatoriosRouteImport.update({
   path: '/relatorios',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedRelatoriosEstoqueRoute =
+  AuthenticatedRelatoriosEstoqueRouteImport.update({
+    id: '/relatorios-estoque',
+    path: '/relatorios-estoque',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedProdutosRoute = AuthenticatedProdutosRouteImport.update({
   id: '/produtos',
   path: '/produtos',
@@ -109,6 +116,7 @@ export interface FileRoutesByFullPath {
   '/movimentacoes': typeof AuthenticatedMovimentacoesRoute
   '/produtos': typeof AuthenticatedProdutosRoute
   '/relatorios': typeof AuthenticatedRelatoriosRoute
+  '/relatorios-estoque': typeof AuthenticatedRelatoriosEstoqueRoute
   '/usuarios': typeof AuthenticatedUsuariosRoute
   '/cadastros/$tipo': typeof AuthenticatedCadastrosTipoRoute
 }
@@ -124,6 +132,7 @@ export interface FileRoutesByTo {
   '/movimentacoes': typeof AuthenticatedMovimentacoesRoute
   '/produtos': typeof AuthenticatedProdutosRoute
   '/relatorios': typeof AuthenticatedRelatoriosRoute
+  '/relatorios-estoque': typeof AuthenticatedRelatoriosEstoqueRoute
   '/usuarios': typeof AuthenticatedUsuariosRoute
   '/cadastros/$tipo': typeof AuthenticatedCadastrosTipoRoute
 }
@@ -141,6 +150,7 @@ export interface FileRoutesById {
   '/_authenticated/movimentacoes': typeof AuthenticatedMovimentacoesRoute
   '/_authenticated/produtos': typeof AuthenticatedProdutosRoute
   '/_authenticated/relatorios': typeof AuthenticatedRelatoriosRoute
+  '/_authenticated/relatorios-estoque': typeof AuthenticatedRelatoriosEstoqueRoute
   '/_authenticated/usuarios': typeof AuthenticatedUsuariosRoute
   '/_authenticated/cadastros/$tipo': typeof AuthenticatedCadastrosTipoRoute
 }
@@ -158,6 +168,7 @@ export interface FileRouteTypes {
     | '/movimentacoes'
     | '/produtos'
     | '/relatorios'
+    | '/relatorios-estoque'
     | '/usuarios'
     | '/cadastros/$tipo'
   fileRoutesByTo: FileRoutesByTo
@@ -173,6 +184,7 @@ export interface FileRouteTypes {
     | '/movimentacoes'
     | '/produtos'
     | '/relatorios'
+    | '/relatorios-estoque'
     | '/usuarios'
     | '/cadastros/$tipo'
   id:
@@ -189,6 +201,7 @@ export interface FileRouteTypes {
     | '/_authenticated/movimentacoes'
     | '/_authenticated/produtos'
     | '/_authenticated/relatorios'
+    | '/_authenticated/relatorios-estoque'
     | '/_authenticated/usuarios'
     | '/_authenticated/cadastros/$tipo'
   fileRoutesById: FileRoutesById
@@ -299,6 +312,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedRelatoriosRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/relatorios-estoque': {
+      id: '/_authenticated/relatorios-estoque'
+      path: '/relatorios-estoque'
+      fullPath: '/relatorios-estoque'
+      preLoaderRoute: typeof AuthenticatedRelatoriosEstoqueRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
@@ -312,6 +332,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedMovimentacoesRoute: typeof AuthenticatedMovimentacoesRoute
   AuthenticatedProdutosRoute: typeof AuthenticatedProdutosRoute
   AuthenticatedRelatoriosRoute: typeof AuthenticatedRelatoriosRoute
+  AuthenticatedRelatoriosEstoqueRoute: typeof AuthenticatedRelatoriosEstoqueRoute
   AuthenticatedUsuariosRoute: typeof AuthenticatedUsuariosRoute
   AuthenticatedCadastrosTipoRoute: typeof AuthenticatedCadastrosTipoRoute
 }
@@ -326,6 +347,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedMovimentacoesRoute: AuthenticatedMovimentacoesRoute,
   AuthenticatedProdutosRoute: AuthenticatedProdutosRoute,
   AuthenticatedRelatoriosRoute: AuthenticatedRelatoriosRoute,
+  AuthenticatedRelatoriosEstoqueRoute: AuthenticatedRelatoriosEstoqueRoute,
   AuthenticatedUsuariosRoute: AuthenticatedUsuariosRoute,
   AuthenticatedCadastrosTipoRoute: AuthenticatedCadastrosTipoRoute,
 }
