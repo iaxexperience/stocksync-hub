@@ -14,7 +14,14 @@
       "Bash(find /c/Users/maxra/.claude -iname \"*.png\" -o -iname \"*.jpg\" -mmin -60 2>/dev/null | head -20 *)",
       "Read(//c/Users/maxra/.claude/**)",
       "Bash(ls -la /c/Users/maxra/.claude/paste-cache/ 2>&1 | tail -30)",
-      "Read(//c/Users/maxra/.claude/paste-cache//**)"
+      "Read(//c/Users/maxra/.claude/paste-cache//**)",
+      "Read(//c/Users/maxra/.claude/paste-cache/**)",
+      "Bash(grep -iE \"\\\\.\\(png|jpg|jpeg|webp\\)$\")",
+      "Bash(file \"/c/Users/maxra/AppData/Local/Temp/josenildo e josi.jpg\")",
+      "Bash(cp \"/c/Users/maxra/AppData/Local/Temp/josenildo e josi.jpg\" \"/d/stocksync-hub/public/logo.jpg\" && ls -la /d/stocksync-hub/public/logo.jpg)"
+    ],
+    "additionalDirectories": [
+      "C:\\Users\\maxra\\AppData\\Local\\Temp"
     ]
   }
 }

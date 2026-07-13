@@ -61,12 +61,11 @@ function Landing() {
       <header className="fixed top-0 inset-x-0 z-40 border-b border-slate-200 bg-white/90 backdrop-blur-md shadow-sm">
         <div className="mx-auto max-w-7xl px-4 h-20 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-3">
-            <div className="flex flex-col">
-              <span className="font-extrabold text-lg text-blue-900 leading-none">Josi & Jó</span>
-              <span className="text-xs font-semibold text-pink-600 tracking-wider uppercase">
-                Eletrodomésticos
-              </span>
-            </div>
+            <img
+              src="/logo.jpg"
+              alt="Josi & Jó Eletrodomésticos"
+              className="h-12 w-auto rounded-lg object-contain shadow-sm"
+            />
           </Link>
           <nav className="hidden md:flex items-center gap-8 text-sm font-semibold text-slate-600">
             <a href="#inicio" className="hover:text-pink-600 transition-colors">
@@ -116,7 +115,7 @@ function Landing() {
         <div className="absolute bottom-0 left-0 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl" />
 
         <div className="mx-auto max-w-7xl px-4 grid lg:grid-cols-12 gap-12 items-center relative z-10">
-          <div className="lg:col-span-12 space-y-6 max-w-3xl">
+          <div className="lg:col-span-7 space-y-6">
             <div className="inline-flex items-center gap-2 rounded-full bg-white/10 border border-white/20 px-4 py-1.5 text-xs font-semibold text-pink-300">
               <Sparkles className="h-3.5 w-3.5" /> Tudo para o seu Lar · Eletro & Enxovais
             </div>
