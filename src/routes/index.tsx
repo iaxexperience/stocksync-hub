@@ -152,17 +152,6 @@ function Landing() {
               </Button>
             </div>
           </div>
-
-          <div className="lg:col-span-5 relative flex justify-center">
-            {/* Visual Frame */}
-            <div className="relative w-full max-w-md aspect-square rounded-3xl overflow-hidden shadow-2xl border-4 border-white/15 bg-white/5 backdrop-blur-md p-3 group">
-              <img
-                src="/logo.jpg"
-                alt="Josi & Jó Logomarca"
-                className="w-full h-full object-cover rounded-2xl group-hover:scale-105 transition-all duration-700"
-              />
-            </div>
-          </div>
         </div>
       </section>
 
@@ -414,11 +403,6 @@ function Landing() {
         <div className="mx-auto max-w-7xl px-4 py-16 grid md:grid-cols-4 gap-8">
           <div className="space-y-4">
             <div className="flex items-center gap-3">
-              <img
-                src="/logo.jpg"
-                alt="Josi & Jó Eletrodomésticos"
-                className="h-10 w-10 rounded-full object-cover"
-              />
               <span className="font-extrabold text-blue-900 text-lg">Josi & Jó</span>
             </div>
             <p className="text-slate-500 font-medium">
