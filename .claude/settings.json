@@ -27,7 +27,8 @@
       "Read(//c/Users/maxra/.config/**)",
       "Bash(timeout 25 npx -y supabase --version)",
       "Bash(ls -la /c/Users/maxra/.supabase/ 2>&1 *)",
-      "Read(//c/Users/maxra/.supabase//**)"
+      "Read(//c/Users/maxra/.supabase//**)",
+      "Bash(node -e ' *)"
     ],
     "additionalDirectories": [
       "C:\\Users\\maxra\\AppData\\Local\\Temp"
