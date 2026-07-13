@@ -141,14 +141,6 @@ function Landing() {
                   <WhatsAppIcon className="h-5 w-5" /> Falar no WhatsApp
                 </a>
               </Button>
-              <Button
-                asChild
-                size="lg"
-                variant="outline"
-                className="border-white/30 text-white hover:bg-white/10 hover:text-white rounded-full px-8 py-6"
-              >
-                <a href="#categorias">Ver Nossos Produtos</a>
-              </Button>
             </div>
           </div>
 
