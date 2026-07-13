@@ -378,6 +378,61 @@ function ClientesLayout() {
     },
   });
 
+  // Mutação para editar parcela
+  const updateInstallment = useMutation({
+    mutationFn: async ({
+      id,
+      dueDate,
+      amount,
+      status,
+      paymentMethod,
+      paymentDate,
+    }: {
+      id: string;
+      dueDate: string;
+      amount: number;
+      status: string;
+      paymentMethod: string | null;
+      paymentDate: string | null;
+    }) => {
+      const { error } = await supabase
+        .from("installments")
+        .update({
+          due_date: dueDate,
+          amount,
+          status,
+          payment_method: paymentMethod,
+          payment_date: paymentDate,
+        })
+        .eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Parcela atualizada com sucesso!");
+      qc.invalidateQueries({ queryKey: ["all_installments"] });
+      qc.invalidateQueries({ queryKey: ["orders"] });
+    },
+    onError: (err: any) => {
+      toast.error("Erro ao editar parcela: " + err.message);
+    },
+  });
+
+  // Mutação para excluir parcela
+  const deleteInstallment = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("installments").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Parcela excluída com sucesso!");
+      qc.invalidateQueries({ queryKey: ["all_installments"] });
+      qc.invalidateQueries({ queryKey: ["orders"] });
+    },
+    onError: (err: any) => {
+      toast.error("Erro ao excluir parcela: " + err.message);
+    },
+  });
+
   // Mutação para salvar assinatura digital
   const saveSignature = useMutation({
     mutationFn: async (signatureData: any) => {
@@ -648,6 +703,8 @@ function ClientesLayout() {
               <PagamentosControle
                 installments={installments}
                 payInstallment={payInstallment.mutateAsync}
+                updateInstallment={updateInstallment.mutateAsync}
+                deleteInstallment={deleteInstallment.mutateAsync}
                 navegarAba={navegarAba}
               />
             )}
