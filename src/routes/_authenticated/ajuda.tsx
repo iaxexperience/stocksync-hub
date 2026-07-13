@@ -832,7 +832,7 @@ function AjudaPage() {
               <div className="font-bold text-sm mb-0.5">Suporte via WhatsApp</div>
               <div className="text-xs text-muted-foreground mb-2">Tire dúvidas rapidamente</div>
               <a
-                href="https://api.whatsapp.com/send?phone=5583988059666&text=Olá!%20Preciso%20de%20suporte%20no%20sistema."
+                href="https://wa.me/5583988059666?text=Olá!%20Preciso%20de%20suporte%20no%20sistema."
                 target="_blank"
                 rel="noopener noreferrer"
               >

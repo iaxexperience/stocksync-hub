@@ -4247,7 +4247,7 @@ function SignatureCollector({
       .replace(/{link_contrato}/g, `https://stockflow.com/v/contrato-${order.order_number}`);
 
     const text = encodeURIComponent(resolvedText);
-    window.open(`https://api.whatsapp.com/send?phone=${phoneNum}&text=${text}`, "_blank");
+    window.open(`https://wa.me/${phoneNum}?text=${text}`, "_blank");
   }
 
   function handleSendEmail() {
