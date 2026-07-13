@@ -22,6 +22,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
 import {
   Search,
   FileBarChart,
@@ -30,6 +31,7 @@ import {
   CreditCard,
   Wallet,
   Package,
+  Printer,
 } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/relatorios")({
@@ -149,15 +151,34 @@ function RelatoriosPage() {
   const isLoading = isLoadingOrders || isLoadingInstallments;
 
   return (
-    <div className="space-y-6 text-xs max-w-7xl animate-fade-in">
-      <header className="pb-2 border-b">
-        <h1 className="text-2xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
-          <FileBarChart className="h-6 w-6 text-indigo-600" /> Relatório de Vendas
-        </h1>
-        <p className="text-muted-foreground text-sm">
-          Consulte vendas por cliente e mercadoria, com situação do parcelamento e forma de
-          pagamento (cartão ou crediário).
-        </p>
+    <div className="space-y-6 text-xs max-w-7xl animate-fade-in print-container">
+      <style>{`
+        @page { size: A4; margin: 15mm 15mm; }
+        @media print {
+          body * { visibility: hidden; }
+          .print-container, .print-container * { visibility: visible; }
+          .print-container { position: absolute; left: 0; top: 0; width: 100%; }
+          .no-print { display: none !important; }
+        }
+      `}</style>
+
+      <header className="pb-2 border-b flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
+            <FileBarChart className="h-6 w-6 text-indigo-600" /> Relatório de Vendas
+          </h1>
+          <p className="text-muted-foreground text-sm">
+            Consulte vendas por cliente e mercadoria, com situação do parcelamento e forma de
+            pagamento (cartão ou crediário).
+          </p>
+        </div>
+        <Button
+          variant="outline"
+          className="no-print shrink-0 flex items-center gap-1.5"
+          onClick={() => window.print()}
+        >
+          <Printer className="h-4 w-4" /> Imprimir Relatório (PDF)
+        </Button>
       </header>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -227,7 +248,7 @@ function RelatoriosPage() {
         </Card>
       </div>
 
-      <Card className="shadow-sm">
+      <Card className="shadow-sm no-print">
         <CardHeader className="pb-3">
           <CardTitle className="text-base font-bold text-slate-900">Filtros</CardTitle>
           <CardDescription>
