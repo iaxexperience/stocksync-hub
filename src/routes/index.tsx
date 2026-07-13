@@ -116,7 +116,7 @@ function Landing() {
         <div className="absolute bottom-0 left-0 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl" />
 
         <div className="mx-auto max-w-7xl px-4 grid lg:grid-cols-12 gap-12 items-center relative z-10">
-          <div className="lg:col-span-7 space-y-6">
+          <div className="lg:col-span-12 space-y-6 max-w-3xl">
             <div className="inline-flex items-center gap-2 rounded-full bg-white/10 border border-white/20 px-4 py-1.5 text-xs font-semibold text-pink-300">
               <Sparkles className="h-3.5 w-3.5" /> Tudo para o seu Lar · Eletro & Enxovais
             </div>
