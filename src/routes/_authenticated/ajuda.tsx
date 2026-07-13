@@ -372,7 +372,7 @@ function generatePortfolioPDF() {
   doc.setTextColor(255, 255, 255);
   doc.setFontSize(26);
   doc.setFont("helvetica", "bold");
-  doc.text("Josi & Jó", W / 2, 70, { align: "center" });
+  doc.text("Josi & Jo", W / 2, 70, { align: "center" });
   doc.setFontSize(11);
   doc.setFont("helvetica", "normal");
   doc.text("Eletrodomésticos", W / 2, 78, { align: "center" });
@@ -418,7 +418,7 @@ function generatePortfolioPDF() {
   // About section
   sectionTitle("📋  Sobre a Empresa");
   bodyText(
-    "A Josi & Jó Eletrodomésticos é uma empresa especializada na comercialização de eletrodomésticos e enxovais de cama, mesa e banho, com atendimento humanizado e qualidade garantida. Localizada em Tibiri/Santa Rita, Paraíba, a empresa conta com um sistema de gestão moderno e integrado para controlar todo o fluxo de vendas, estoque e clientes.",
+    "A Josi & Jo Eletrodomésticos é uma empresa especializada na comercialização de eletrodomésticos e enxovais de cama, mesa e banho, com atendimento humanizado e qualidade garantida. Localizada em Tibiri/Santa Rita, Paraíba, a empresa conta com um sistema de gestão moderno e integrado para controlar todo o fluxo de vendas, estoque e clientes.",
   );
   y += 3;
   bodyText("📞  (83) 98805-9666     📍  Tibiri/Santa Rita, Paraíba, Brasil", 0, 9, muted);
@@ -578,7 +578,7 @@ function generatePortfolioPDF() {
   doc.setTextColor(255, 255, 255);
   doc.setFontSize(13);
   doc.setFont("helvetica", "bold");
-  doc.text("Josi & Jó Eletrodomésticos", W / 2, y + 10, { align: "center" });
+  doc.text("Josi & Jo Eletrodomésticos", W / 2, y + 10, { align: "center" });
   doc.setFontSize(9.5);
   doc.setFont("helvetica", "normal");
   doc.text("📱  WhatsApp: (83) 98805-9666", W / 2, y + 18, { align: "center" });
@@ -594,7 +594,7 @@ function generatePortfolioPDF() {
     doc.setFont("helvetica", "normal");
     doc.setTextColor(muted);
     doc.text(
-      `Josi & Jó Eletrodomésticos  ·  Sistema StockFlow  ·  Página ${i} de ${pageCount}`,
+      `Josi & Jo Eletrodomésticos  ·  Sistema StockFlow  ·  Página ${i} de ${pageCount}`,
       W / 2,
       285,
       { align: "center" },
@@ -673,7 +673,7 @@ function AjudaPage() {
             </h1>
             <p className="text-blue-200 text-sm md:text-base max-w-lg">
               Guia completo do sistema StockFlow — conheça todos os módulos, tire dúvidas e baixe o
-              portfólio da Josi & Jó Eletrodomésticos.
+              portfólio da Josi & Jo Eletrodomésticos.
             </p>
           </div>
           <div className="flex flex-col gap-3 shrink-0">
@@ -787,7 +787,7 @@ function AjudaPage() {
             </div>
             <div className="flex-1 text-center md:text-left">
               <h3 className="text-lg font-bold mb-1">
-                Portfólio Completo — Josi & Jó Eletrodomésticos
+                Portfólio Completo — Josi & Jo Eletrodomésticos
               </h3>
               <p className="text-sm text-muted-foreground">
                 Documento PDF profissional com apresentação da empresa, todos os módulos do sistema,
@@ -871,7 +871,7 @@ function AjudaPage() {
       <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground pt-2">
         <Star className="h-3.5 w-3.5 text-yellow-400" />
         <span>
-          StockFlow Gestão · Desenvolvido para Josi & Jó Eletrodomésticos · Tibiri/Santa Rita,
+          StockFlow Gestão · Desenvolvido para Josi & Jo Eletrodomésticos · Tibiri/Santa Rita,
           Paraíba
         </span>
         <Star className="h-3.5 w-3.5 text-yellow-400" />

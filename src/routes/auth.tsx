@@ -82,7 +82,7 @@ function AuthPage() {
           <span className="font-semibold">StockFlow Gestão</span>
         </Link>
         <div>
-          <div className="text-5xl font-black mb-4 leading-none">Josi & Jó</div>
+          <div className="text-5xl font-black mb-4 leading-none">Josi & Jo</div>
           <h2 className="text-2xl font-bold leading-tight">
             Sistema de Gestão de Eletrodomésticos
           </h2>
@@ -104,7 +104,7 @@ function AuthPage() {
           </div>
         </div>
         <div className="text-xs text-white/60">
-          © {new Date().getFullYear()} Josi & Jó Eletrodomésticos
+          © {new Date().getFullYear()} Josi & Jo Eletrodomésticos
         </div>
       </div>
 

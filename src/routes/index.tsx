@@ -24,13 +24,13 @@ export const Route = createFileRoute("/")({
   component: Landing,
   head: () => ({
     meta: [
-      { title: "Josi & Jó Eletrodomésticos — Tudo para o seu Lar" },
+      { title: "Josi & Jo Eletrodomésticos — Tudo para o seu Lar" },
       {
         name: "description",
         content:
           "Encontre os melhores eletrodomésticos, cama, mesa e banho para equipar e decorar sua casa com qualidade e o melhor atendimento.",
       },
-      { property: "og:title", content: "Josi & Jó Eletrodomésticos" },
+      { property: "og:title", content: "Josi & Jo Eletrodomésticos" },
       {
         property: "og:description",
         content: "Tudo para o seu lar em eletrodomésticos, cama, mesa e banho.",
@@ -63,7 +63,7 @@ function Landing() {
           <Link to="/" className="flex items-center gap-3">
             <img
               src="/logo.jpg"
-              alt="Josi & Jó Eletrodomésticos"
+              alt="Josi & Jo Eletrodomésticos"
               className="h-12 w-auto rounded-lg object-contain shadow-sm"
             />
           </Link>
@@ -123,7 +123,7 @@ function Landing() {
               O aconchego e a tecnologia que a sua casa merece.
             </h1>
             <p className="text-lg text-slate-200 max-w-2xl font-medium leading-relaxed">
-              Na Josi & Jó você encontra o melhor em tecnologia de eletrodomésticos e o carinho dos
+              Na Josi & Jo você encontra o melhor em tecnologia de eletrodomésticos e o carinho dos
               nossos enxovais de cama, mesa e banho. Qualidade garantida e atendimento humanizado.
             </p>
             <div className="pt-2 flex flex-wrap gap-4">
@@ -149,7 +149,7 @@ function Landing() {
             <div className="relative w-full max-w-md rounded-3xl overflow-hidden shadow-2xl border-4 border-white/15 bg-white/5 backdrop-blur-md p-3 group">
               <img
                 src="/logo.jpg"
-                alt="Josi & Jó Logomarca"
+                alt="Josi & Jo Logomarca"
                 className="w-full h-auto rounded-2xl group-hover:scale-105 transition-all duration-700"
               />
             </div>
@@ -179,7 +179,7 @@ function Landing() {
                 <div className="relative overflow-hidden aspect-video">
                   <img
                     src="/eletrodomesticos.png"
-                    alt="Eletrodomésticos Josi & Jó"
+                    alt="Eletrodomésticos Josi & Jo"
                     className="w-full h-full object-cover group-hover:scale-105 transition-all duration-500"
                   />
                   <div className="absolute top-4 left-4 bg-blue-900 text-white font-bold text-xs uppercase px-3 py-1 rounded-full">
@@ -225,7 +225,7 @@ function Landing() {
                 <div className="relative overflow-hidden aspect-video">
                   <img
                     src="/cama_mesa_banho.png"
-                    alt="Cama, Mesa e Banho Josi & Jó"
+                    alt="Cama, Mesa e Banho Josi & Jo"
                     className="w-full h-full object-cover group-hover:scale-105 transition-all duration-500"
                   />
                   <div className="absolute top-4 left-4 bg-pink-600 text-white font-bold text-xs uppercase px-3 py-1 rounded-full">
@@ -329,7 +329,7 @@ function Landing() {
               Sua parceira de confiança para transformar sua casa
             </h2>
             <p className="text-slate-600 font-medium leading-relaxed">
-              A **Josi & Jó Eletrodomésticos** nasceu com a missão de trazer facilidade, tecnologia
+              A **Josi & Jo Eletrodomésticos** nasceu com a missão de trazer facilidade, tecnologia
               e aconchego para as famílias brasileiras. Unimos em um único lugar eletrodomésticos de
               ponta e itens de decoração e enxoval refinados para cama, mesa e banho.
             </p>
@@ -407,7 +407,7 @@ function Landing() {
             <div className="flex items-center gap-3">
               <img
                 src="/logo.jpg"
-                alt="Josi & Jó Eletrodomésticos"
+                alt="Josi & Jo Eletrodomésticos"
                 className="h-10 w-auto rounded-md object-contain"
               />
             </div>
@@ -462,7 +462,7 @@ function Landing() {
           </div>
         </div>
         <div className="border-t border-slate-100 py-6 text-center text-xs text-slate-400 font-medium">
-          © {new Date().getFullYear()} Josi & Jó Eletrodomésticos. Todos os direitos reservados.
+          © {new Date().getFullYear()} Josi & Jo Eletrodomésticos. Todos os direitos reservados.
         </div>
       </footer>
 
