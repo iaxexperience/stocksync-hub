@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useProfile } from "@/hooks/useProfile";
@@ -43,6 +43,8 @@ import {
   Send,
   Loader2,
   Plus,
+  Upload,
+  ImageOff,
 } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/configuracoes")({
@@ -204,6 +206,49 @@ function Configuracoes() {
     whatsapp_template_name: "hello_world",
     whatsapp_integration_type: "link",
   });
+
+  // Upload do logotipo (Identidade Visual Whitelabel)
+  const logoFileInputRef = useRef<HTMLInputElement>(null);
+  const [isUploadingLogo, setIsUploadingLogo] = useState(false);
+
+  async function handleLogoUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      toast.error("Por favor, selecione um arquivo de imagem.");
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("A imagem deve ter no máximo 5MB.");
+      return;
+    }
+
+    try {
+      setIsUploadingLogo(true);
+      const fileExt = file.name.split(".").pop();
+      const fileName = `${orgId}_${Date.now()}.${fileExt}`;
+
+      const { error } = await supabase.storage
+        .from("org-logos")
+        .upload(fileName, file, { cacheControl: "3600", upsert: true });
+      if (error) throw error;
+
+      const { data: publicUrlData } = supabase.storage.from("org-logos").getPublicUrl(fileName);
+      if (!publicUrlData?.publicUrl) {
+        throw new Error("Não foi possível gerar a URL da imagem.");
+      }
+
+      setSettingsForm((prev) => ({ ...prev, company_logo_url: publicUrlData.publicUrl }));
+      toast.success("Logotipo enviado! Clique em Salvar Alterações para aplicar.");
+    } catch (err: any) {
+      toast.error("Erro ao enviar logotipo: " + err.message);
+    } finally {
+      setIsUploadingLogo(false);
+      if (logoFileInputRef.current) logoFileInputRef.current.value = "";
+    }
+  }
 
   // Sync Form States when data loads
   useEffect(() => {
@@ -619,15 +664,50 @@ function Configuracoes() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="logo-url">URL do Logotipo da Empresa</Label>
+                    <Label htmlFor="logo-url">Logotipo da Empresa (Whitelabel)</Label>
+                    <div className="flex items-center gap-3">
+                      <div className="h-14 w-14 shrink-0 rounded-md border bg-white flex items-center justify-center overflow-hidden">
+                        {settingsForm.company_logo_url ? (
+                          <img
+                            src={settingsForm.company_logo_url}
+                            alt="Logotipo da empresa"
+                            className="h-full w-full object-contain"
+                          />
+                        ) : (
+                          <ImageOff className="h-5 w-5 text-slate-300" />
+                        )}
+                      </div>
+                      <input
+                        ref={logoFileInputRef}
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={handleLogoUpload}
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        disabled={isLoading || saveAllSettings.isPending || isUploadingLogo}
+                        onClick={() => logoFileInputRef.current?.click()}
+                        className="h-9"
+                      >
+                        {isUploadingLogo ? (
+                          <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />
+                        ) : (
+                          <Upload className="h-4 w-4 mr-1.5" />
+                        )}
+                        Enviar Logotipo
+                      </Button>
+                    </div>
                     <Input disabled={isLoading || saveAllSettings.isPending}
                       id="logo-url"
-                      placeholder="https://suaempresa.com/logo.png"
+                      placeholder="ou cole a URL de uma imagem: https://suaempresa.com/logo.png"
                       value={settingsForm.company_logo_url}
                       onChange={(e) =>
                         setSettingsForm({ ...settingsForm, company_logo_url: e.target.value })
                       }
-                      className="h-9"
+                      className="h-9 text-[11px]"
                     />
                   </div>
                 </div>
@@ -1032,6 +1112,22 @@ function Configuracoes() {
                           }
                           className="bg-white"
                         />
+                        <div className="flex justify-end pt-1">
+                          <Button
+                            type="button"
+                            size="sm"
+                            onClick={() => saveAllSettings.mutate()}
+                            disabled={saveAllSettings.isPending || isLoading}
+                            className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold flex items-center gap-1.5"
+                          >
+                            {saveAllSettings.isPending ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <Save className="h-4 w-4" />
+                            )}
+                            Salvar Configurações de WhatsApp
+                          </Button>
+                        </div>
                       </div>
                     )}
 
@@ -1105,6 +1201,22 @@ function Configuracoes() {
                                 className="bg-white"
                               />
                             </div>
+                          </div>
+                          <div className="flex justify-end pt-1">
+                            <Button
+                              type="button"
+                              size="sm"
+                              onClick={() => saveAllSettings.mutate()}
+                              disabled={saveAllSettings.isPending || isLoading}
+                              className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold flex items-center gap-1.5"
+                            >
+                              {saveAllSettings.isPending ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              ) : (
+                                <Save className="h-4 w-4" />
+                              )}
+                              Salvar Configurações de WhatsApp
+                            </Button>
                           </div>
                         </div>
 
