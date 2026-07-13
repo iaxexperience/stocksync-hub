@@ -21,7 +21,8 @@
       "Bash(cp \"/c/Users/maxra/AppData/Local/Temp/josenildo e josi.jpg\" \"/d/stocksync-hub/public/logo.jpg\" && ls -la /d/stocksync-hub/public/logo.jpg)",
       "Bash(npx tsc *)",
       "Bash(node -e \"require\\('fs'\\).readFileSync\\('/d/stocksync-hub/src/routeTree.gen.ts','utf8'\\)\")",
-      "Bash(node --check /d/stocksync-hub/src/routeTree.gen.ts)"
+      "Bash(node --check /d/stocksync-hub/src/routeTree.gen.ts)",
+      "Bash(awk 'NR==5188,NR==5610' /d/stocksync-hub/src/routes/_authenticated/clientes.tsx)"
     ],
     "additionalDirectories": [
       "C:\\Users\\maxra\\AppData\\Local\\Temp"
