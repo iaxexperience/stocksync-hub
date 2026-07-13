@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find /c/Users/maxra/AppData/Local/Temp -iname \"*.png\" -newer /c/Users/maxra/AppData/Local/Temp -mmin -30 2>/dev/null | head -20; echo \"---\"; find /c/Users/maxra/AppData/Local/Temp/claude -type f -mmin -30 2>/dev/null | head -20)",
+      "Read(//c/Users/maxra/AppData/Local/Temp/**)",
+      "Read(//c/Users/maxra/AppData/Local/Temp/claude/**)",
+      "Bash(find /c/Users/maxra/AppData/Local/Temp -type f \\\\\\( -iname \"*.png\" -o -iname \"*.jpg\" -o -iname \"*.jpeg\" -o -iname \"*.webp\" \\\\\\) -mmin -60 2>/dev/null)",
+      "Bash(grep -iE \"\\\\.\\(png|jpg|jpeg|webp|gif|bmp\\)$\")"
+    ]
+  }
+}
