@@ -3997,7 +3997,16 @@ function ClientePerfil({
       </Dialog>
 
       {/* DIALOG DE ASSINATURA DIGITAL (SIMULAÇÃO DE TOUCH/MOUSE CANVAS) */}
-      <Dialog open={openSignModal} onOpenChange={setOpenSignModal}>
+      <Dialog
+        open={openSignModal}
+        onOpenChange={(open) => {
+          setOpenSignModal(open);
+          if (!open) {
+            setSigningOrder(null);
+            setViewingPrefilledSignature(null);
+          }
+        }}
+      >
         <DialogContent className="max-w-5xl w-[95vw] max-h-[95vh] overflow-y-auto">
           {signingOrder && (
             <SignatureCollector
@@ -4006,8 +4015,10 @@ function ClientePerfil({
               onClose={() => {
                 setOpenSignModal(false);
                 setSigningOrder(null);
+                setViewingPrefilledSignature(null);
               }}
               saveSignature={saveSignature}
+              prefilledSignature={viewingPrefilledSignature}
             />
           )}
         </DialogContent>
