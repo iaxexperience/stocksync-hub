@@ -1961,6 +1961,15 @@ function ClienteForm({
     return true;
   }
 
+  // Verifica se já existe outro cliente cadastrado com o mesmo CPF/CNPJ
+  const duplicateCustomer = useMemo(() => {
+    const digits = cpfCnpj.replace(/\D/g, "");
+    if (!digits || isEditMode) return null;
+    return (
+      customers.find((c: any) => c.id !== id && c.cpf_cnpj?.replace(/\D/g, "") === digits) || null
+    );
+  }, [customers, cpfCnpj, isEditMode, id]);
+
   // Salvar cadastro geral (Aba dados + Aba endereço)
   async function handleSaveCustomerOnly() {
     if (!name || !cpfCnpj) {
@@ -1981,6 +1990,14 @@ function ClienteForm({
         setActiveTab("dados");
         return;
       }
+    }
+
+    if (duplicateCustomer) {
+      toast.error(
+        `Já existe um cliente cadastrado com este ${customerType === "PF" ? "CPF" : "CNPJ"}: ${duplicateCustomer.name}.`,
+      );
+      setActiveTab("dados");
+      return;
     }
 
     const customerObj = {
@@ -2046,6 +2063,14 @@ function ClienteForm({
           setActiveTab("dados");
           return;
         }
+      }
+
+      if (duplicateCustomer) {
+        toast.error(
+          `Já existe um cliente cadastrado com este ${customerType === "PF" ? "CPF" : "CNPJ"}: ${duplicateCustomer.name}.`,
+        );
+        setActiveTab("dados");
+        return;
       }
 
       try {
