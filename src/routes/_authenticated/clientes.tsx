@@ -5185,9 +5185,31 @@ function ProdutosContratadosList({
 // ============================================
 // SUBCOMPONENT: HistoricoCompras
 // ============================================
-function HistoricoCompras({ orders, navegarAba }: { orders: any[]; navegarAba: any }) {
+function HistoricoCompras({
+  orders,
+  navegarAba,
+  updateOrder,
+  deleteOrder,
+}: {
+  orders: any[];
+  navegarAba: any;
+  updateOrder: any;
+  deleteOrder: any;
+}) {
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState("all");
+
+  const [editingOrder, setEditingOrder] = useState<any | null>(null);
+  const [editOrderType, setEditOrderType] = useState("pedido");
+  const [editPaymentMethod, setEditPaymentMethod] = useState("");
+  const [editStatus, setEditStatus] = useState("Pendente");
+  const [editPaymentStatus, setEditPaymentStatus] = useState("Pendente");
+  const [editDiscount, setEditDiscount] = useState("0");
+  const [editShippingFee, setEditShippingFee] = useState("0");
+  const [editInstallationFee, setEditInstallationFee] = useState("0");
+  const [editDeliveryDate, setEditDeliveryDate] = useState("");
+  const [editNotes, setEditNotes] = useState("");
+  const [openEditModal, setOpenEditModal] = useState(false);
 
   const filtered = useMemo(() => {
     return orders.filter((o) => {
@@ -5198,6 +5220,48 @@ function HistoricoCompras({ orders, navegarAba }: { orders: any[]; navegarAba: a
       return matchesSearch && matchesType;
     });
   }, [orders, search, typeFilter]);
+
+  function handleOpenEdit(o: any) {
+    setEditingOrder(o);
+    setEditOrderType(o.order_type);
+    setEditPaymentMethod(o.payment_method || "");
+    setEditStatus(o.status);
+    setEditPaymentStatus(o.payment_status);
+    setEditDiscount(String(o.discount || 0));
+    setEditShippingFee(String(o.shipping_fee || 0));
+    setEditInstallationFee(String(o.installation_fee || 0));
+    setEditDeliveryDate(o.delivery_date || "");
+    setEditNotes(o.notes || "");
+    setOpenEditModal(true);
+  }
+
+  async function handleConfirmEdit() {
+    if (!editingOrder) return;
+    await updateOrder({
+      id: editingOrder.id,
+      order_type: editOrderType,
+      payment_method: editPaymentMethod,
+      status: editStatus,
+      payment_status: editPaymentStatus,
+      discount: Number(editDiscount),
+      shipping_fee: Number(editShippingFee),
+      installation_fee: Number(editInstallationFee),
+      delivery_date: editDeliveryDate || null,
+      notes: editNotes || null,
+      subtotal: Number(editingOrder.subtotal),
+    });
+    setOpenEditModal(false);
+  }
+
+  function handleDelete(o: any) {
+    if (
+      confirm(
+        `Tem certeza que deseja excluir o ${o.order_type} #${o.order_number} de "${o.customers?.name}"?\nTodos os itens, parcelas e assinaturas vinculados também serão removidos. Esta ação não pode ser desfeita.`,
+      )
+    ) {
+      deleteOrder(o.id);
+    }
+  }
 
   return (
     <Card className="shadow-sm animate-fade-in">
@@ -5246,12 +5310,13 @@ function HistoricoCompras({ orders, navegarAba }: { orders: any[]; navegarAba: a
                 <TableHead>Status Venda</TableHead>
                 <TableHead>Status Pag.</TableHead>
                 <TableHead>Data Emissão</TableHead>
+                <TableHead className="text-right">Ação</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filtered.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={11} className="text-center py-10 text-muted-foreground">
+                  <TableCell colSpan={12} className="text-center py-10 text-muted-foreground">
                     Nenhuma venda ou transação localizada.
                   </TableCell>
                 </TableRow>
@@ -5323,6 +5388,28 @@ function HistoricoCompras({ orders, navegarAba }: { orders: any[]; navegarAba: a
                     <TableCell className="text-muted-foreground">
                       {new Date(o.created_at).toLocaleDateString("pt-BR")}
                     </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex items-center justify-end gap-1.5">
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="h-7 w-7 text-slate-500 hover:text-blue-700 hover:bg-blue-50"
+                          title="Editar"
+                          onClick={() => handleOpenEdit(o)}
+                        >
+                          <Pencil className="h-3.5 w-3.5" />
+                        </Button>
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="h-7 w-7 text-slate-500 hover:text-destructive hover:bg-destructive/10"
+                          title="Excluir"
+                          onClick={() => handleDelete(o)}
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
+                    </TableCell>
                   </TableRow>
                 ))
               )}
@@ -5330,6 +5417,183 @@ function HistoricoCompras({ orders, navegarAba }: { orders: any[]; navegarAba: a
           </Table>
         </div>
       </CardContent>
+
+      <Dialog open={openEditModal} onOpenChange={setOpenEditModal}>
+        <DialogContent className="max-w-lg text-xs">
+          <DialogHeader>
+            <DialogTitle>Editar {editingOrder?.order_type}</DialogTitle>
+          </DialogHeader>
+          {editingOrder && (
+            <div className="space-y-4 py-2">
+              <div className="bg-slate-50 p-3 rounded border space-y-1.5">
+                <p>
+                  <span className="font-semibold text-muted-foreground">Número:</span> #
+                  {editingOrder.order_number}
+                </p>
+                <p>
+                  <span className="font-semibold text-muted-foreground">Cliente:</span>{" "}
+                  {editingOrder.customers?.name}
+                </p>
+                <p>
+                  <span className="font-semibold text-muted-foreground">Subtotal:</span>{" "}
+                  {Number(editingOrder.subtotal).toLocaleString("pt-BR", {
+                    style: "currency",
+                    currency: "BRL",
+                  })}
+                </p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <Label>Tipo</Label>
+                  <Select value={editOrderType} onValueChange={setEditOrderType}>
+                    <SelectTrigger className="h-9">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="pedido">Pedido</SelectItem>
+                      <SelectItem value="orcamento">Orçamento</SelectItem>
+                      <SelectItem value="contrato">Contrato</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1">
+                  <Label>Forma de Pagamento</Label>
+                  <Select value={editPaymentMethod} onValueChange={setEditPaymentMethod}>
+                    <SelectTrigger className="h-9">
+                      <SelectValue placeholder="—" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Dinheiro">Dinheiro</SelectItem>
+                      <SelectItem value="Pix">Pix</SelectItem>
+                      <SelectItem value="Cartão de débito">Cartão de débito</SelectItem>
+                      <SelectItem value="Cartão de crédito">Cartão de crédito</SelectItem>
+                      <SelectItem value="Boleto">Boleto</SelectItem>
+                      <SelectItem value="Transferência bancária">
+                        Transferência bancária
+                      </SelectItem>
+                      <SelectItem value="Financiamento">Financiamento</SelectItem>
+                      <SelectItem value="Crediário próprio">Crediário próprio</SelectItem>
+                      <SelectItem value="Pagamento parcelado">Pagamento parcelado</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <Label>Status da Venda</Label>
+                  <Select value={editStatus} onValueChange={setEditStatus}>
+                    <SelectTrigger className="h-9">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Rascunho">Rascunho</SelectItem>
+                      <SelectItem value="Pendente">Pendente</SelectItem>
+                      <SelectItem value="Aprovado">Aprovado</SelectItem>
+                      <SelectItem value="Concluído">Concluído</SelectItem>
+                      <SelectItem value="Cancelado">Cancelado</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1">
+                  <Label>Status de Pagamento</Label>
+                  <Select value={editPaymentStatus} onValueChange={setEditPaymentStatus}>
+                    <SelectTrigger className="h-9">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Pendente">Pendente</SelectItem>
+                      <SelectItem value="Parcialmente Pago">Parcialmente Pago</SelectItem>
+                      <SelectItem value="Pago">Pago</SelectItem>
+                      <SelectItem value="Inadimplente">Inadimplente</SelectItem>
+                      <SelectItem value="Cancelado">Cancelado</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-3 gap-3">
+                <div className="space-y-1">
+                  <Label>Desconto (R$)</Label>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    value={editDiscount}
+                    onChange={(e) => setEditDiscount(e.target.value)}
+                    className="h-9"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label>Frete (R$)</Label>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    value={editShippingFee}
+                    onChange={(e) => setEditShippingFee(e.target.value)}
+                    className="h-9"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label>Taxa Instalação (R$)</Label>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    value={editInstallationFee}
+                    onChange={(e) => setEditInstallationFee(e.target.value)}
+                    className="h-9"
+                  />
+                </div>
+              </div>
+
+              <div className="bg-slate-50 p-2.5 rounded border flex justify-between items-center">
+                <span className="font-semibold text-muted-foreground">Novo Total Geral:</span>
+                <span className="font-extrabold text-slate-900">
+                  {Math.max(
+                    0,
+                    Number(editingOrder.subtotal) -
+                      Number(editDiscount || 0) +
+                      Number(editShippingFee || 0) +
+                      Number(editInstallationFee || 0),
+                  ).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+                </span>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <Label>Data de Entrega</Label>
+                  <Input
+                    type="date"
+                    value={editDeliveryDate}
+                    onChange={(e) => setEditDeliveryDate(e.target.value)}
+                    className="h-9"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <Label>Observações</Label>
+                <Textarea
+                  value={editNotes}
+                  onChange={(e) => setEditNotes(e.target.value)}
+                  rows={2}
+                />
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setOpenEditModal(false)}>
+              Cancelar
+            </Button>
+            <Button
+              onClick={handleConfirmEdit}
+              className="bg-blue-700 hover:bg-blue-800 text-white font-semibold"
+            >
+              Salvar Alterações
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 }
