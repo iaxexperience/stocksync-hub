@@ -346,6 +346,82 @@ function ClientesLayout() {
     },
   });
 
+  // Mutação para editar pedido/contrato
+  const updateOrder = useMutation({
+    mutationFn: async ({
+      id,
+      order_type,
+      payment_method,
+      status,
+      payment_status,
+      discount,
+      shipping_fee,
+      installation_fee,
+      delivery_date,
+      notes,
+      subtotal,
+    }: {
+      id: string;
+      order_type: string;
+      payment_method: string;
+      status: string;
+      payment_status: string;
+      discount: number;
+      shipping_fee: number;
+      installation_fee: number;
+      delivery_date: string | null;
+      notes: string | null;
+      subtotal: number;
+    }) => {
+      const total_amount = Math.max(0, subtotal - discount + shipping_fee + installation_fee);
+      const { error } = await supabase
+        .from("orders")
+        .update({
+          order_type,
+          payment_method,
+          status,
+          payment_status,
+          discount,
+          shipping_fee,
+          installation_fee,
+          delivery_date: delivery_date || null,
+          notes,
+          total_amount,
+        })
+        .eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Pedido atualizado com sucesso!");
+      qc.invalidateQueries({ queryKey: ["orders"] });
+      qc.invalidateQueries({ queryKey: ["all_installments"] });
+    },
+    onError: (err: any) => {
+      toast.error("Erro ao editar pedido: " + err.message);
+    },
+  });
+
+  // Mutação para excluir pedido/contrato
+  const deleteOrder = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("orders").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Pedido excluído com sucesso!");
+      qc.invalidateQueries({ queryKey: ["orders"] });
+      qc.invalidateQueries({ queryKey: ["all_installments"] });
+      qc.invalidateQueries({ queryKey: ["products"] });
+    },
+    onError: (err: any) => {
+      toast.error(
+        "Erro ao excluir pedido: " +
+          err.message +
+          " (apenas administradores/gerentes podem excluir vendas)",
+      );
+    },
+  });
+
   // Mutação para dar baixa em parcela
   const payInstallment = useMutation({
     mutationFn: async ({
