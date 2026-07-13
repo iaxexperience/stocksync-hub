@@ -228,14 +228,16 @@ function Configuracoes() {
     try {
       setIsUploadingLogo(true);
       const fileExt = file.name.split(".").pop();
-      const fileName = `${orgId}_${Date.now()}.${fileExt}`;
+      const fileName = `logo_${orgId}_${Date.now()}.${fileExt}`;
 
       const { error } = await supabase.storage
-        .from("org-logos")
+        .from("customer-photos")
         .upload(fileName, file, { cacheControl: "3600", upsert: true });
       if (error) throw error;
 
-      const { data: publicUrlData } = supabase.storage.from("org-logos").getPublicUrl(fileName);
+      const { data: publicUrlData } = supabase.storage
+        .from("customer-photos")
+        .getPublicUrl(fileName);
       if (!publicUrlData?.publicUrl) {
         throw new Error("Não foi possível gerar a URL da imagem.");
       }

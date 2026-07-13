@@ -22,7 +22,12 @@
       "Bash(npx tsc *)",
       "Bash(node -e \"require\\('fs'\\).readFileSync\\('/d/stocksync-hub/src/routeTree.gen.ts','utf8'\\)\")",
       "Bash(node --check /d/stocksync-hub/src/routeTree.gen.ts)",
-      "Bash(awk 'NR==5188,NR==5610' /d/stocksync-hub/src/routes/_authenticated/clientes.tsx)"
+      "Bash(awk 'NR==5188,NR==5610' /d/stocksync-hub/src/routes/_authenticated/clientes.tsx)",
+      "Bash(npx --version)",
+      "Read(//c/Users/maxra/.config/**)",
+      "Bash(timeout 25 npx -y supabase --version)",
+      "Bash(ls -la /c/Users/maxra/.supabase/ 2>&1 *)",
+      "Read(//c/Users/maxra/.supabase//**)"
     ],
     "additionalDirectories": [
       "C:\\Users\\maxra\\AppData\\Local\\Temp"
