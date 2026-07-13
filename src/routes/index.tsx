@@ -413,7 +413,11 @@ function Landing() {
         <div className="mx-auto max-w-7xl px-4 py-16 grid md:grid-cols-4 gap-8">
           <div className="space-y-4">
             <div className="flex items-center gap-3">
-              <span className="font-extrabold text-blue-900 text-lg">Josi & Jó</span>
+              <img
+                src="/logo.jpg"
+                alt="Josi & Jó Eletrodomésticos"
+                className="h-10 w-auto rounded-md object-contain"
+              />
             </div>
             <p className="text-slate-500 font-medium">
               Transformando casas em lares com os melhores eletrodomésticos e enxovais.
