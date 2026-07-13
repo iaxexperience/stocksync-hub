@@ -18,7 +18,8 @@
       "Read(//c/Users/maxra/.claude/paste-cache/**)",
       "Bash(grep -iE \"\\\\.\\(png|jpg|jpeg|webp\\)$\")",
       "Bash(file \"/c/Users/maxra/AppData/Local/Temp/josenildo e josi.jpg\")",
-      "Bash(cp \"/c/Users/maxra/AppData/Local/Temp/josenildo e josi.jpg\" \"/d/stocksync-hub/public/logo.jpg\" && ls -la /d/stocksync-hub/public/logo.jpg)"
+      "Bash(cp \"/c/Users/maxra/AppData/Local/Temp/josenildo e josi.jpg\" \"/d/stocksync-hub/public/logo.jpg\" && ls -la /d/stocksync-hub/public/logo.jpg)",
+      "Bash(npx tsc *)"
     ],
     "additionalDirectories": [
       "C:\\Users\\maxra\\AppData\\Local\\Temp"

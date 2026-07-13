@@ -5257,10 +5257,14 @@ function HistoricoCompras({ orders, navegarAba }: { orders: any[]; navegarAba: a
 function PagamentosControle({
   installments,
   payInstallment,
+  updateInstallment,
+  deleteInstallment,
   navegarAba,
 }: {
   installments: any[];
   payInstallment: any;
+  updateInstallment: any;
+  deleteInstallment: any;
   navegarAba: any;
 }) {
   const [search, setSearch] = useState("");
@@ -5270,6 +5274,14 @@ function PagamentosControle({
   const [payMethod, setPayMethod] = useState("Pix");
   const [payDate, setPayDate] = useState(() => new Date().toISOString().split("T")[0]);
   const [openPayModal, setOpenPayModal] = useState(false);
+
+  const [editingIns, setEditingIns] = useState<any | null>(null);
+  const [editDueDate, setEditDueDate] = useState("");
+  const [editAmount, setEditAmount] = useState("");
+  const [editStatus, setEditStatus] = useState("Pendente");
+  const [editPayMethod, setEditPayMethod] = useState("");
+  const [editPayDate, setEditPayDate] = useState("");
+  const [openEditModal, setOpenEditModal] = useState(false);
 
   const filtered = useMemo(() => {
     return installments.filter((ins) => {
@@ -5297,6 +5309,39 @@ function PagamentosControle({
       paymentDate: payDate,
     });
     setOpenPayModal(false);
+  }
+
+  function handleOpenEdit(ins: any) {
+    setEditingIns(ins);
+    setEditDueDate(ins.due_date);
+    setEditAmount(String(ins.amount));
+    setEditStatus(ins.status);
+    setEditPayMethod(ins.payment_method || "");
+    setEditPayDate(ins.payment_date || "");
+    setOpenEditModal(true);
+  }
+
+  async function handleConfirmEdit() {
+    if (!editingIns) return;
+    await updateInstallment({
+      id: editingIns.id,
+      dueDate: editDueDate,
+      amount: Number(editAmount),
+      status: editStatus,
+      paymentMethod: editPayMethod || null,
+      paymentDate: editPayDate || null,
+    });
+    setOpenEditModal(false);
+  }
+
+  function handleDelete(ins: any) {
+    if (
+      confirm(
+        `Tem certeza que deseja excluir a parcela ${ins.installment_number}/${ins.orders?.installments || 1} do pedido #${ins.orders?.order_number}?\nEsta ação não pode ser desfeita.`,
+      )
+    ) {
+      deleteInstallment(ins.id);
+    }
   }
 
   return (
@@ -5399,18 +5444,38 @@ function PagamentosControle({
                       </TableCell>
                       <TableCell>{ins.payment_method || "—"}</TableCell>
                       <TableCell className="text-right">
-                        {ins.status !== "Pago" && (
+                        <div className="flex items-center justify-end gap-1.5">
+                          {ins.status !== "Pago" && (
+                            <Button
+                              size="sm"
+                              className="h-7 text-xs bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border-emerald-300 font-semibold"
+                              onClick={() => {
+                                setPayingIns(ins);
+                                setOpenPayModal(true);
+                              }}
+                            >
+                              Dar Baixa
+                            </Button>
+                          )}
                           <Button
-                            size="sm"
-                            className="h-7 text-xs bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border-emerald-300 font-semibold"
-                            onClick={() => {
-                              setPayingIns(ins);
-                              setOpenPayModal(true);
-                            }}
+                            size="icon"
+                            variant="ghost"
+                            className="h-7 w-7 text-slate-500 hover:text-blue-700 hover:bg-blue-50"
+                            title="Editar parcela"
+                            onClick={() => handleOpenEdit(ins)}
                           >
-                            Dar Baixa
+                            <Pencil className="h-3.5 w-3.5" />
                           </Button>
-                        )}
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="h-7 w-7 text-slate-500 hover:text-destructive hover:bg-destructive/10"
+                            title="Excluir parcela"
+                            onClick={() => handleDelete(ins)}
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   );
@@ -5495,6 +5560,108 @@ function PagamentosControle({
               className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold"
             >
               Confirmar Recebimento
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={openEditModal} onOpenChange={setOpenEditModal}>
+        <DialogContent className="max-w-md text-xs">
+          <DialogHeader>
+            <DialogTitle>Editar Parcela</DialogTitle>
+          </DialogHeader>
+          {editingIns && (
+            <div className="space-y-4 py-2">
+              <div className="bg-slate-50 p-3 rounded border space-y-1.5">
+                <p>
+                  <span className="font-semibold text-muted-foreground">Cliente:</span>{" "}
+                  {editingIns.orders?.customers?.name}
+                </p>
+                <p>
+                  <span className="font-semibold text-muted-foreground">Pedido Vinculado:</span> #
+                  {editingIns.orders?.order_number}
+                </p>
+                <p>
+                  <span className="font-semibold text-muted-foreground">Parcela:</span>{" "}
+                  {editingIns.installment_number} / {editingIns.orders?.installments || 1} Parcela
+                </p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <Label>Vencimento</Label>
+                  <Input
+                    type="date"
+                    value={editDueDate}
+                    onChange={(e) => setEditDueDate(e.target.value)}
+                    className="h-9"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label>Valor</Label>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    value={editAmount}
+                    onChange={(e) => setEditAmount(e.target.value)}
+                    className="h-9"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <Label>Status</Label>
+                <Select value={editStatus} onValueChange={setEditStatus}>
+                  <SelectTrigger className="h-9">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Pendente">Pendente</SelectItem>
+                    <SelectItem value="Pago">Pago</SelectItem>
+                    <SelectItem value="Atrasado">Atrasado</SelectItem>
+                    <SelectItem value="Cancelado">Cancelado</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <Label>Forma de Pagamento</Label>
+                  <Select value={editPayMethod} onValueChange={setEditPayMethod}>
+                    <SelectTrigger className="h-9">
+                      <SelectValue placeholder="—" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Dinheiro">Dinheiro</SelectItem>
+                      <SelectItem value="Pix">Pix</SelectItem>
+                      <SelectItem value="Cartão de débito">Cartão de débito</SelectItem>
+                      <SelectItem value="Cartão de crédito">Cartão de crédito</SelectItem>
+                      <SelectItem value="Boleto">Boleto</SelectItem>
+                      <SelectItem value="Transferência bancária">Transferência bancária</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1">
+                  <Label>Data do Pagamento</Label>
+                  <Input
+                    type="date"
+                    value={editPayDate}
+                    onChange={(e) => setEditPayDate(e.target.value)}
+                    className="h-9"
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setOpenEditModal(false)}>
+              Cancelar
+            </Button>
+            <Button
+              onClick={handleConfirmEdit}
+              className="bg-blue-700 hover:bg-blue-800 text-white font-semibold"
+            >
+              Salvar Alterações
             </Button>
           </DialogFooter>
         </DialogContent>
