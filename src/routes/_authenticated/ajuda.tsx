@@ -693,19 +693,6 @@ function AjudaPage() {
                 </>
               )}
             </Button>
-            <a
-              href="https://api.whatsapp.com/send?phone=5583988059666&text=Olá!%20Preciso%20de%20suporte%20no%20sistema."
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <Button
-                variant="outline"
-                size="lg"
-                className="w-full border-white/30 text-white hover:bg-white/10 hover:text-white"
-              >
-                <MessageCircle className="h-4 w-4 mr-2" /> Suporte via WhatsApp
-              </Button>
-            </a>
           </div>
         </div>
       </div>
