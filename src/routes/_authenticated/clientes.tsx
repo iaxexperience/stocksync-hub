@@ -2956,6 +2956,7 @@ function ClientePerfil({
   // Dialog para coletar assinatura pendente
   const [openSignModal, setOpenSignModal] = useState(false);
   const [signingOrder, setSigningOrder] = useState<any | null>(null);
+  const [viewingPrefilledSignature, setViewingPrefilledSignature] = useState<any | null>(null);
 
   // Mock de uploads de anexos no state do componente para fins de simulação
   const [anexos, setAnexos] = useState<any[]>([
@@ -3634,13 +3635,14 @@ function ClientePerfil({
                           <TableHead>Localização (Lat/Long)</TableHead>
                           <TableHead>Versão</TableHead>
                           <TableHead className="text-center">Assinatura</TableHead>
+                          <TableHead className="text-right">Ação</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
                         {customerSignatures.length === 0 ? (
                           <TableRow>
                             <TableCell
-                              colSpan={7}
+                              colSpan={8}
                               className="text-center py-8 text-muted-foreground"
                             >
                               Nenhuma assinatura digital coletada para este cliente.
@@ -3680,6 +3682,25 @@ function ClientePerfil({
                                     alt="Assinatura"
                                   />
                                 </div>
+                              </TableCell>
+                              <TableCell className="text-right">
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="h-7 text-xs flex items-center gap-1 ml-auto"
+                                  onClick={() => {
+                                    const fullOrder = orders.find((o: any) => o.id === sig.order_id);
+                                    if (fullOrder) {
+                                      setSigningOrder(fullOrder);
+                                      setViewingPrefilledSignature(sig);
+                                      setOpenSignModal(true);
+                                    } else {
+                                      toast.error("Pedido/contrato não localizado.");
+                                    }
+                                  }}
+                                >
+                                  <Printer className="h-3 w-3" /> Baixar / Imprimir
+                                </Button>
                               </TableCell>
                             </TableRow>
                           ))
