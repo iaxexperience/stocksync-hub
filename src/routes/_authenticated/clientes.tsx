@@ -2234,7 +2234,21 @@ function ClienteForm({
                     onChange={(e) => setCpfCnpj(e.target.value)}
                     required
                     placeholder={customerType === "PF" ? "000.000.000-00" : "00.000.000/0000-00"}
+                    className={duplicateCustomer ? "border-destructive focus-visible:ring-destructive" : ""}
                   />
+                  {duplicateCustomer && (
+                    <p className="text-destructive text-[11px] font-semibold flex items-center gap-1 pt-0.5">
+                      <AlertCircle className="h-3 w-3 shrink-0" /> Já cadastrado para{" "}
+                      {duplicateCustomer.name}.{" "}
+                      <button
+                        type="button"
+                        className="underline hover:no-underline"
+                        onClick={() => navegarAba("perfil", { id: duplicateCustomer.id })}
+                      >
+                        Ver cadastro
+                      </button>
+                    </p>
+                  )}
                 </div>
                 <div className="space-y-1">
                   <Label>{customerType === "PF" ? "RG" : "Inscrição Estadual"}</Label>
