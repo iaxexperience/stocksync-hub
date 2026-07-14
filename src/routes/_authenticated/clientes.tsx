@@ -4418,6 +4418,380 @@ function SignatureCollector({
     window.open(`mailto:${customer.email}?subject=${subject}&body=${body}`, "_blank");
   }
 
+  function generateContractPDF() {
+    const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+    const W = 210;
+    const H = 297;
+    const margin = 18;
+    const contentW = W - margin * 2;
+    const dark = "#1e293b";
+    let y = margin;
+
+    function addPage() {
+      doc.addPage();
+      y = margin;
+    }
+    function checkSpace(needed: number) {
+      if (y + needed > H - margin) addPage();
+    }
+    function clauseTitle(text: string) {
+      checkSpace(12);
+      doc.setFontSize(10);
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor(dark);
+      doc.text(text, margin, y);
+      y += 2;
+      doc.setDrawColor(200);
+      doc.setLineWidth(0.2);
+      doc.line(margin, y, W - margin, y);
+      y += 6;
+    }
+    function paragraph(text: string, opts: { bold?: boolean; size?: number } = {}) {
+      doc.setFontSize(opts.size || 9.5);
+      doc.setFont("helvetica", opts.bold ? "bold" : "normal");
+      doc.setTextColor(dark);
+      const lines = doc.splitTextToSize(text, contentW);
+      checkSpace(lines.length * 4.6 + 2);
+      doc.text(lines, margin, y);
+      y += lines.length * 4.6 + 3;
+    }
+    function labelValue(label: string, value: string) {
+      doc.setFontSize(9.5);
+      checkSpace(5);
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor(dark);
+      const labelW = doc.getTextWidth(label);
+      doc.text(label, margin, y);
+      doc.setFont("helvetica", "normal");
+      const lines = doc.splitTextToSize(value || "—", contentW - labelW);
+      doc.text(lines, margin + labelW, y);
+      y += lines.length * 4.6 + 1.5;
+    }
+    function divider() {
+      checkSpace(4);
+      doc.setDrawColor(220);
+      doc.setLineWidth(0.2);
+      doc.line(margin, y, W - margin, y);
+      y += 5;
+    }
+    function drawTable(
+      headers: { label: string; w: number; align?: "left" | "right" | "center" }[],
+      rows: string[][],
+    ) {
+      const rowH = 6.5;
+      checkSpace(rowH + 2);
+      let x = margin;
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(8);
+      headers.forEach((h) => {
+        doc.setFillColor(241, 245, 249);
+        doc.setDrawColor(180);
+        doc.setLineWidth(0.15);
+        doc.rect(x, y, h.w, rowH, "FD");
+        doc.setTextColor(dark);
+        const align = h.align || "left";
+        const tx = align === "right" ? x + h.w - 1.5 : align === "center" ? x + h.w / 2 : x + 1.5;
+        doc.text(h.label, tx, y + rowH - 2.2, { align, maxWidth: h.w - 3 });
+        x += h.w;
+      });
+      y += rowH;
+      doc.setFont("helvetica", "normal");
+      rows.forEach((row) => {
+        checkSpace(rowH + 1);
+        x = margin;
+        row.forEach((cell, i) => {
+          const h = headers[i];
+          doc.setDrawColor(200);
+          doc.rect(x, y, h.w, rowH);
+          const align = h.align || "left";
+          const tx = align === "right" ? x + h.w - 1.5 : align === "center" ? x + h.w / 2 : x + 1.5;
+          doc.text(String(cell), tx, y + rowH - 2.2, { align, maxWidth: h.w - 3 });
+          x += h.w;
+        });
+        y += rowH;
+      });
+      y += 4;
+    }
+
+    const brl = (v: number) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+
+    // ── TÍTULO ──────────────────────────────────────────────
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(13);
+    doc.setTextColor(dark);
+    doc.text("CONTRATO PARTICULAR DE COMPRA E VENDA COM RESERVA DE DOMÍNIO", W / 2, y, {
+      align: "center",
+      maxWidth: contentW,
+    });
+    y += 10;
+
+    labelValue("Contrato nº: ", order.order_number);
+    labelValue("Pedido nº: ", order.order_number);
+    labelValue("Data: ", new Date(order.created_at).toLocaleDateString("pt-BR"));
+    y += 2;
+    divider();
+
+    // ── DAS PARTES ──────────────────────────────────────────
+    clauseTitle("DAS PARTES");
+    paragraph("VENDEDORA", { bold: true, size: 10 });
+    labelValue("Razão Social: ", organization?.name || "StockFlow Gestão");
+    labelValue("CNPJ: ", organization?.document || "00.000.000/0001-00");
+    labelValue("Endereço: ", organization?.address || "Av. Principal, 1000 - Centro");
+    labelValue("Telefone: ", organization?.phone || "(00) 3000-0000");
+    labelValue("E-mail: ", organization?.email || "contato@stockflow.com");
+    labelValue("Representante Legal: ", sellerName);
+    y += 2;
+    paragraph("COMPRADOR(A)", { bold: true, size: 10 });
+    labelValue("Nome: ", customer.name);
+    labelValue("CPF/CNPJ: ", customer.cpf_cnpj);
+    labelValue("RG: ", customer.rg_state_registration || "Não informado");
+    labelValue("Estado Civil: ", customer.marital_status || "Não informado");
+    labelValue("Profissão: ", customer.profession || "Não informado");
+    labelValue("Telefone: ", customer.phone || "Não informado");
+    labelValue("WhatsApp: ", customer.whatsapp || "Não informado");
+    labelValue("E-mail: ", customer.email || "Não informado");
+    labelValue("Endereço: ", customerAddress);
+    divider();
+
+    // ── CLÁUSULA PRIMEIRA ───────────────────────────────────
+    clauseTitle("CLÁUSULA PRIMEIRA – DO OBJETO");
+    paragraph("A VENDEDORA vende ao COMPRADOR os seguintes bens:");
+    drawTable(
+      [
+        { label: "Produto", w: 32 },
+        { label: "Tipo", w: 22 },
+        { label: "Marca", w: 20 },
+        { label: "Modelo", w: 20 },
+        { label: "Nº Série", w: 18 },
+        { label: "Qtd", w: 12, align: "center" },
+        { label: "Vl. Unitário", w: 25, align: "right" },
+        { label: "Total", w: 25, align: "right" },
+      ],
+      (order.order_items || []).map((item: any) => [
+        item.products?.name || "Produto",
+        getProductTypeLabel(item.products?.product_type),
+        item.products?.brand || "Genérica",
+        item.products?.model || "Padrão",
+        item.serial_number || "S/N",
+        String(Number(item.quantity)),
+        brl(Number(item.unit_price)),
+        brl(Number(item.total_amount)),
+      ]),
+    );
+    paragraph(
+      `Valor Total da Venda: ${brl(Number(order.total_amount))} (${numberToWords(Number(order.total_amount))}), dividido em ${installmentsCount} parcelas mensais de ${brl(installmentAmount)}.`,
+      { bold: true },
+    );
+    divider();
+
+    // ── CLÁUSULA SEGUNDA ────────────────────────────────────
+    clauseTitle("CLÁUSULA SEGUNDA – DA FORMA DE PAGAMENTO");
+    paragraph("O pagamento será realizado nas seguintes condições:");
+    labelValue("Entrada: ", brl(downPayment));
+    labelValue("Saldo financiado: ", brl(financedBalance));
+    labelValue("Quantidade de parcelas: ", String(installmentsCount));
+    labelValue("Valor de cada parcela: ", brl(installmentAmount));
+    labelValue("Primeiro vencimento: ", firstDueDate);
+    paragraph(
+      "Demais vencimentos ocorrerão mensalmente na mesma data. Em caso de atraso, poderão incidir multa, juros e atualização monetária conforme legislação vigente.",
+    );
+    divider();
+
+    // ── DEMAIS CLÁUSULAS ────────────────────────────────────
+    clauseTitle("CLÁUSULA TERCEIRA – DA RESERVA DE DOMÍNIO");
+    paragraph(
+      "A propriedade do(s) bem(ns) permanecerá pertencente à VENDEDORA até a quitação integral do contrato.",
+    );
+    paragraph("Enquanto existir saldo devedor, o COMPRADOR possuirá apenas a posse direta do(s) bem(ns).");
+    divider();
+
+    clauseTitle("CLÁUSULA QUARTA – DA POSSE E CONSERVAÇÃO");
+    paragraph("O COMPRADOR compromete-se a:");
+    paragraph("• conservar adequadamente o(s) produto(s);");
+    paragraph(
+      "• não vender, emprestar, alugar ou dar o bem em garantia sem autorização da VENDEDORA;",
+    );
+    paragraph("• comunicar qualquer dano, perda, roubo ou furto.");
+    paragraph("A VENDEDORA poderá solicitar informações sobre a localização e estado do bem.");
+    divider();
+
+    clauseTitle("CLÁUSULA QUINTA – DO INADIMPLEMENTO");
+    paragraph(
+      "O atraso no pagamento de qualquer parcela constituirá automaticamente o COMPRADOR em mora.",
+    );
+    paragraph(
+      "A VENDEDORA poderá cobrar judicial ou extrajudicialmente os valores devidos, considerar rescindido o contrato, requerer a restituição do bem, promover a execução das Notas Promissórias emitidas e adotar todas as medidas previstas na legislação.",
+    );
+    divider();
+
+    clauseTitle("CLÁUSULA SEXTA – DA GARANTIA");
+    paragraph("O(s) produto(s) possui(em) garantia conforme especificação do fabricante e/ou da VENDEDORA.");
+    paragraph(
+      "Não estão cobertos: mau uso, acidentes, instalação inadequada, quedas, violação dos lacres e desgaste natural.",
+    );
+    divider();
+
+    clauseTitle("CLÁUSULA SÉTIMA – DA LGPD");
+    paragraph(
+      "As partes autorizam o tratamento dos dados pessoais exclusivamente para execução deste contrato, emissão de documentos fiscais, cobrança, assistência técnica e cumprimento das obrigações legais, nos termos da Lei nº 13.709/2018.",
+    );
+    divider();
+
+    clauseTitle("CLÁUSULA OITAVA – DA ASSINATURA ELETRÔNICA");
+    paragraph(
+      "As partes reconhecem como válida a assinatura eletrônica realizada através do sistema da VENDEDORA, possuindo a mesma validade jurídica da assinatura manuscrita.",
+    );
+    paragraph(
+      "O sistema registrará automaticamente: Data e hora, IP, Dispositivo utilizado, Geolocalização (quando autorizada), Hash criptográfico do documento e Usuário responsável.",
+    );
+    divider();
+
+    clauseTitle("CLÁUSULA NONA – DAS DISPOSIÇÕES GERAIS");
+    paragraph(
+      "Este contrato obriga as partes e seus sucessores. Qualquer tolerância quanto ao descumprimento contratual não implicará renúncia de direitos.",
+    );
+    divider();
+
+    clauseTitle("CLÁUSULA DÉCIMA – DO FORO");
+    const foroCidade = customer.customer_addresses?.[0]?.city || "Cidade";
+    const foroEstado = customer.customer_addresses?.[0]?.state || "UF";
+    paragraph(
+      `Fica eleito o foro da Comarca de ${foroCidade} / ${foroEstado}, renunciando as partes a qualquer outro, por mais privilegiado que seja.`,
+    );
+    divider();
+
+    // ── ASSINATURAS ─────────────────────────────────────────
+    checkSpace(70);
+    clauseTitle("ASSINATURAS");
+    const sigColW = contentW / 2;
+    const sigStartY = y;
+
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(9);
+    doc.text("VENDEDORA", margin + sigColW / 2, y, { align: "center" });
+    doc.setFont("helvetica", "normal");
+    doc.text(`Empresa: ${organization?.name || "StockFlow Gestão"}`, margin + sigColW / 2, y + 6, {
+      align: "center",
+      maxWidth: sigColW - 6,
+    });
+    doc.text(`Representante: ${sellerName}`, margin + sigColW / 2, y + 12, {
+      align: "center",
+      maxWidth: sigColW - 6,
+    });
+    doc.setDrawColor(150);
+    doc.line(margin + 8, y + 24, margin + sigColW - 8, y + 24);
+    doc.setFontSize(7);
+    doc.setTextColor(120);
+    doc.text("[Assinatura Digital no Sistema]", margin + sigColW / 2, y + 22, { align: "center" });
+
+    doc.setFontSize(9);
+    doc.setTextColor(dark);
+    doc.setFont("helvetica", "bold");
+    doc.text("COMPRADOR", margin + sigColW + sigColW / 2, y, { align: "center" });
+    doc.setFont("helvetica", "normal");
+    doc.text(`Nome: ${customer.name}`, margin + sigColW + sigColW / 2, y + 6, {
+      align: "center",
+      maxWidth: sigColW - 6,
+    });
+    doc.text(`CPF/CNPJ: ${customer.cpf_cnpj}`, margin + sigColW + sigColW / 2, y + 12, {
+      align: "center",
+      maxWidth: sigColW - 6,
+    });
+
+    const sigDataUrl = signedResult?.signature_url || order.customer_signatures?.[0]?.signature_url;
+    if (sigDataUrl) {
+      try {
+        doc.addImage(sigDataUrl, "PNG", margin + sigColW + sigColW / 2 - 25, y + 13, 50, 16);
+      } catch {
+        // ignore invalid image data
+      }
+    } else {
+      doc.setFontSize(7);
+      doc.setTextColor(120);
+      doc.text("[Pendente Assinatura]", margin + sigColW + sigColW / 2, y + 22, { align: "center" });
+    }
+    doc.setDrawColor(150);
+    doc.line(margin + sigColW + 8, y + 24, margin + contentW - 8, y + 24);
+
+    y = sigStartY + 32;
+    doc.setTextColor(dark);
+
+    const witnessY = y + 6;
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(8.5);
+    doc.text("1ª TESTEMUNHA", margin, witnessY);
+    doc.text("2ª TESTEMUNHA", margin + sigColW, witnessY);
+    doc.setFont("helvetica", "normal");
+    ["Nome: ______________________________", "CPF: _______________________________", "Assinatura: _________________________"].forEach(
+      (line, i) => {
+        doc.text(line, margin, witnessY + 6 + i * 5.5);
+        doc.text(line, margin + sigColW, witnessY + 6 + i * 5.5);
+      },
+    );
+    y = witnessY + 6 + 3 * 5.5 + 6;
+
+    // ── ANEXO I: NOTAS PROMISSÓRIAS ─────────────────────────
+    if (unpaidInstallments.length > 0) {
+      addPage();
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(12);
+      doc.text("ANEXO I – NOTAS PROMISSÓRIAS", W / 2, y, { align: "center" });
+      y += 6;
+      doc.setFont("helvetica", "italic");
+      doc.setFontSize(8);
+      doc.setTextColor(100);
+      doc.text(
+        "As notas promissórias abaixo integram este contrato e correspondem às parcelas em aberto, podendo ser destacadas e utilizadas individualmente.",
+        W / 2,
+        y,
+        { align: "center", maxWidth: contentW },
+      );
+      y += 10;
+      doc.setTextColor(dark);
+
+      unpaidInstallments.forEach((ins: any) => {
+        const boxH = 34;
+        checkSpace(boxH + 4);
+        const boxY = y;
+        doc.setDrawColor(30);
+        doc.setLineWidth(0.4);
+        doc.rect(margin, boxY, contentW, boxH);
+
+        const promissoriaNumero = `${ins.installment_number}/${orderInstallments.length}`;
+        const dataVencimento = new Date(ins.due_date + "T12:00:00").toLocaleDateString("pt-BR");
+        const valorParcela = Number(ins.amount);
+
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(9);
+        doc.text(`NOTA PROMISSÓRIA Nº ${promissoriaNumero}`, margin + 3, boxY + 6);
+        doc.text(`VENCIMENTO: ${dataVencimento}`, margin + contentW - 3, boxY + 6, { align: "right" });
+
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(8);
+        doc.text(`Contrato: ${order.order_number}`, margin + 3, boxY + 12);
+        doc.text(`Pedido: ${order.order_number}`, margin + 3 + contentW / 3, boxY + 12);
+        doc.text(`Valor: ${brl(valorParcela)}`, margin + 3 + (contentW / 3) * 2, boxY + 12);
+
+        const promissoriaTexto = `No vencimento acima indicado, pagarei, por esta única via de NOTA PROMISSÓRIA, sem qualquer condição, à empresa ${organization?.name || "StockFlow Gestão"}, inscrita no CNPJ nº ${organization?.document || "00.000.000/0001-00"}, ou à sua ordem, a quantia de ${brl(valorParcela)} (${numberToWords(valorParcela)}), referente à ${ins.installment_number}ª parcela do Contrato Particular de Compra e Venda nº ${order.order_number}.`;
+        doc.setFontSize(7.5);
+        const promLines = doc.splitTextToSize(promissoriaTexto, contentW - 6);
+        doc.text(promLines, margin + 3, boxY + 18);
+
+        doc.setFontSize(7.5);
+        doc.text(
+          `Cidade, ${new Date().toLocaleDateString("pt-BR")}`,
+          margin + contentW - 3,
+          boxY + boxH - 3,
+          { align: "right" },
+        );
+
+        y = boxY + boxH + 5;
+      });
+    }
+
+    doc.save(`contrato-${order.order_number}.pdf`);
+  }
+
   return (
     <div className="space-y-5 py-2 text-xs">
       <style>{`
@@ -4503,6 +4877,14 @@ function SignatureCollector({
               onClick={() => window.print()}
             >
               <Printer className="h-3.5 w-3.5" /> Imprimir Contrato e Promissórias
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex items-center gap-1 text-indigo-700 bg-indigo-50"
+              onClick={generateContractPDF}
+            >
+              <Download className="h-3.5 w-3.5" /> Baixar Contrato em PDF
             </Button>
             <Button
               variant="outline"
