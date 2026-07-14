@@ -964,6 +964,16 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      create_new_user_by_admin: {
+        Args: {
+          p_email: string
+          p_full_name: string
+          p_org_id: string
+          p_password: string
+          p_role: string
+        }
+        Returns: string
+      }
       has_org_role: {
         Args: {
           _org_id: string
