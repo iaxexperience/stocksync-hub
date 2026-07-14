@@ -119,18 +119,31 @@ function Financeiro() {
   });
 
   // 2. Active Cash Register Session
+  // NOTE: cash_register_sessions.opened_by references auth.users, not public.profiles,
+  // so PostgREST cannot embed the profile via a foreign-key join. Fetch separately.
   const { data: activeSession, isLoading: isLoadingSession } = useQuery({
     queryKey: ["active_cash_session", orgId],
     enabled: !!orgId,
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data: session, error } = await supabase
         .from("cash_register_sessions")
-        .select("*, opened_by_profile:profiles!cash_register_sessions_opened_by_fkey(full_name)")
+        .select("*")
         .eq("organization_id", orgId!)
         .eq("status", "aberto")
         .maybeSingle();
       if (error) throw error;
-      return data as unknown as CashSession;
+      if (!session) return null;
+
+      const { data: openedByProfile } = await supabase
+        .from("profiles")
+        .select("full_name")
+        .eq("id", session.opened_by)
+        .maybeSingle();
+
+      return {
+        ...session,
+        opened_by_profile: openedByProfile ?? null,
+      } as unknown as CashSession;
     },
   });
 

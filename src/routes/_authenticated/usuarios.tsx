@@ -41,7 +41,6 @@ import {
   Keyboard,
   Users,
   CheckCircle2,
-  Clock,
   XCircle,
   UserPlus,
 } from "lucide-react";
@@ -63,14 +62,6 @@ interface Member {
   created_at: string;
   user_id: string;
   profiles: Profile | null;
-}
-
-interface PendingUser {
-  id: string;
-  full_name: string;
-  email: string;
-  created_at: string;
-  provider: "google" | "email";
 }
 
 // ── Role config ──────────────────────────────────────────────────────────
@@ -136,39 +127,32 @@ function UsuariosPage() {
   const [editingMember, setEditingMember] = useState<Member | null>(null);
 
   // ── Fetch members ───────────────────────────────────────────────────────
+  // NOTE: organization_members.user_id references auth.users, not public.profiles,
+  // so PostgREST cannot embed profiles via a foreign-key join. Fetch separately
+  // and merge client-side instead.
   const { data: members = [], isLoading } = useQuery<Member[]>({
     queryKey: ["org_members", orgId],
     enabled: !!orgId,
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data: memberRows, error: memberErr } = await supabase
         .from("organization_members")
-        .select(
-          `id, role, created_at, user_id, profiles:profiles ( id, full_name, email, phone, is_active )`,
-        )
+        .select("id, role, created_at, user_id")
         .eq("organization_id", orgId!);
-      if (error) throw error;
-      return (data as unknown as Member[]) ?? [];
-    },
-  });
+      if (memberErr) throw memberErr;
+      if (!memberRows || memberRows.length === 0) return [];
 
-  // ── Fetch pending Google users ───────────────────────────────────────────
-  const { data: pendingUsers = [] } = useQuery<PendingUser[]>({
-    queryKey: ["pending_users", orgId],
-    enabled: !!orgId,
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("organization_members")
-        .select(`id, created_at, profiles:profiles ( full_name, email )`)
-        .eq("organization_id", orgId!)
-        .eq("role", "pendente" as any);
-      if (error) return [];
-      return (data ?? []).map((d: any) => ({
-        id: d.id,
-        full_name: d.profiles?.full_name ?? "—",
-        email: d.profiles?.email ?? "—",
-        created_at: d.created_at,
-        provider: "google" as const,
-      }));
+      const userIds = memberRows.map((m) => m.user_id);
+      const { data: profileRows, error: profileErr } = await supabase
+        .from("profiles")
+        .select("id, full_name, email, phone, is_active")
+        .in("id", userIds);
+      if (profileErr) throw profileErr;
+
+      const profileMap = new Map((profileRows ?? []).map((p) => [p.id, p]));
+      return memberRows.map((m) => ({
+        ...m,
+        profiles: profileMap.get(m.user_id) ?? null,
+      })) as unknown as Member[];
     },
   });
 
@@ -231,28 +215,9 @@ function UsuariosPage() {
     onSuccess: () => {
       toast.success("Acesso do usuário revogado.");
       qc.invalidateQueries({ queryKey: ["org_members"] });
-      qc.invalidateQueries({ queryKey: ["pending_users"] });
     },
     onError: (err: { message?: string }) => {
       toast.error(err.message || "Erro ao remover usuário.");
-    },
-  });
-
-  const approvePendingMutation = useMutation({
-    mutationFn: async ({ memberId, approvedRole }: { memberId: string; approvedRole: string }) => {
-      const { error } = await supabase
-        .from("organization_members")
-        .update({ role: approvedRole as any })
-        .eq("id", memberId);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      toast.success("Usuário aprovado e acesso liberado!");
-      qc.invalidateQueries({ queryKey: ["org_members"] });
-      qc.invalidateQueries({ queryKey: ["pending_users"] });
-    },
-    onError: (err: { message?: string }) => {
-      toast.error(err.message || "Erro ao aprovar usuário.");
     },
   });
 
@@ -496,37 +461,6 @@ function UsuariosPage() {
 
         {/* ── RIGHT: List + Pending ── */}
         <div className={`space-y-4 ${isAdmin ? "lg:col-span-3" : "lg:col-span-5"}`}>
-          {/* Pending Google approvals */}
-          {pendingUsers.length > 0 && (
-            <Card className="border-amber-200 bg-amber-50/50 shadow-card">
-              <CardHeader className="pb-2">
-                <CardTitle className="flex items-center gap-2 text-base text-amber-800">
-                  <Clock className="h-4 w-4" />
-                  Aguardando Aprovação ({pendingUsers.length})
-                </CardTitle>
-                <CardDescription className="text-amber-700 text-xs">
-                  Usuários que entraram via Google aguardam aprovação para acessar o sistema.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="pt-0 space-y-1">
-                {pendingUsers.map((u) => (
-                  <PendingApprovalRow
-                    key={u.id}
-                    user={u}
-                    onApprove={(approvedRole) =>
-                      approvePendingMutation.mutate({ memberId: u.id, approvedRole })
-                    }
-                    onReject={() => {
-                      if (confirm(`Recusar acesso de ${u.full_name}?`))
-                        removeMemberMutation.mutate(u.id);
-                    }}
-                    isLoading={approvePendingMutation.isPending || removeMemberMutation.isPending}
-                  />
-                ))}
-              </CardContent>
-            </Card>
-          )}
-
           {/* Members table */}
           <Card className="shadow-card">
             <CardContent className="p-4">
@@ -700,67 +634,6 @@ function UsuariosPage() {
           )}
         </DialogContent>
       </Dialog>
-    </div>
-  );
-}
-
-// ── Pending Row ──────────────────────────────────────────────────────────
-function PendingApprovalRow({
-  user,
-  onApprove,
-  onReject,
-  isLoading,
-}: {
-  user: PendingUser;
-  onApprove: (role: string) => void;
-  onReject: () => void;
-  isLoading: boolean;
-}) {
-  const [selectedRole, setSelectedRole] = useState("estoquista");
-  return (
-    <div className="flex flex-col sm:flex-row sm:items-center gap-2 py-2 border-t border-amber-100 first:border-t-0">
-      <div className="flex items-center gap-2 flex-1 min-w-0">
-        <div className="h-8 w-8 rounded-full bg-amber-100 flex items-center justify-center font-bold text-amber-700 shrink-0 text-sm">
-          {user.full_name[0]?.toUpperCase() || "G"}
-        </div>
-        <div className="min-w-0">
-          <p className="font-semibold text-sm truncate">{user.full_name}</p>
-          <p className="text-xs text-muted-foreground truncate">{user.email}</p>
-        </div>
-      </div>
-      <div className="flex items-center gap-2 shrink-0">
-        <Select value={selectedRole} onValueChange={setSelectedRole}>
-          <SelectTrigger className="w-40 h-8 text-xs">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {ROLES.map((r) => (
-              <SelectItem key={r.value} value={r.value} className="text-xs">
-                {r.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Button
-          size="sm"
-          className="h-8 bg-green-600 hover:bg-green-700 text-white border-0 text-xs px-2"
-          onClick={() => onApprove(selectedRole)}
-          disabled={isLoading}
-        >
-          <CheckCircle2 className="h-3.5 w-3.5 mr-1" />
-          Aprovar
-        </Button>
-        <Button
-          size="sm"
-          variant="ghost"
-          className="h-8 text-destructive hover:bg-destructive/10 text-xs px-2"
-          onClick={onReject}
-          disabled={isLoading}
-        >
-          <XCircle className="h-3.5 w-3.5 mr-1" />
-          Recusar
-        </Button>
-      </div>
     </div>
   );
 }
