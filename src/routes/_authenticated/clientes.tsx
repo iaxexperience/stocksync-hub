@@ -4172,6 +4172,9 @@ function SignatureCollector({
   const firstDueDate = orderInstallments[0]
     ? new Date(orderInstallments[0].due_date + "T12:00:00").toLocaleDateString("pt-BR")
     : new Date().toLocaleDateString("pt-BR");
+  // Parcelas já quitadas não geram nota promissória — a promissória é uma
+  // garantia de pagamento futuro, sem sentido para uma dívida já paga.
+  const unpaidInstallments = orderInstallments.filter((ins: any) => ins.status !== "Pago");
 
   const sellerName = sellerProfile?.full_name || "Representante Legal";
   const addressObj = customer.customer_addresses?.[0];
@@ -4904,19 +4907,19 @@ function SignatureCollector({
           </div>
         </div>
 
-        {/* NOTAS PROMISSÓRIAS (REPETE AUTOMATICAMENTE PARA CADA PARCELA) */}
-        {orderInstallments.length > 0 && (
+        {/* NOTAS PROMISSÓRIAS (REPETE AUTOMATICAMENTE PARA CADA PARCELA EM ABERTO) */}
+        {unpaidInstallments.length > 0 && (
           <div className="pt-8 space-y-8 page-break-before">
             <hr className="border-2" />
             <h1 className="text-sm font-bold uppercase tracking-wider text-center">
               ANEXO I – NOTAS PROMISSÓRIAS
             </h1>
             <p className="text-[10px] text-center italic text-slate-500">
-              As notas promissórias abaixo integram este contrato e correspondem às parcelas
-              pactuadas, podendo ser destacadas e utilizadas individualmente.
+              As notas promissórias abaixo integram este contrato e correspondem às parcelas em
+              aberto, podendo ser destacadas e utilizadas individualmente.
             </p>
 
-            {orderInstallments.map((ins: any, idx: number) => {
+            {unpaidInstallments.map((ins: any, idx: number) => {
               const promissoriaNumero = `${ins.installment_number}/${orderInstallments.length}`;
               const dataVencimento = new Date(ins.due_date + "T12:00:00").toLocaleDateString(
                 "pt-BR",
