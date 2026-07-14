@@ -45,10 +45,12 @@
       "Bash(BUN_CONFIG_VERBOSE_FETCH=1 bun add left-pad --dry-run)",
       "Read(//c/Users/maxra//**)",
       "Read(//c/Users/maxra/AppData/**)",
-      "Read(//c/Users/maxra/.bun/**)"
+      "Read(//c/Users/maxra/.bun/**)",
+      "Bash(cd /d/stocksync-hub *)"
     ],
     "additionalDirectories": [
-      "C:\\Users\\maxra\\AppData\\Local\\Temp"
+      "C:\\Users\\maxra\\AppData\\Local\\Temp",
+      "D:\\stocksync-hub"
     ]
   }
 }
