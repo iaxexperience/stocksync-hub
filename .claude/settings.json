@@ -37,7 +37,10 @@
       "Bash(git ls-tree *)",
       "Bash(bun --version)",
       "Bash(bun install *)",
-      "Bash(git fetch *)"
+      "Bash(git fetch *)",
+      "Bash(env)",
+      "Bash(bun pm *)",
+      "Read(//d//**)"
     ],
     "additionalDirectories": [
       "C:\\Users\\maxra\\AppData\\Local\\Temp"
