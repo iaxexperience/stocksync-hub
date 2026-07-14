@@ -48,7 +48,11 @@
       "Read(//c/Users/maxra/.bun/**)",
       "Bash(cd /d/stocksync-hub *)",
       "Bash(./node_modules/.bin/tsc --noEmit)",
-      "Bash(xargs grep -l \"addImage\")"
+      "Bash(xargs grep -l \"addImage\")",
+      "Bash(find /tmp -maxdepth 2 -newermt \"-15 minutes\")",
+      "Read(//tmp/**)",
+      "Bash(mount)",
+      "Bash(cygpath -w /tmp/6a7330cd-e575-4759-8774-72fe8ec8851a.tmp)"
     ],
     "additionalDirectories": [
       "C:\\Users\\maxra\\AppData\\Local\\Temp",
