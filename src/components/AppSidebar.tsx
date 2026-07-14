@@ -36,6 +36,7 @@ import {
   SidebarHeader,
   useSidebar,
 } from "@/components/ui/sidebar";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useProfile } from "@/hooks/useProfile";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -133,6 +134,23 @@ export function AppSidebar() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const searchParams = useRouterState({ select: (s) => s.location.search }) as any;
   const { data: profile } = useProfile();
+  const orgId = profile?.active_org_id;
+  const orgName = (profile as any)?.organizations?.name;
+
+  const { data: orgSettings } = useQuery({
+    queryKey: ["organization_settings", orgId],
+    enabled: !!orgId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("organization_settings")
+        .select("*")
+        .eq("organization_id", orgId!)
+        .maybeSingle();
+      if (error) return null;
+      return data;
+    },
+  });
+  const logoUrl = orgSettings?.company_logo_url;
 
   async function handleSignOut() {
     await supabase.auth.signOut();
@@ -150,12 +168,18 @@ export function AppSidebar() {
     <Sidebar collapsible="icon" className="border-r-sidebar-border">
       <SidebarHeader className="px-4 py-4 border-b border-sidebar-border">
         <Link to="/dashboard" className="flex items-center gap-2">
-          <div className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground font-bold">
-            SF
+          <div className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground font-bold overflow-hidden">
+            {logoUrl ? (
+              <img src={logoUrl} alt={orgName || "Logo"} className="h-full w-full object-cover" />
+            ) : (
+              "SF"
+            )}
           </div>
           {!collapsed && (
             <div className="min-w-0">
-              <div className="truncate font-semibold text-sidebar-foreground">StockFlow</div>
+              <div className="truncate font-semibold text-sidebar-foreground">
+                {orgName || "StockFlow"}
+              </div>
               <div className="truncate text-xs text-sidebar-foreground/60">Gestão</div>
             </div>
           )}

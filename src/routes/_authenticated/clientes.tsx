@@ -4422,34 +4422,37 @@ function SignatureCollector({
           margin: 15mm 20mm;
         }
         @media print {
-          body * {
-            visibility: hidden;
-          }
-          .print-container, .print-container * {
-            visibility: visible;
-          }
-          html, body, [data-radix-portal], div[role="dialog"] {
-            position: static !important;
-            overflow: visible !important;
-            max-height: none !important;
+          html, body {
             height: auto !important;
-            width: 100% !important;
+            overflow: visible !important;
+            background: white !important;
+          }
+          body * {
+            visibility: hidden !important;
+          }
+          [data-radix-portal], [data-radix-portal] * {
+            position: static !important;
+            inset: auto !important;
             transform: none !important;
+            width: auto !important;
+            height: auto !important;
+            max-width: none !important;
+            max-height: none !important;
+            min-height: 0 !important;
+            overflow: visible !important;
             margin: 0 !important;
             padding: 0 !important;
+            border: none !important;
             box-shadow: none !important;
             background: white !important;
           }
+          .print-container, .print-container * {
+            visibility: visible !important;
+          }
           .print-container {
-            position: absolute !important;
-            left: 0 !important;
-            top: 0 !important;
+            display: block !important;
             width: 100% !important;
-            max-height: none !important;
-            overflow: visible !important;
-            border: none !important;
             padding: 0 !important;
-            background: white !important;
           }
           .no-print {
             display: none !important;

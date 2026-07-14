@@ -177,9 +177,22 @@ function RelatorioEstoquePage() {
       <style>{`
         @page { size: A4; margin: 15mm 15mm; }
         @media print {
-          body * { visibility: hidden; }
-          .print-container, .print-container * { visibility: visible; }
-          .print-container { position: absolute; left: 0; top: 0; width: 100%; }
+          html, body, main {
+            position: static !important;
+            width: 100% !important;
+            height: auto !important;
+            overflow: visible !important;
+            background: white !important;
+          }
+          body * { visibility: hidden !important; }
+          .print-container, .print-container * { visibility: visible !important; }
+          .print-container {
+            position: static !important;
+            width: 100% !important;
+            max-width: none !important;
+            margin: 0 !important;
+            padding: 0 !important;
+          }
           .no-print { display: none !important; }
         }
       `}</style>
