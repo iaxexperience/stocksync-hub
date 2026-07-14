@@ -278,7 +278,7 @@ function Financeiro() {
           closing_balance: closingData.actual,
           expected_balance: closingData.expected,
         })
-        .eq("id", activeSession.id);
+        .eq("id", activeSession!.id);
       if (error) throw error;
     },
     onSuccess: () => {
