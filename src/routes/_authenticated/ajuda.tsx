@@ -295,6 +295,23 @@ async function generatePortfolioPDF() {
 
   let y = 0;
 
+  // Logo real da empresa (arquivo local, mesma origem — sem CORS)
+  let logoDataUrl: string | null = null;
+  try {
+    const res = await fetch("/logo.jpg");
+    const blob = await res.blob();
+    if (res.ok && blob.type.startsWith("image/")) {
+      logoDataUrl = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      });
+    }
+  } catch {
+    logoDataUrl = null;
+  }
+
   function addPage() {
     doc.addPage();
     y = margin;
@@ -360,13 +377,24 @@ async function generatePortfolioPDF() {
   doc.setFillColor(accent);
   doc.rect(0, 85, W, 8, "F");
 
-  // Logo circle
+  // Logo (imagem real da empresa; fallback para círculo com iniciais se falhar)
   doc.setFillColor(255, 255, 255);
   doc.circle(W / 2, 36, 22, "F");
-  doc.setTextColor(primary);
-  doc.setFontSize(22);
-  doc.setFont("helvetica", "bold");
-  doc.text("J&J", W / 2, 40, { align: "center" });
+  if (logoDataUrl) {
+    try {
+      doc.addImage(logoDataUrl, W / 2 - 18, 22, 36, 24);
+    } catch {
+      doc.setTextColor(primary);
+      doc.setFontSize(22);
+      doc.setFont("helvetica", "bold");
+      doc.text("J&J", W / 2, 40, { align: "center" });
+    }
+  } else {
+    doc.setTextColor(primary);
+    doc.setFontSize(22);
+    doc.setFont("helvetica", "bold");
+    doc.text("J&J", W / 2, 40, { align: "center" });
+  }
 
   // Company name
   doc.setTextColor(255, 255, 255);
@@ -416,16 +444,16 @@ async function generatePortfolioPDF() {
   divider();
 
   // About section
-  sectionTitle("📋  Sobre a Empresa");
+  sectionTitle("Sobre a Empresa");
   bodyText(
     "A Josi & Jo Eletrodomésticos é uma empresa especializada na comercialização de eletrodomésticos e enxovais de cama, mesa e banho, com atendimento humanizado e qualidade garantida. Localizada em Tibiri/Santa Rita, Paraíba, a empresa conta com um sistema de gestão moderno e integrado para controlar todo o fluxo de vendas, estoque e clientes.",
   );
   y += 3;
-  bodyText("📞  (83) 98805-9666     📍  Tibiri/Santa Rita, Paraíba, Brasil", 0, 9, muted);
+  bodyText("(83) 98805-9666   ·   Tibiri/Santa Rita, Paraíba, Brasil", 0, 9, muted);
   y += 6;
 
   // ── MÓDULOS ──────────────────────────────────────────────
-  sectionTitle("🗂️  Módulos do Sistema");
+  sectionTitle("Módulos do Sistema");
 
   const moduleData = [
     {
@@ -523,7 +551,7 @@ async function generatePortfolioPDF() {
 
   // ── DIFERENCIAIS ─────────────────────────────────────────
   addPage();
-  sectionTitle("⭐  Diferenciais do Sistema", accent);
+  sectionTitle("Diferenciais do Sistema", accent);
 
   const diffs = [
     {
@@ -559,7 +587,7 @@ async function generatePortfolioPDF() {
     doc.setTextColor(primary);
     doc.setFontSize(10);
     doc.setFont("helvetica", "bold");
-    doc.text(`✓  ${d.title}`, margin + 4, y + 5.5);
+    doc.text(d.title, margin + 4, y + 5.5);
     doc.setFontSize(8.5);
     doc.setFont("helvetica", "normal");
     doc.setTextColor(muted);
@@ -570,7 +598,7 @@ async function generatePortfolioPDF() {
   y += 4;
 
   // ── CONTATO ──────────────────────────────────────────────
-  sectionTitle("📞  Informações de Contato", accent);
+  sectionTitle("Informações de Contato", accent);
 
   doc.setFillColor(primary);
   doc.roundedRect(margin, y, contentW, 32, 3, 3, "F");
@@ -581,8 +609,8 @@ async function generatePortfolioPDF() {
   doc.text("Josi & Jo Eletrodomésticos", W / 2, y + 10, { align: "center" });
   doc.setFontSize(9.5);
   doc.setFont("helvetica", "normal");
-  doc.text("📱  WhatsApp: (83) 98805-9666", W / 2, y + 18, { align: "center" });
-  doc.text("📍  Tibiri/Santa Rita, Paraíba, Brasil", W / 2, y + 24, { align: "center" });
+  doc.text("WhatsApp: (83) 98805-9666", W / 2, y + 18, { align: "center" });
+  doc.text("Tibiri/Santa Rita, Paraíba, Brasil", W / 2, y + 24, { align: "center" });
 
   y += 40;
 
@@ -722,7 +750,7 @@ async function generateSystemManualPDF() {
   }
 
   // ── GUIA DE INÍCIO RÁPIDO ────────────────────────────────
-  sectionTitle("🚀  Guia de Início Rápido");
+  sectionTitle("Guia de Início Rápido");
   quickSteps.forEach((s) => {
     checkSpace(16);
     doc.setFillColor(primary);
@@ -748,7 +776,7 @@ async function generateSystemManualPDF() {
 
   // ── MÓDULOS DO SISTEMA ───────────────────────────────────
   addPage();
-  sectionTitle("🗂️  Módulos do Sistema");
+  sectionTitle("Módulos do Sistema");
   modules.forEach((mod) => {
     checkSpace(12);
     doc.setTextColor(primary);
@@ -780,7 +808,7 @@ async function generateSystemManualPDF() {
 
   // ── PERGUNTAS FREQUENTES ─────────────────────────────────
   addPage();
-  sectionTitle("❓  Perguntas Frequentes", accent);
+  sectionTitle("Perguntas Frequentes", accent);
   faqs.forEach((section) => {
     checkSpace(10);
     doc.setTextColor(accent);
@@ -807,7 +835,7 @@ async function generateSystemManualPDF() {
   // ── CONTATO ──────────────────────────────────────────────
   y += 2;
   checkSpace(36);
-  sectionTitle("📞  Suporte", primary);
+  sectionTitle("Suporte", primary);
   doc.setFillColor(primary);
   doc.roundedRect(margin, y, contentW, 26, 3, 3, "F");
   doc.setTextColor(255, 255, 255);
