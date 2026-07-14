@@ -162,7 +162,7 @@ function Financeiro() {
         .eq("organization_id", orgId!)
         .eq("type", "receita")
         .eq("payment_method", "Dinheiro")
-        .gte("created_at", activeSession.opened_at);
+        .gte("created_at", activeSession!.opened_at);
       if (error) throw error;
       return data.reduce((sum, tx) => sum + Number(tx.amount), 0);
     },
