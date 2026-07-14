@@ -160,7 +160,7 @@ function UsuariosPage() {
         .from("organization_members")
         .select(`id, created_at, profiles:profiles ( full_name, email )`)
         .eq("organization_id", orgId!)
-        .eq("role", "pendente");
+        .eq("role", "pendente" as any);
       if (error) return [];
       return (data ?? []).map((d: any) => ({
         id: d.id,
