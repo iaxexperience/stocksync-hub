@@ -4934,32 +4934,20 @@ function SignatureCollector({
     for (let p = 1; p <= totalPages; p++) {
       doc.setPage(p);
 
-      // Cabeçalho institucional centralizado
-      let hy = MARGIN - 4;
+      // Cabeçalho institucional: apenas a logomarca, centralizada
       if (logoDataUrl) {
         try {
-          doc.addImage(logoDataUrl, W / 2 - 6, hy, 12, 12);
-          hy += 13;
+          doc.addImage(logoDataUrl, W / 2 - 9, MARGIN - 4, 18, 18);
         } catch {
           // ignora logo inválida
         }
+      } else {
+        // Sem logo cadastrada: mostra só o nome da empresa, uma única linha
+        doc.setFont(FONT, "bold");
+        doc.setFontSize(12);
+        doc.setTextColor(dark);
+        doc.text(organization?.name || "StockFlow Gestão", W / 2, MARGIN + 6, { align: "center" });
       }
-      doc.setFont(FONT, "bold");
-      doc.setFontSize(11);
-      doc.setTextColor(dark);
-      doc.text(organization?.name || "StockFlow Gestão", W / 2, hy, { align: "center" });
-      hy += 4.5;
-      doc.setFont(FONT, "normal");
-      doc.setFontSize(8);
-      doc.setTextColor(100);
-      doc.text(
-        `CNPJ: ${organization?.document || "—"}  ·  Tel: ${organization?.phone || "—"}`,
-        W / 2,
-        hy,
-        { align: "center" },
-      );
-      hy += 4;
-      doc.text(organization?.address || "Endereço não cadastrado", W / 2, hy, { align: "center" });
       doc.setDrawColor(210);
       doc.setLineWidth(0.2);
       doc.line(MARGIN, MARGIN + HEADER_H - 3, W - MARGIN, MARGIN + HEADER_H - 3);
