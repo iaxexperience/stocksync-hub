@@ -242,7 +242,7 @@ function UsuariosPage() {
     mutationFn: async ({ memberId, approvedRole }: { memberId: string; approvedRole: string }) => {
       const { error } = await supabase
         .from("organization_members")
-        .update({ role: approvedRole })
+        .update({ role: approvedRole as any })
         .eq("id", memberId);
       if (error) throw error;
     },
