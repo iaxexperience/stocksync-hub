@@ -4983,7 +4983,10 @@ function SignatureCollector({
 
       doc.setDrawColor(210);
       doc.setLineWidth(0.2);
-      doc.line(MARGIN, MARGIN + HEADER_H - 3, W - MARGIN, MARGIN + HEADER_H - 3);
+      // 7mm de folga até o topo do conteúdo (contentTop = MARGIN + HEADER_H):
+      // com só 3mm, a caixa-alta do título "CONTRATO..." (16pt bold) passava
+      // por cima desta linha, parecendo um traço cortando o nome do contrato.
+      doc.line(MARGIN, MARGIN + HEADER_H - 7, W - MARGIN, MARGIN + HEADER_H - 7);
 
       // Rodapé institucional
       const fy = H - MARGIN - FOOTER_H + 6;
