@@ -144,11 +144,13 @@ function UsuariosPage() {
       if (memberErr) throw memberErr;
       if (!memberRows || memberRows.length === 0) return [];
 
+      // Se a função ainda não existir no banco (migration pendente), não deixa
+      // a lista inteira sumir — só mostra os membros sem nome/e-mail, como antes.
       const { data: profileRows, error: profileErr } = await supabase.rpc(
         "get_org_member_profiles" as never,
         { p_org_id: orgId! } as never,
       );
-      if (profileErr) throw profileErr;
+      if (profileErr) console.error("get_org_member_profiles falhou:", profileErr);
 
       const profiles = (profileRows ?? []) as unknown as Profile[];
       const profileMap = new Map(profiles.map((p) => [p.id, p]));
