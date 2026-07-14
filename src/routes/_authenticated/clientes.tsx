@@ -4611,7 +4611,6 @@ function SignatureCollector({
     y += titleLines.length * (TITLE_SIZE * 0.3528 * 1.15) + 5;
 
     renderClause(null, [
-      { type: "lv", label: "Contrato nº: ", value: order.order_number },
       { type: "lv", label: "Pedido nº: ", value: order.order_number },
       { type: "lv", label: "Data: ", value: new Date(order.created_at).toLocaleDateString("pt-BR") },
       { type: "lv", label: "Local: ", value: "Santa Rita - PB" },
@@ -5082,9 +5081,6 @@ function SignatureCollector({
             CONTRATO PARTICULAR DE COMPRA E VENDA COM RESERVA DE DOMÍNIO
           </h1>
           <div className="text-[10px] space-y-0.5 text-slate-600">
-            <p>
-              <strong>Contrato nº:</strong> {order.order_number}
-            </p>
             <p>
               <strong>Pedido nº:</strong> {order.order_number}
             </p>
