@@ -228,15 +228,15 @@ function Financeiro() {
   const adjustSessionMutation = useMutation({
     mutationFn: async (adj: { type: "suprimento" | "sangria"; amount: number; notes: string }) => {
       const field = adj.type === "suprimento" ? "additions" : "withdrawals";
-      const currentVal = Number(activeSession[field] || 0);
+      const currentVal = Number((activeSession as any)[field] || 0);
 
       // A) Update active session statistics
       const { error: sessionErr } = await supabase
         .from("cash_register_sessions")
         .update({
           [field]: currentVal + adj.amount,
-        })
-        .eq("id", activeSession.id);
+        } as any)
+        .eq("id", activeSession!.id);
       if (sessionErr) throw sessionErr;
 
       // B) Log adjustment as a financial transaction
