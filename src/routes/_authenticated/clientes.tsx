@@ -4420,6 +4420,27 @@ function SignatureCollector({
     const FIRST_LINE_INDENT = 12.5; // 1,25 cm
     let y = contentTop;
 
+    // Logo da empresa (Configurações → Dados da Empresa & Marca), convertido para
+    // data URL com antecedência para poder ser usado tanto na capa quanto no
+    // cabeçalho corrido de cada página.
+    let logoDataUrl: string | null = null;
+    if (settings?.company_logo_url) {
+      try {
+        const res = await fetch(settings.company_logo_url);
+        const blob = await res.blob();
+        if (res.ok && blob.type.startsWith("image/")) {
+          logoDataUrl = await new Promise<string>((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onloadend = () => resolve(reader.result as string);
+            reader.onerror = reject;
+            reader.readAsDataURL(blob);
+          });
+        }
+      } catch {
+        logoDataUrl = null;
+      }
+    }
+
     function addPage() {
       doc.addPage();
       y = contentTop;
@@ -4565,15 +4586,29 @@ function SignatureCollector({
       y += 3;
     }
 
+    // Logomarca centralizada acima do título (capa do contrato)
+    if (logoDataUrl) {
+      const coverLogoSize = 22;
+      try {
+        doc.addImage(logoDataUrl, W / 2 - coverLogoSize / 2, y - 4, coverLogoSize, coverLogoSize);
+        y += coverLogoSize + 4;
+      } catch {
+        // ignora logo inválida
+      }
+    }
+
     // ── TÍTULO PRINCIPAL ────────────────────────────────────
     doc.setFont(FONT, "bold");
     doc.setFontSize(TITLE_SIZE);
     doc.setTextColor(dark);
-    doc.text("CONTRATO PARTICULAR DE COMPRA E VENDA COM RESERVA DE DOMÍNIO", W / 2, y, {
-      align: "center",
-      maxWidth: contentW,
-    });
-    y += 11;
+    const titleLines = doc.splitTextToSize(
+      "CONTRATO PARTICULAR DE COMPRA E VENDA COM RESERVA DE DOMÍNIO",
+      contentW,
+    );
+    doc.text(titleLines, W / 2, y, { align: "center" });
+    // Avança exatamente pela altura real das linhas do título (evita
+    // sobrepor o conteúdo seguinte quando o título quebra em 2 linhas).
+    y += titleLines.length * (TITLE_SIZE * 0.3528 * 1.15) + 5;
 
     renderClause(null, [
       { type: "lv", label: "Contrato nº: ", value: order.order_number },
@@ -4905,23 +4940,6 @@ function SignatureCollector({
       qrDataUrl = await QRCode.toDataURL(qrText, { margin: 0, width: 160 });
     } catch {
       qrDataUrl = null;
-    }
-
-    // Logo da empresa (opcional, convertido para data URL se disponível)
-    let logoDataUrl: string | null = null;
-    if (settings?.company_logo_url) {
-      try {
-        const res = await fetch(settings.company_logo_url);
-        const blob = await res.blob();
-        logoDataUrl = await new Promise<string>((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onloadend = () => resolve(reader.result as string);
-          reader.onerror = reject;
-          reader.readAsDataURL(blob);
-        });
-      } catch {
-        logoDataUrl = null;
-      }
     }
 
     // ── CABEÇALHO E RODAPÉ EM TODAS AS PÁGINAS (passe final) ──
