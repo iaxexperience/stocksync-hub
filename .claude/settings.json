@@ -28,7 +28,8 @@
       "Bash(timeout 25 npx -y supabase --version)",
       "Bash(ls -la /c/Users/maxra/.supabase/ 2>&1 *)",
       "Read(//c/Users/maxra/.supabase//**)",
-      "Bash(node -e ' *)"
+      "Bash(node -e ' *)",
+      "Bash(grep -n \"^  function generateContractPDF\\\\|doc.save\\(\\\\`contrato\" /d/stocksync-hub/src/routes/_authenticated/clientes.tsx)"
     ],
     "additionalDirectories": [
       "C:\\Users\\maxra\\AppData\\Local\\Temp"
