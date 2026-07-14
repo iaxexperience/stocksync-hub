@@ -56,7 +56,10 @@
       "Bash(file /tmp/17b48ffa-a60d-404b-92f7-24587b79b11b.tmp)",
       "Bash(ls -lat --time-style=full-iso /tmp/*.tmp)",
       "Bash(find \"/c/Users/maxra/AppData/Local/Temp/claude/d--stocksync-hub\" -maxdepth 4 -newermt \"-20 minutes\" 2>/dev/null)",
-      "Read(//c/Users/maxra/AppData/Local/Temp/claude/d--stocksync-hub/**)"
+      "Read(//c/Users/maxra/AppData/Local/Temp/claude/d--stocksync-hub/**)",
+      "Bash(node -e \"console.log\\(process.version\\)\")",
+      "Bash(grep -i -E \"^sharp$|^jimp$|^pngjs$\")",
+      "Bash(where python *)"
     ],
     "additionalDirectories": [
       "C:\\Users\\maxra\\AppData\\Local\\Temp",
