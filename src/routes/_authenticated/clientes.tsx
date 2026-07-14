@@ -160,26 +160,30 @@ function ClientesLayout() {
   const { data: installments = [], isLoading: isLoadingInstallments } = useQuery({
     queryKey: ["all_installments", orgId],
     enabled: !!orgId,
+    staleTime: 30_000,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("installments")
-        .select("*, orders(*, customers(*))")
+        .select("*, orders!inner(*, customers(*))")
+        .eq("orders.organization_id", orgId!)
         .order("due_date", { ascending: true });
       if (error) throw error;
-      return (data ?? []).filter((i: any) => i.orders?.organization_id === orgId);
+      return data ?? [];
     },
   });
 
   const { data: signatures = [] } = useQuery({
     queryKey: ["signatures", orgId],
     enabled: !!orgId,
+    staleTime: 30_000,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("customer_signatures")
-        .select("*, customers(*), orders(*)")
+        .select("*, customers!inner(*), orders(*)")
+        .eq("customers.organization_id", orgId!)
         .order("signed_at", { ascending: false });
       if (error) throw error;
-      return (data ?? []).filter((s: any) => s.customers?.organization_id === orgId);
+      return data ?? [];
     },
   });
 
