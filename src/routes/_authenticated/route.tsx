@@ -86,7 +86,7 @@ function AuthenticatedLayout() {
             count -= 1;
             setCountdown(count);
             if (count <= 0) {
-              clearInterval(countdownInterval);
+              if (countdownInterval) clearInterval(countdownInterval);
               handleLogout();
             }
           }, 1000);
