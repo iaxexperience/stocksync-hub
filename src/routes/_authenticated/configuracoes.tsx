@@ -1535,6 +1535,7 @@ function Configuracoes() {
               </Card>
             </div>
           </div>
+          )}
         </TabsContent>
       </Tabs>
     </div>
