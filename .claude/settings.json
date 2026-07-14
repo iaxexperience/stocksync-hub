@@ -31,7 +31,9 @@
       "Bash(node -e ' *)",
       "Bash(grep -n \"^  function generateContractPDF\\\\|doc.save\\(\\\\`contrato\" /d/stocksync-hub/src/routes/_authenticated/clientes.tsx)",
       "Bash(awk 'NR==4405,NR==4990' /d/stocksync-hub/src/routes/_authenticated/clientes.tsx)",
-      "Bash(git submodule *)"
+      "Bash(git submodule *)",
+      "Bash(git worktree *)",
+      "Bash(git rm *)"
     ],
     "additionalDirectories": [
       "C:\\Users\\maxra\\AppData\\Local\\Temp"
