@@ -47,7 +47,8 @@
       "Read(//c/Users/maxra/AppData/**)",
       "Read(//c/Users/maxra/.bun/**)",
       "Bash(cd /d/stocksync-hub *)",
-      "Bash(./node_modules/.bin/tsc --noEmit)"
+      "Bash(./node_modules/.bin/tsc --noEmit)",
+      "Bash(xargs grep -l \"addImage\")"
     ],
     "additionalDirectories": [
       "C:\\Users\\maxra\\AppData\\Local\\Temp",
