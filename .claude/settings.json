@@ -66,7 +66,8 @@
       "Bash(grep -rn \"\\\\.or\\(\\\\`\" src/)",
       "Bash(grep -rn \"\\\\.filter\\(\\\\`\" src/)",
       "WebSearch",
-      "WebFetch(domain:doc.focusnfe.com.br)"
+      "WebFetch(domain:doc.focusnfe.com.br)",
+      "Bash(supabase --version)"
     ],
     "additionalDirectories": [
       "C:\\Users\\maxra\\AppData\\Local\\Temp",
