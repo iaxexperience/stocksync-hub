@@ -4128,20 +4128,6 @@ function SignatureCollector({
     },
   });
 
-  // Fetch seller's profile details
-  const { data: sellerProfile } = useQuery({
-    queryKey: ["seller_profile", order?.seller_id],
-    enabled: !!order?.seller_id,
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("full_name")
-        .eq("id", order.seller_id)
-        .single();
-      if (error) throw error;
-      return data;
-    },
-  });
 
   // Fetch installments for the order
   const { data: orderInstallments = [] } = useQuery({
@@ -4177,7 +4163,8 @@ function SignatureCollector({
   // garantia de pagamento futuro, sem sentido para uma dívida já paga.
   const unpaidInstallments = orderInstallments.filter((ins: any) => ins.status !== "Pago");
 
-  const sellerName = sellerProfile?.full_name || "Representante Legal";
+  // Representante legal fixo da empresa nos contratos (independe do vendedor da venda)
+  const sellerName = "Josenildo Juvenal da Silva";
   const addressObj = customer.customer_addresses?.[0];
   const customerAddress = addressObj
     ? `${addressObj.street || ""}, nº ${addressObj.number || ""}${
