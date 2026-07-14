@@ -604,6 +604,239 @@ async function generatePortfolioPDF() {
   doc.save("portfolio-josi-e-jo.pdf");
 }
 
+async function generateSystemManualPDF() {
+  const { default: jsPDF } = await import("jspdf");
+  const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+  const W = 210;
+  const margin = 18;
+  const contentW = W - margin * 2;
+
+  const primary = "#1e3a8a";
+  const accent = "#db2777";
+  const light = "#f1f5f9";
+  const dark = "#1e293b";
+  const muted = "#64748b";
+
+  let y = 0;
+
+  function addPage() {
+    doc.addPage();
+    y = margin;
+    doc.setDrawColor(primary);
+    doc.setLineWidth(0.4);
+    doc.line(margin, 8, W - margin, 8);
+    doc.line(margin, 289, W - margin, 289);
+  }
+
+  function checkSpace(needed: number) {
+    if (y + needed > 277) addPage();
+  }
+
+  function sectionTitle(text: string, color = primary) {
+    checkSpace(14);
+    doc.setFillColor(color);
+    doc.roundedRect(margin, y, contentW, 9, 2, 2, "F");
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(11);
+    doc.setFont("helvetica", "bold");
+    doc.text(text, margin + 4, y + 6.2);
+    y += 13;
+    doc.setTextColor(dark);
+  }
+
+  function bodyText(text: string, indent = 0, size = 9.5, color = dark) {
+    doc.setFontSize(size);
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(color);
+    const lines = doc.splitTextToSize(text, contentW - indent);
+    checkSpace(lines.length * 5 + 1);
+    doc.text(lines, margin + indent, y);
+    y += lines.length * 5 + 1;
+  }
+
+  // Logo (arquivo local do app, mesma origem — sem risco de CORS)
+  let logoDataUrl: string | null = null;
+  try {
+    const res = await fetch("/logo.jpg");
+    const blob = await res.blob();
+    if (res.ok && blob.type.startsWith("image/")) {
+      logoDataUrl = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      });
+    }
+  } catch {
+    logoDataUrl = null;
+  }
+
+  // ── CAPA ─────────────────────────────────────────────────
+  doc.setFillColor(primary);
+  doc.rect(0, 0, W, 95, "F");
+  doc.setFillColor(accent);
+  doc.rect(0, 90, W, 8, "F");
+
+  if (logoDataUrl) {
+    try {
+      doc.addImage(logoDataUrl, W / 2 - 20, 14, 40, 26.7);
+    } catch {
+      // ignora logo inválida
+    }
+  } else {
+    doc.setFillColor(255, 255, 255);
+    doc.circle(W / 2, 30, 18, "F");
+    doc.setTextColor(primary);
+    doc.setFontSize(18);
+    doc.setFont("helvetica", "bold");
+    doc.text("J&J", W / 2, 34, { align: "center" });
+  }
+
+  doc.setTextColor(255, 255, 255);
+  doc.setFontSize(24);
+  doc.setFont("helvetica", "bold");
+  doc.text("Manual do Sistema", W / 2, 62, { align: "center" });
+  doc.setFontSize(11);
+  doc.setFont("helvetica", "normal");
+  doc.text("StockFlow Gestão — Josi & Jo Utilidades", W / 2, 71, { align: "center" });
+
+  y = 112;
+  doc.setTextColor(muted);
+  doc.setFontSize(10);
+  doc.setFont("helvetica", "normal");
+  doc.text(
+    "Guia completo de utilização: primeiros passos, módulos do sistema e perguntas frequentes.",
+    W / 2,
+    y,
+    { align: "center", maxWidth: contentW },
+  );
+  y += 14;
+  divider2();
+
+  function divider2(color = light) {
+    checkSpace(5);
+    doc.setDrawColor(color);
+    doc.setLineWidth(0.3);
+    doc.line(margin, y, W - margin, y);
+    y += 4;
+  }
+
+  // ── GUIA DE INÍCIO RÁPIDO ────────────────────────────────
+  sectionTitle("🚀  Guia de Início Rápido");
+  quickSteps.forEach((s) => {
+    checkSpace(16);
+    doc.setFillColor(primary);
+    doc.circle(margin + 6, y + 4, 5, "F");
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(9);
+    doc.setFont("helvetica", "bold");
+    doc.text(`${s.step}`, margin + 6, y + 6, { align: "center" });
+
+    doc.setTextColor(dark);
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "bold");
+    doc.text(s.title, margin + 15, y + 3);
+
+    doc.setTextColor(muted);
+    doc.setFontSize(8.5);
+    doc.setFont("helvetica", "normal");
+    const lines = doc.splitTextToSize(s.desc, contentW - 15);
+    doc.text(lines, margin + 15, y + 8);
+    y += Math.max(14, 6 + lines.length * 4.5);
+  });
+  y += 4;
+
+  // ── MÓDULOS DO SISTEMA ───────────────────────────────────
+  addPage();
+  sectionTitle("🗂️  Módulos do Sistema");
+  modules.forEach((mod) => {
+    checkSpace(12);
+    doc.setTextColor(primary);
+    doc.setFontSize(11);
+    doc.setFont("helvetica", "bold");
+    doc.text(mod.title, margin, y + 4);
+    y += 6;
+    doc.setTextColor(muted);
+    doc.setFontSize(8.5);
+    doc.setFont("helvetica", "italic");
+    const descLines = doc.splitTextToSize(mod.desc, contentW);
+    doc.text(descLines, margin, y);
+    y += descLines.length * 4.2 + 2;
+
+    mod.features.forEach((f) => {
+      checkSpace(6);
+      doc.setFontSize(9);
+      doc.setFont("helvetica", "normal");
+      doc.setTextColor(muted);
+      doc.text("•", margin + 2, y);
+      doc.setTextColor(dark);
+      const lines = doc.splitTextToSize(f, contentW - 8);
+      doc.text(lines, margin + 7, y);
+      y += lines.length * 4.6;
+    });
+    y += 5;
+    divider2();
+  });
+
+  // ── PERGUNTAS FREQUENTES ─────────────────────────────────
+  addPage();
+  sectionTitle("❓  Perguntas Frequentes", accent);
+  faqs.forEach((section) => {
+    checkSpace(10);
+    doc.setTextColor(accent);
+    doc.setFontSize(9.5);
+    doc.setFont("helvetica", "bold");
+    doc.text(section.section.toUpperCase(), margin, y + 3);
+    y += 8;
+
+    section.items.forEach((item) => {
+      checkSpace(14);
+      doc.setTextColor(dark);
+      doc.setFontSize(9.5);
+      doc.setFont("helvetica", "bold");
+      const qLines = doc.splitTextToSize(`P: ${item.q}`, contentW);
+      doc.text(qLines, margin, y);
+      y += qLines.length * 4.6 + 1;
+
+      bodyText(`R: ${item.a}`, 2, 8.5, muted);
+      y += 3;
+    });
+    y += 2;
+  });
+
+  // ── CONTATO ──────────────────────────────────────────────
+  y += 2;
+  checkSpace(36);
+  sectionTitle("📞  Suporte", primary);
+  doc.setFillColor(primary);
+  doc.roundedRect(margin, y, contentW, 26, 3, 3, "F");
+  doc.setTextColor(255, 255, 255);
+  doc.setFontSize(11);
+  doc.setFont("helvetica", "bold");
+  doc.text("Precisa de ajuda? Fale com a gente.", W / 2, y + 9, { align: "center" });
+  doc.setFontSize(9.5);
+  doc.setFont("helvetica", "normal");
+  doc.text("WhatsApp / Telefone: (83) 98805-9666", W / 2, y + 17, { align: "center" });
+  y += 30;
+
+  // ── FOOTER ───────────────────────────────────────────────
+  const pageCount = (doc as any).internal.pages.length - 1;
+  for (let i = 1; i <= pageCount; i++) {
+    doc.setPage(i);
+    doc.setFontSize(8);
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(muted);
+    doc.text(
+      `Josi & Jo Utilidades  ·  Manual do Sistema StockFlow  ·  Página ${i} de ${pageCount}`,
+      W / 2,
+      285,
+      { align: "center" },
+    );
+  }
+
+  doc.save("manual-do-sistema-stockflow.pdf");
+}
+
 // ────────────────────────────────────────────────────────────
 // COMPONENTS
 // ────────────────────────────────────────────────────────────
@@ -638,6 +871,7 @@ function AccordionItem({ q, a }: { q: string; a: string }) {
 
 function AjudaPage() {
   const [downloading, setDownloading] = useState(false);
+  const [downloadingManual, setDownloadingManual] = useState(false);
 
   async function handleDownload() {
     setDownloading(true);
@@ -645,6 +879,15 @@ function AjudaPage() {
       await generatePortfolioPDF();
     } finally {
       setTimeout(() => setDownloading(false), 1200);
+    }
+  }
+
+  async function handleDownloadManual() {
+    setDownloadingManual(true);
+    try {
+      await generateSystemManualPDF();
+    } finally {
+      setTimeout(() => setDownloadingManual(false), 1200);
     }
   }
 
@@ -673,10 +916,26 @@ function AjudaPage() {
             </h1>
             <p className="text-blue-200 text-sm md:text-base max-w-lg">
               Guia completo do sistema StockFlow — conheça todos os módulos, tire dúvidas e baixe o
-              portfólio da Josi & Jo Eletrodomésticos.
+              manual de uso ou o portfólio da Josi & Jo Utilidades.
             </p>
           </div>
           <div className="flex flex-col gap-3 shrink-0">
+            <Button
+              size="lg"
+              className="bg-white hover:bg-blue-50 text-blue-900 font-bold shadow-lg border-0"
+              onClick={handleDownloadManual}
+              disabled={downloadingManual}
+            >
+              {downloadingManual ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" /> Gerando PDF…
+                </>
+              ) : (
+                <>
+                  <BookOpen className="h-4 w-4 mr-2" /> Baixar Manual do Sistema
+                </>
+              )}
+            </Button>
             <Button
               size="lg"
               className="bg-pink-600 hover:bg-pink-700 text-white font-bold shadow-lg shadow-pink-900/40 border-0"
