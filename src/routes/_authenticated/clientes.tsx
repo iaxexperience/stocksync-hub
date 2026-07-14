@@ -65,6 +65,8 @@ import {
   Info,
   Check,
   Loader2,
+  Receipt,
+  RefreshCw,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -5832,6 +5834,7 @@ function HistoricoCompras({
   const [editDeliveryDate, setEditDeliveryDate] = useState("");
   const [editNotes, setEditNotes] = useState("");
   const [openEditModal, setOpenEditModal] = useState(false);
+  const [nfeOrder, setNfeOrder] = useState<any | null>(null);
 
   const filtered = useMemo(() => {
     return orders.filter((o) => {
@@ -6012,6 +6015,15 @@ function HistoricoCompras({
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-1.5">
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="h-7 w-7 text-slate-500 hover:text-emerald-700 hover:bg-emerald-50"
+                          title="Nota Fiscal (NF-e)"
+                          onClick={() => setNfeOrder(o)}
+                        >
+                          <Receipt className="h-3.5 w-3.5" />
+                        </Button>
                         <Button
                           size="icon"
                           variant="ghost"
@@ -6216,7 +6228,221 @@ function HistoricoCompras({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <NotaFiscalDialog
+        order={nfeOrder}
+        open={!!nfeOrder}
+        onOpenChange={(o) => !o && setNfeOrder(null)}
+      />
     </Card>
+  );
+}
+
+// ============================================
+// SUBCOMPONENT: NotaFiscalDialog (NF-e via Focus NFe — sandbox/homologação)
+// ============================================
+function NotaFiscalDialog({
+  order,
+  open,
+  onOpenChange,
+}: {
+  order: any | null;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}) {
+  const queryClient = useQueryClient();
+
+  const { data: invoice, isLoading } = useQuery({
+    queryKey: ["fiscal_invoice", order?.id],
+    enabled: !!order?.id && open,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("fiscal_invoices")
+        .select("*")
+        .eq("order_id", order.id)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const emitMutation = useMutation({
+    mutationFn: async () => {
+      const { data, error } = await supabase.functions.invoke("emit-nfe", {
+        body: { order_id: order.id },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      return data;
+    },
+    onSuccess: () => {
+      toast.success("NF-e enviada para processamento (homologação).");
+      queryClient.invalidateQueries({ queryKey: ["fiscal_invoice", order?.id] });
+    },
+    onError: (err: any) => {
+      toast.error(err.message || "Erro ao emitir NF-e.");
+    },
+  });
+
+  const statusMutation = useMutation({
+    mutationFn: async () => {
+      const { data, error } = await supabase.functions.invoke("nfe-status", {
+        body: { order_id: order.id },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      return data;
+    },
+    onSuccess: (data) => {
+      toast.success(`Status atualizado: ${data.status}`);
+      queryClient.invalidateQueries({ queryKey: ["fiscal_invoice", order?.id] });
+    },
+    onError: (err: any) => {
+      toast.error(err.message || "Erro ao consultar status.");
+    },
+  });
+
+  const statusInfo: Record<string, { label: string; color: string }> = {
+    processando_autorizacao: {
+      label: "Processando autorização",
+      color: "bg-amber-100 text-amber-700 border-amber-200",
+    },
+    autorizado: { label: "Autorizada", color: "bg-success/15 text-success border-success/30" },
+    erro_autorizacao: { label: "Erro / Rejeitada", color: "bg-red-50 text-red-600 border-red-200" },
+    cancelado: { label: "Cancelada", color: "bg-slate-100 text-slate-600 border-slate-200" },
+    denegado: { label: "Denegada", color: "bg-red-50 text-red-600 border-red-200" },
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-md text-xs">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-1.5">
+            <Receipt className="h-5 w-5 text-emerald-600" />
+            Nota Fiscal Eletrônica (NF-e)
+          </DialogTitle>
+        </DialogHeader>
+
+        {order && (
+          <div className="space-y-4 py-1">
+            <div className="rounded bg-amber-50 border border-amber-200 text-amber-800 px-3 py-2 text-[11px] font-medium">
+              Ambiente de homologação (sandbox) — emissões aqui não têm valor fiscal. Só passa a
+              valer de verdade depois de certificado digital, cadastro na SEFAZ-PB e configuração
+              de produção na Focus NFe.
+            </div>
+
+            <p>
+              <span className="font-semibold text-muted-foreground">Pedido:</span> #
+              {order.order_number} · {order.customers?.name}
+            </p>
+
+            {isLoading ? (
+              <div className="flex items-center gap-2 text-muted-foreground py-4 justify-center">
+                <Loader2 className="h-4 w-4 animate-spin" /> Carregando...
+              </div>
+            ) : !invoice ? (
+              <div className="text-center py-4 space-y-3">
+                <p className="text-muted-foreground">Nenhuma NF-e emitida para este pedido ainda.</p>
+                <Button
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold"
+                  disabled={emitMutation.isPending}
+                  onClick={() => emitMutation.mutate()}
+                >
+                  {emitMutation.isPending ? (
+                    <>
+                      <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" /> Emitindo...
+                    </>
+                  ) : (
+                    <>
+                      <Receipt className="h-3.5 w-3.5 mr-1.5" /> Emitir NF-e (Homologação)
+                    </>
+                  )}
+                </Button>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground font-semibold">Status:</span>
+                  <Badge
+                    variant="outline"
+                    className={
+                      statusInfo[invoice.status]?.color ??
+                      "bg-slate-100 text-slate-600 border-slate-200"
+                    }
+                  >
+                    {statusInfo[invoice.status]?.label ?? invoice.status}
+                  </Badge>
+                </div>
+                {invoice.numero && (
+                  <p>
+                    <span className="font-semibold text-muted-foreground">Número/Série:</span>{" "}
+                    {invoice.numero}/{invoice.serie}
+                  </p>
+                )}
+                {invoice.chave_acesso && (
+                  <p className="break-all">
+                    <span className="font-semibold text-muted-foreground">Chave de acesso:</span>{" "}
+                    {invoice.chave_acesso}
+                  </p>
+                )}
+                {invoice.motivo_status && (
+                  <p className="text-red-600">
+                    <span className="font-semibold">Motivo:</span> {invoice.motivo_status}
+                  </p>
+                )}
+
+                <div className="flex flex-wrap gap-2 pt-1">
+                  {invoice.status === "processando_autorizacao" && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      disabled={statusMutation.isPending}
+                      onClick={() => statusMutation.mutate()}
+                    >
+                      {statusMutation.isPending ? (
+                        <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />
+                      ) : (
+                        <RefreshCw className="h-3.5 w-3.5 mr-1.5" />
+                      )}
+                      Atualizar Status
+                    </Button>
+                  )}
+                  {invoice.status === "erro_autorizacao" && (
+                    <Button
+                      size="sm"
+                      className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold"
+                      disabled={emitMutation.isPending}
+                      onClick={() => emitMutation.mutate()}
+                    >
+                      {emitMutation.isPending ? (
+                        <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />
+                      ) : (
+                        <Receipt className="h-3.5 w-3.5 mr-1.5" />
+                      )}
+                      Tentar novamente
+                    </Button>
+                  )}
+                  {invoice.danfe_url && (
+                    <a href={invoice.danfe_url} target="_blank" rel="noopener noreferrer">
+                      <Button size="sm" variant="outline">
+                        <Download className="h-3.5 w-3.5 mr-1.5" /> DANFE
+                      </Button>
+                    </a>
+                  )}
+                  {invoice.xml_url && (
+                    <a href={invoice.xml_url} target="_blank" rel="noopener noreferrer">
+                      <Button size="sm" variant="outline">
+                        <Download className="h-3.5 w-3.5 mr-1.5" /> XML
+                      </Button>
+                    </a>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
   );
 }
 
