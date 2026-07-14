@@ -34,7 +34,9 @@
       "Bash(git submodule *)",
       "Bash(git worktree *)",
       "Bash(git rm *)",
-      "Bash(git ls-tree *)"
+      "Bash(git ls-tree *)",
+      "Bash(bun --version)",
+      "Bash(bun install *)"
     ],
     "additionalDirectories": [
       "C:\\Users\\maxra\\AppData\\Local\\Temp"
