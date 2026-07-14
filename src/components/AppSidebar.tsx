@@ -1,4 +1,5 @@
 import { Link, useRouter, useRouterState } from "@tanstack/react-router";
+import { useState } from "react";
 import {
   LayoutDashboard,
   Package,
@@ -22,6 +23,7 @@ import {
   BookOpen,
   TrendingUp,
   FileBarChart,
+  ChevronDown,
 } from "lucide-react";
 import {
   Sidebar,
@@ -36,10 +38,13 @@ import {
   SidebarHeader,
   useSidebar,
 } from "@/components/ui/sidebar";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useProfile } from "@/hooks/useProfile";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+
+const SIDEBAR_GROUPS_STORAGE_KEY = "stockflow_sidebar_open_groups";
 
 const groups = [
   {
@@ -152,6 +157,23 @@ export function AppSidebar() {
   });
   const logoUrl = orgSettings?.company_logo_url;
 
+  const [closedGroups, setClosedGroups] = useState<Record<string, boolean>>(() => {
+    try {
+      const saved = localStorage.getItem(SIDEBAR_GROUPS_STORAGE_KEY);
+      return saved ? JSON.parse(saved) : {};
+    } catch {
+      return {};
+    }
+  });
+
+  function toggleGroup(label: string) {
+    setClosedGroups((prev) => {
+      const next = { ...prev, [label]: !prev[label] };
+      localStorage.setItem(SIDEBAR_GROUPS_STORAGE_KEY, JSON.stringify(next));
+      return next;
+    });
+  }
+
   async function handleSignOut() {
     await supabase.auth.signOut();
     router.navigate({ to: "/auth", replace: true });
@@ -186,32 +208,48 @@ export function AppSidebar() {
         </Link>
       </SidebarHeader>
       <SidebarContent>
-        {groups.map((g) => (
-          <SidebarGroup key={g.label}>
-            {!collapsed && <SidebarGroupLabel>{g.label}</SidebarGroupLabel>}
-            <SidebarGroupContent>
-              <SidebarMenu>
-                {g.items.map((it: any) => {
-                  const active = it.params
-                    ? pathname.startsWith(`/cadastros/${it.params.tipo}`)
-                    : it.search
-                      ? pathname === it.to && searchParams.aba === it.search.aba
-                      : pathname === it.to;
-                  return (
-                    <SidebarMenuItem key={it.title}>
-                      <SidebarMenuButton asChild isActive={active}>
-                        <Link to={it.to} params={it.params} search={it.search}>
-                          <it.icon className="h-4 w-4" />
-                          {!collapsed && <span>{it.title}</span>}
-                        </Link>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                  );
-                })}
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-        ))}
+        {groups.map((g) => {
+          const isOpen = collapsed || !closedGroups[g.label];
+          return (
+            <Collapsible key={g.label} open={isOpen} onOpenChange={() => toggleGroup(g.label)}>
+              <SidebarGroup>
+                {!collapsed && (
+                  <CollapsibleTrigger className="flex w-full items-center justify-between">
+                    <SidebarGroupLabel className="flex-1 text-left">{g.label}</SidebarGroupLabel>
+                    <ChevronDown
+                      className={`h-3.5 w-3.5 mr-2 text-sidebar-foreground/50 transition-transform duration-200 ${
+                        isOpen ? "" : "-rotate-90"
+                      }`}
+                    />
+                  </CollapsibleTrigger>
+                )}
+                <CollapsibleContent>
+                  <SidebarGroupContent>
+                    <SidebarMenu>
+                      {g.items.map((it: any) => {
+                        const active = it.params
+                          ? pathname.startsWith(`/cadastros/${it.params.tipo}`)
+                          : it.search
+                            ? pathname === it.to && searchParams.aba === it.search.aba
+                            : pathname === it.to;
+                        return (
+                          <SidebarMenuItem key={it.title}>
+                            <SidebarMenuButton asChild isActive={active}>
+                              <Link to={it.to} params={it.params} search={it.search}>
+                                <it.icon className="h-4 w-4" />
+                                {!collapsed && <span>{it.title}</span>}
+                              </Link>
+                            </SidebarMenuButton>
+                          </SidebarMenuItem>
+                        );
+                      })}
+                    </SidebarMenu>
+                  </SidebarGroupContent>
+                </CollapsibleContent>
+              </SidebarGroup>
+            </Collapsible>
+          );
+        })}
       </SidebarContent>
       <SidebarFooter className="border-t border-sidebar-border p-3 flex flex-col gap-2">
         <div className="flex items-center gap-2 min-w-0">
