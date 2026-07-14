@@ -4128,7 +4128,6 @@ function SignatureCollector({
     },
   });
 
-
   // Fetch installments for the order
   const { data: orderInstallments = [] } = useQuery({
     queryKey: ["order_installments", order?.id],
