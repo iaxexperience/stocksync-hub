@@ -6241,6 +6241,19 @@ function HistoricoCompras({
 // ============================================
 // SUBCOMPONENT: NotaFiscalDialog (NF-e via Focus NFe — sandbox/homologação)
 // ============================================
+interface FiscalInvoice {
+  id: string;
+  order_id: string;
+  environment: string;
+  status: string;
+  numero: number | null;
+  serie: number | null;
+  chave_acesso: string | null;
+  motivo_status: string | null;
+  xml_url: string | null;
+  danfe_url: string | null;
+}
+
 function NotaFiscalDialog({
   order,
   open,
@@ -6252,17 +6265,17 @@ function NotaFiscalDialog({
 }) {
   const queryClient = useQueryClient();
 
-  const { data: invoice, isLoading } = useQuery({
+  const { data: invoice, isLoading } = useQuery<FiscalInvoice | null>({
     queryKey: ["fiscal_invoice", order?.id],
     enabled: !!order?.id && open,
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("fiscal_invoices")
+        .from("fiscal_invoices" as never)
         .select("*")
         .eq("order_id", order.id)
         .maybeSingle();
       if (error) throw error;
-      return data;
+      return data as unknown as FiscalInvoice | null;
     },
   });
 
