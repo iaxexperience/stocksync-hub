@@ -129,8 +129,10 @@ function UsuariosPage() {
 
   // ── Fetch members ───────────────────────────────────────────────────────
   // NOTE: organization_members.user_id references auth.users, not public.profiles,
-  // so PostgREST cannot embed profiles via a foreign-key join. Fetch separately
-  // and merge client-side instead.
+  // so PostgREST cannot embed profiles via a foreign-key join. profiles RLS also
+  // only allows reading your own row, so teammate profiles must come through the
+  // get_org_member_profiles RPC (SECURITY DEFINER, gated on org membership)
+  // instead of a direct .from("profiles") select.
   const { data: members = [], isLoading } = useQuery<Member[]>({
     queryKey: ["org_members", orgId],
     enabled: !!orgId,
@@ -142,14 +144,14 @@ function UsuariosPage() {
       if (memberErr) throw memberErr;
       if (!memberRows || memberRows.length === 0) return [];
 
-      const userIds = memberRows.map((m) => m.user_id);
-      const { data: profileRows, error: profileErr } = await supabase
-        .from("profiles")
-        .select("id, full_name, email, phone, is_active")
-        .in("id", userIds);
+      const { data: profileRows, error: profileErr } = await supabase.rpc(
+        "get_org_member_profiles" as never,
+        { p_org_id: orgId! } as never,
+      );
       if (profileErr) throw profileErr;
 
-      const profileMap = new Map((profileRows ?? []).map((p) => [p.id, p]));
+      const profiles = (profileRows ?? []) as unknown as Profile[];
+      const profileMap = new Map(profiles.map((p) => [p.id, p]));
       return memberRows
         .map((m) => ({
           ...m,

@@ -134,15 +134,18 @@ function Financeiro() {
       if (error) throw error;
       if (!session) return null;
 
-      const { data: openedByProfile } = await supabase
-        .from("profiles")
-        .select("full_name")
-        .eq("id", session.opened_by)
-        .maybeSingle();
+      // profiles RLS only allows reading your own row, so the operator who
+      // opened this session (possibly someone else) must come through the
+      // get_org_member_profiles RPC instead of a direct .from("profiles") select.
+      const { data: orgProfilesRaw } = await supabase.rpc("get_org_member_profiles" as never, {
+        p_org_id: orgId!,
+      } as never);
+      const orgProfiles = (orgProfilesRaw ?? []) as unknown as { id: string; full_name: string | null }[];
+      const openedByProfile = orgProfiles.find((p) => p.id === session.opened_by) ?? null;
 
       return {
         ...session,
-        opened_by_profile: openedByProfile ?? null,
+        opened_by_profile: openedByProfile,
       } as unknown as CashSession;
     },
   });
