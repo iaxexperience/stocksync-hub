@@ -4797,7 +4797,14 @@ function SignatureCollector({
           .print-dialog-content, .print-dialog-content * {
             position: static !important;
             inset: auto !important;
+            top: auto !important;
+            left: auto !important;
+            right: auto !important;
+            bottom: auto !important;
             transform: none !important;
+            translate: none !important;
+            rotate: none !important;
+            scale: none !important;
             width: auto !important;
             height: auto !important;
             max-width: none !important;
@@ -4816,6 +4823,7 @@ function SignatureCollector({
           .print-dialog-content {
             display: block !important;
           }
+
           .print-container, .print-container * {
             visibility: visible !important;
           }
