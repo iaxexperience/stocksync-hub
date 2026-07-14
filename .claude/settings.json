@@ -52,7 +52,11 @@
       "Bash(find /tmp -maxdepth 2 -newermt \"-15 minutes\")",
       "Read(//tmp/**)",
       "Bash(mount)",
-      "Bash(cygpath -w /tmp/6a7330cd-e575-4759-8774-72fe8ec8851a.tmp)"
+      "Bash(cygpath -w /tmp/6a7330cd-e575-4759-8774-72fe8ec8851a.tmp)",
+      "Bash(file /tmp/17b48ffa-a60d-404b-92f7-24587b79b11b.tmp)",
+      "Bash(ls -lat --time-style=full-iso /tmp/*.tmp)",
+      "Bash(find \"/c/Users/maxra/AppData/Local/Temp/claude/d--stocksync-hub\" -maxdepth 4 -newermt \"-20 minutes\" 2>/dev/null)",
+      "Read(//c/Users/maxra/AppData/Local/Temp/claude/d--stocksync-hub/**)"
     ],
     "additionalDirectories": [
       "C:\\Users\\maxra\\AppData\\Local\\Temp",
