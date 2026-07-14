@@ -45,6 +45,7 @@ import {
   Plus,
   Upload,
   ImageOff,
+  FileText,
 } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/configuracoes")({
@@ -179,6 +180,14 @@ function Configuracoes() {
     phone: "",
     email: "",
     address: "",
+    state_registration: "",
+    tax_regime: "",
+    address_street: "",
+    address_number: "",
+    address_neighborhood: "",
+    address_city: "",
+    address_state: "",
+    address_zipcode: "",
   });
 
   const [settingsForm, setSettingsForm] = useState({
@@ -261,6 +270,14 @@ function Configuracoes() {
         phone: organization.phone || "",
         email: organization.email || "",
         address: organization.address || "",
+        state_registration: (organization as any).state_registration || "",
+        tax_regime: (organization as any).tax_regime ? String((organization as any).tax_regime) : "",
+        address_street: (organization as any).address_street || "",
+        address_number: (organization as any).address_number || "",
+        address_neighborhood: (organization as any).address_neighborhood || "",
+        address_city: (organization as any).address_city || "",
+        address_state: (organization as any).address_state || "",
+        address_zipcode: (organization as any).address_zipcode || "",
       });
     }
   }, [organization]);
@@ -307,7 +324,15 @@ function Configuracoes() {
           phone: orgForm.phone,
           email: orgForm.email,
           address: orgForm.address,
-        })
+          state_registration: orgForm.state_registration || null,
+          tax_regime: orgForm.tax_regime ? Number(orgForm.tax_regime) : null,
+          address_street: orgForm.address_street || null,
+          address_number: orgForm.address_number || null,
+          address_neighborhood: orgForm.address_neighborhood || null,
+          address_city: orgForm.address_city || null,
+          address_state: orgForm.address_state || null,
+          address_zipcode: orgForm.address_zipcode || null,
+        } as any)
         .eq("id", orgId!);
       if (orgErr) throw orgErr;
 
@@ -612,6 +637,98 @@ function Configuracoes() {
                     value={orgForm.address}
                     onChange={(e) => setOrgForm({ ...orgForm, address: e.target.value })}
                   />
+                </div>
+              </div>
+
+              <hr />
+
+              <div className="space-y-4">
+                <h3 className="font-bold text-sm text-slate-800 flex items-center gap-1">
+                  <FileText className="h-4 w-4 text-indigo-500" />
+                  Dados Fiscais (emissão de NF-e)
+                </h3>
+                <p className="text-xs text-muted-foreground -mt-2">
+                  Necessários para emitir Nota Fiscal Eletrônica. Enquanto a integração estiver em
+                  homologação (sandbox), esses dados não têm valor fiscal.
+                </p>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="org-ie">Inscrição Estadual</Label>
+                    <Input disabled={isLoading || saveAllSettings.isPending}
+                      id="org-ie"
+                      value={orgForm.state_registration}
+                      onChange={(e) => setOrgForm({ ...orgForm, state_registration: e.target.value })}
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="org-regime">Regime Tributário</Label>
+                    <Select
+                      value={orgForm.tax_regime}
+                      onValueChange={(v) => setOrgForm({ ...orgForm, tax_regime: v })}
+                    >
+                      <SelectTrigger id="org-regime">
+                        <SelectValue placeholder="Selecione" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="1">1 — Simples Nacional</SelectItem>
+                        <SelectItem value="2">2 — Simples Nacional (excesso sublimite)</SelectItem>
+                        <SelectItem value="3">3 — Regime Normal</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="org-cep">CEP</Label>
+                    <Input disabled={isLoading || saveAllSettings.isPending}
+                      id="org-cep"
+                      placeholder="00000-000"
+                      value={orgForm.address_zipcode}
+                      onChange={(e) => setOrgForm({ ...orgForm, address_zipcode: e.target.value })}
+                    />
+                  </div>
+                  <div className="space-y-1.5 md:col-span-2">
+                    <Label htmlFor="org-street">Logradouro</Label>
+                    <Input disabled={isLoading || saveAllSettings.isPending}
+                      id="org-street"
+                      value={orgForm.address_street}
+                      onChange={(e) => setOrgForm({ ...orgForm, address_street: e.target.value })}
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="org-number">Número</Label>
+                    <Input disabled={isLoading || saveAllSettings.isPending}
+                      id="org-number"
+                      value={orgForm.address_number}
+                      onChange={(e) => setOrgForm({ ...orgForm, address_number: e.target.value })}
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="org-neighborhood">Bairro</Label>
+                    <Input disabled={isLoading || saveAllSettings.isPending}
+                      id="org-neighborhood"
+                      value={orgForm.address_neighborhood}
+                      onChange={(e) => setOrgForm({ ...orgForm, address_neighborhood: e.target.value })}
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="org-city">Cidade</Label>
+                    <Input disabled={isLoading || saveAllSettings.isPending}
+                      id="org-city"
+                      value={orgForm.address_city}
+                      onChange={(e) => setOrgForm({ ...orgForm, address_city: e.target.value })}
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="org-uf">UF</Label>
+                    <Input disabled={isLoading || saveAllSettings.isPending}
+                      id="org-uf"
+                      maxLength={2}
+                      placeholder="PB"
+                      value={orgForm.address_state}
+                      onChange={(e) =>
+                        setOrgForm({ ...orgForm, address_state: e.target.value.toUpperCase() })
+                      }
+                    />
+                  </div>
                 </div>
               </div>
 

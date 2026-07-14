@@ -215,6 +215,15 @@ function Produtos() {
                 <Input name="barcode" defaultValue={editing?.barcode ?? ""} />
               </div>
               <div className="space-y-1">
+                <Label>NCM</Label>
+                <Input
+                  name="ncm"
+                  placeholder="8 dígitos, p/ NF-e"
+                  maxLength={8}
+                  defaultValue={(editing as any)?.ncm ?? ""}
+                />
+              </div>
+              <div className="space-y-1">
                 <Label>Tipo</Label>
                 <Select name="product_type" defaultValue={editing?.product_type ?? "produto_venda"}>
                   <SelectTrigger>
