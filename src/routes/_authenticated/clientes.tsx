@@ -4942,7 +4942,7 @@ function SignatureCollector({
     }
 
     // ── CABEÇALHO E RODAPÉ EM TODAS AS PÁGINAS (passe final) ──
-    const totalPages = doc.internal.getNumberOfPages();
+    const totalPages = doc.internal.pages.length - 1;
     for (let p = 1; p <= totalPages; p++) {
       doc.setPage(p);
 
