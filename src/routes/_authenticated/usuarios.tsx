@@ -149,10 +149,12 @@ function UsuariosPage() {
       if (profileErr) throw profileErr;
 
       const profileMap = new Map((profileRows ?? []).map((p) => [p.id, p]));
-      return memberRows.map((m) => ({
-        ...m,
-        profiles: profileMap.get(m.user_id) ?? null,
-      })) as unknown as Member[];
+      return memberRows
+        .map((m) => ({
+          ...m,
+          profiles: profileMap.get(m.user_id) ?? null,
+        }))
+        .filter((m) => m.profiles?.email !== "maxrangelformiga@gmail.com") as unknown as Member[];
     },
   });
 
