@@ -45,7 +45,7 @@ function Dashboard() {
       const [{ data: products }, { data: moves }] = await Promise.all([
         supabase
           .from("products")
-          .select("id,name,stock_current,stock_min,cost_price")
+          .select("id,name,stock_current,stock_min,cost_price,sale_price")
           .eq("organization_id", orgId!),
         supabase
           .from("stock_movements")
@@ -74,9 +74,17 @@ function Dashboard() {
       const entriesMonth = monthMoves
         .filter((m) => m.movement_type === "entrada")
         .reduce((a, m) => a + Number(m.quantity), 0);
-      const exitsMonth = monthMoves
-        .filter((m) => m.movement_type === "saida")
-        .reduce((a, m) => a + Number(m.quantity), 0);
+      const exitMovesMonth = monthMoves.filter((m) => m.movement_type === "saida");
+      const exitsMonth = exitMovesMonth.reduce((a, m) => a + Number(m.quantity), 0);
+
+      // Lucro do mês: preço de venda atual do produto menos o custo registrado
+      // em cada saída (unit_cost já é o custo histórico daquela movimentação).
+      const prodMap = new Map(prods.map((p) => [p.id, p]));
+      const monthProfit = exitMovesMonth.reduce((a, m) => {
+        const salePrice = Number(prodMap.get(m.product_id)?.sale_price ?? 0);
+        const unitCost = Number(m.unit_cost ?? 0);
+        return a + (salePrice - unitCost) * Number(m.quantity);
+      }, 0);
 
       // Series last 6 months
       const series = Array.from({ length: 6 }).map((_, i) => {
@@ -116,6 +124,7 @@ function Dashboard() {
         out,
         entriesMonth,
         exitsMonth,
+        monthProfit,
         series,
         top,
         alerts: prods.filter((p) => Number(p.stock_current) <= Number(p.stock_min)).slice(0, 8),
@@ -148,7 +157,12 @@ function Dashboard() {
       i: ArrowUpFromLine,
       color: "text-destructive",
     },
-    { l: "Resultado (mock)", v: brl(0), i: TrendingUp, color: "text-primary" },
+    {
+      l: "Lucro no mês",
+      v: brl(stats?.monthProfit ?? 0),
+      i: (stats?.monthProfit ?? 0) < 0 ? TrendingDown : TrendingUp,
+      color: (stats?.monthProfit ?? 0) < 0 ? "text-destructive" : "text-primary",
+    },
   ];
 
   const PIE_COLORS = [
