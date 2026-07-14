@@ -40,7 +40,9 @@
       "Bash(git fetch *)",
       "Bash(env)",
       "Bash(bun pm *)",
-      "Read(//d//**)"
+      "Read(//d//**)",
+      "Bash(cd /tmp)",
+      "Bash(BUN_CONFIG_VERBOSE_FETCH=1 bun add left-pad --dry-run)"
     ],
     "additionalDirectories": [
       "C:\\Users\\maxra\\AppData\\Local\\Temp"
