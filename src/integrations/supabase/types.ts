@@ -554,6 +554,83 @@ export type Database = {
           },
         ]
       }
+      organization_settings: {
+        Row: {
+          company_logo_url: string | null
+          created_at: string
+          id: string
+          inactivity_action: string | null
+          inactivity_timeout_minutes: number | null
+          lgpd_consent_text: string | null
+          lgpd_cookies_enabled: boolean | null
+          lgpd_data_deletion_instructions: string | null
+          organization_id: string
+          primary_color: string | null
+          secondary_color: string | null
+          updated_at: string
+          whatsapp_api_token: string | null
+          whatsapp_business_account_id: string | null
+          whatsapp_integration_enabled: boolean | null
+          whatsapp_integration_type: string | null
+          whatsapp_phone_number: string | null
+          whatsapp_phone_number_id: string | null
+          whatsapp_template: string | null
+          whatsapp_template_name: string | null
+        }
+        Insert: {
+          company_logo_url?: string | null
+          created_at?: string
+          id?: string
+          inactivity_action?: string | null
+          inactivity_timeout_minutes?: number | null
+          lgpd_consent_text?: string | null
+          lgpd_cookies_enabled?: boolean | null
+          lgpd_data_deletion_instructions?: string | null
+          organization_id: string
+          primary_color?: string | null
+          secondary_color?: string | null
+          updated_at?: string
+          whatsapp_api_token?: string | null
+          whatsapp_business_account_id?: string | null
+          whatsapp_integration_enabled?: boolean | null
+          whatsapp_integration_type?: string | null
+          whatsapp_phone_number?: string | null
+          whatsapp_phone_number_id?: string | null
+          whatsapp_template?: string | null
+          whatsapp_template_name?: string | null
+        }
+        Update: {
+          company_logo_url?: string | null
+          created_at?: string
+          id?: string
+          inactivity_action?: string | null
+          inactivity_timeout_minutes?: number | null
+          lgpd_consent_text?: string | null
+          lgpd_cookies_enabled?: boolean | null
+          lgpd_data_deletion_instructions?: string | null
+          organization_id?: string
+          primary_color?: string | null
+          secondary_color?: string | null
+          updated_at?: string
+          whatsapp_api_token?: string | null
+          whatsapp_business_account_id?: string | null
+          whatsapp_integration_enabled?: boolean | null
+          whatsapp_integration_type?: string | null
+          whatsapp_phone_number?: string | null
+          whatsapp_phone_number_id?: string | null
+          whatsapp_template?: string | null
+          whatsapp_template_name?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "organization_settings_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: true
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       organizations: {
         Row: {
           address: string | null
@@ -964,6 +1041,15 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      create_new_organization: {
+        Args: {
+          org_document?: string
+          org_email?: string
+          org_name: string
+          org_phone?: string
+        }
+        Returns: string
+      }
       create_new_user_by_admin: {
         Args: {
           p_email: string
