@@ -87,6 +87,82 @@ export type Database = {
           },
         ]
       }
+      cash_register_sessions: {
+        Row: {
+          additions: number
+          closed_at: string | null
+          closed_by: string | null
+          closing_balance: number | null
+          created_at: string
+          expected_balance: number | null
+          id: string
+          notes: string | null
+          opened_at: string
+          opened_by: string
+          opening_balance: number
+          organization_id: string
+          status: string
+          updated_at: string
+          withdrawals: number
+        }
+        Insert: {
+          additions?: number
+          closed_at?: string | null
+          closed_by?: string | null
+          closing_balance?: number | null
+          created_at?: string
+          expected_balance?: number | null
+          id?: string
+          notes?: string | null
+          opened_at?: string
+          opened_by: string
+          opening_balance?: number
+          organization_id: string
+          status?: string
+          updated_at?: string
+          withdrawals?: number
+        }
+        Update: {
+          additions?: number
+          closed_at?: string | null
+          closed_by?: string | null
+          closing_balance?: number | null
+          created_at?: string
+          expected_balance?: number | null
+          id?: string
+          notes?: string | null
+          opened_at?: string
+          opened_by?: string
+          opening_balance?: number
+          organization_id?: string
+          status?: string
+          updated_at?: string
+          withdrawals?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cash_register_sessions_closed_by_fkey"
+            columns: ["closed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cash_register_sessions_opened_by_fkey"
+            columns: ["opened_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cash_register_sessions_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       categories: {
         Row: {
           created_at: string
@@ -328,6 +404,56 @@ export type Database = {
           },
         ]
       }
+      financial_transactions: {
+        Row: {
+          amount: number
+          category: string | null
+          created_at: string
+          created_by: string | null
+          date: string
+          description: string | null
+          id: string
+          organization_id: string
+          payment_method: string | null
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          amount?: number
+          category?: string | null
+          created_at?: string
+          created_by?: string | null
+          date?: string
+          description?: string | null
+          id?: string
+          organization_id: string
+          payment_method?: string | null
+          type: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          category?: string | null
+          created_at?: string
+          created_by?: string | null
+          date?: string
+          description?: string | null
+          id?: string
+          organization_id?: string
+          payment_method?: string | null
+          type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "financial_transactions_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       installments: {
         Row: {
           amount: number
@@ -558,6 +684,8 @@ export type Database = {
         Row: {
           company_logo_url: string | null
           created_at: string
+          email_integration_enabled: boolean | null
+          email_template: string | null
           id: string
           inactivity_action: string | null
           inactivity_timeout_minutes: number | null
@@ -567,6 +695,11 @@ export type Database = {
           organization_id: string
           primary_color: string | null
           secondary_color: string | null
+          smtp_encryption: string | null
+          smtp_host: string | null
+          smtp_password: string | null
+          smtp_port: number | null
+          smtp_user: string | null
           updated_at: string
           whatsapp_api_token: string | null
           whatsapp_business_account_id: string | null
@@ -580,6 +713,8 @@ export type Database = {
         Insert: {
           company_logo_url?: string | null
           created_at?: string
+          email_integration_enabled?: boolean | null
+          email_template?: string | null
           id?: string
           inactivity_action?: string | null
           inactivity_timeout_minutes?: number | null
@@ -589,6 +724,11 @@ export type Database = {
           organization_id: string
           primary_color?: string | null
           secondary_color?: string | null
+          smtp_encryption?: string | null
+          smtp_host?: string | null
+          smtp_password?: string | null
+          smtp_port?: number | null
+          smtp_user?: string | null
           updated_at?: string
           whatsapp_api_token?: string | null
           whatsapp_business_account_id?: string | null
@@ -602,6 +742,8 @@ export type Database = {
         Update: {
           company_logo_url?: string | null
           created_at?: string
+          email_integration_enabled?: boolean | null
+          email_template?: string | null
           id?: string
           inactivity_action?: string | null
           inactivity_timeout_minutes?: number | null
@@ -611,6 +753,11 @@ export type Database = {
           organization_id?: string
           primary_color?: string | null
           secondary_color?: string | null
+          smtp_encryption?: string | null
+          smtp_host?: string | null
+          smtp_password?: string | null
+          smtp_port?: number | null
+          smtp_user?: string | null
           updated_at?: string
           whatsapp_api_token?: string | null
           whatsapp_business_account_id?: string | null
