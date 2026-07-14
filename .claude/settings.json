@@ -42,7 +42,10 @@
       "Bash(bun pm *)",
       "Read(//d//**)",
       "Bash(cd /tmp)",
-      "Bash(BUN_CONFIG_VERBOSE_FETCH=1 bun add left-pad --dry-run)"
+      "Bash(BUN_CONFIG_VERBOSE_FETCH=1 bun add left-pad --dry-run)",
+      "Read(//c/Users/maxra//**)",
+      "Read(//c/Users/maxra/AppData/**)",
+      "Read(//c/Users/maxra/.bun/**)"
     ],
     "additionalDirectories": [
       "C:\\Users\\maxra\\AppData\\Local\\Temp"
