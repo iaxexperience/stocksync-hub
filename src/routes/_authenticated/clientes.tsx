@@ -4449,6 +4449,12 @@ function SignatureCollector({
             box-shadow: none !important;
             background: white !important;
           }
+          /* DialogContent defaults to display:grid, which browsers paginate very
+             poorly when printing (content gets clipped/cut mid-line across pages).
+             Force it back to normal block flow for print only. */
+          .print-dialog-content {
+            display: block !important;
+          }
           .print-container, .print-container * {
             visibility: visible !important;
           }
