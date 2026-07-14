@@ -4585,6 +4585,7 @@ function SignatureCollector({
       { type: "lv", label: "Contrato nº: ", value: order.order_number },
       { type: "lv", label: "Pedido nº: ", value: order.order_number },
       { type: "lv", label: "Data: ", value: new Date(order.created_at).toLocaleDateString("pt-BR") },
+      { type: "lv", label: "Local: ", value: "Santa Rita - PB" },
     ]);
 
     // ── DAS PARTES ──────────────────────────────────────────
