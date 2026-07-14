@@ -189,7 +189,7 @@ function UsuariosPage() {
         p_password: password,
         p_full_name: fullName,
         p_role: role,
-        p_org_id: orgId,
+        p_org_id: orgId!,
       });
       if (error) throw error;
       return data;
