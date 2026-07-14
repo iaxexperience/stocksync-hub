@@ -4400,7 +4400,7 @@ function SignatureCollector({
     const W = 210;
     const H = 297;
     const MARGIN = 20; // 20mm em todos os lados
-    const HEADER_H = 22; // zona reservada para o cabeçalho institucional
+    const HEADER_H = 30; // zona reservada para o cabeçalho institucional (logo + dados da empresa)
     const FOOTER_H = 16; // zona reservada para o rodapé (paginação, hash, QR)
     const contentW = W - MARGIN * 2;
     const contentTop = MARGIN + HEADER_H;
@@ -4925,20 +4925,40 @@ function SignatureCollector({
     for (let p = 1; p <= totalPages; p++) {
       doc.setPage(p);
 
-      // Cabeçalho institucional: apenas a logomarca, centralizada
+      // Cabeçalho institucional: logo + dados da empresa (Configurações → Dados da Empresa & Marca)
+      const hasLogo = !!logoDataUrl;
+      const logoSize = 20;
+      const logoY = MARGIN - 3;
       if (logoDataUrl) {
         try {
-          doc.addImage(logoDataUrl, W / 2 - 9, MARGIN - 4, 18, 18);
+          doc.addImage(logoDataUrl, MARGIN, logoY, logoSize, logoSize);
         } catch {
           // ignora logo inválida
         }
-      } else {
-        // Sem logo cadastrada: mostra só o nome da empresa, uma única linha
-        doc.setFont(FONT, "bold");
-        doc.setFontSize(12);
-        doc.setTextColor(dark);
-        doc.text(organization?.name || "StockFlow Gestão", W / 2, MARGIN + 6, { align: "center" });
       }
+
+      const infoX = hasLogo ? MARGIN + logoSize + 6 : W / 2;
+      const infoAlign: "left" | "center" = hasLogo ? "left" : "center";
+      const infoLines: { text: string; bold?: boolean; size: number }[] = [
+        { text: organization?.name || "StockFlow Gestão", bold: true, size: 12 },
+      ];
+      const contactBits = [
+        organization?.document ? `CNPJ: ${organization.document}` : null,
+        organization?.phone ? `Tel: ${organization.phone}` : null,
+      ].filter(Boolean);
+      if (contactBits.length) infoLines.push({ text: contactBits.join("   |   "), size: 8.5 });
+      if (organization?.email) infoLines.push({ text: organization.email, size: 8.5 });
+      if (organization?.address) infoLines.push({ text: organization.address, size: 8 });
+
+      let infoY = MARGIN + 2;
+      for (const line of infoLines) {
+        doc.setFont(FONT, line.bold ? "bold" : "normal");
+        doc.setFontSize(line.size);
+        doc.setTextColor(line.bold ? dark : 90);
+        doc.text(line.text, infoX, infoY, { align: infoAlign });
+        infoY += line.size * 0.42 + 1.3;
+      }
+
       doc.setDrawColor(210);
       doc.setLineWidth(0.2);
       doc.line(MARGIN, MARGIN + HEADER_H - 3, W - MARGIN, MARGIN + HEADER_H - 3);
