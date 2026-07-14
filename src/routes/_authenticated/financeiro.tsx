@@ -828,7 +828,7 @@ function Financeiro() {
                           <TableCell className="text-right">{sale.installments || 1}x</TableCell>
                           <TableCell>
                             <Badge
-                              variant={sale.payment_status === "Pago" ? "success" : "secondary"}
+                              variant={sale.payment_status === "Pago" ? "default" : "secondary"}
                               className={
                                 sale.payment_status === "Pago"
                                   ? "bg-emerald-50 text-emerald-800 border-emerald-200"
