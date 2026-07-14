@@ -62,7 +62,9 @@
       "Bash(where python *)",
       "Bash(python -c \"import PIL; print\\(PIL.__version__\\)\")",
       "Bash(pip install *)",
-      "Bash(python -c ' *)"
+      "Bash(python -c ' *)",
+      "Bash(grep -rn \"\\\\.or\\(\\\\`\" src/)",
+      "Bash(grep -rn \"\\\\.filter\\(\\\\`\" src/)"
     ],
     "additionalDirectories": [
       "C:\\Users\\maxra\\AppData\\Local\\Temp",
