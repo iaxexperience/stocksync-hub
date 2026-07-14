@@ -29,7 +29,8 @@
       "Bash(ls -la /c/Users/maxra/.supabase/ 2>&1 *)",
       "Read(//c/Users/maxra/.supabase//**)",
       "Bash(node -e ' *)",
-      "Bash(grep -n \"^  function generateContractPDF\\\\|doc.save\\(\\\\`contrato\" /d/stocksync-hub/src/routes/_authenticated/clientes.tsx)"
+      "Bash(grep -n \"^  function generateContractPDF\\\\|doc.save\\(\\\\`contrato\" /d/stocksync-hub/src/routes/_authenticated/clientes.tsx)",
+      "Bash(awk 'NR==4405,NR==4990' /d/stocksync-hub/src/routes/_authenticated/clientes.tsx)"
     ],
     "additionalDirectories": [
       "C:\\Users\\maxra\\AppData\\Local\\Temp"
