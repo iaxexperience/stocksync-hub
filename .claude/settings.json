@@ -59,7 +59,9 @@
       "Read(//c/Users/maxra/AppData/Local/Temp/claude/d--stocksync-hub/**)",
       "Bash(node -e \"console.log\\(process.version\\)\")",
       "Bash(grep -i -E \"^sharp$|^jimp$|^pngjs$\")",
-      "Bash(where python *)"
+      "Bash(where python *)",
+      "Bash(python -c \"import PIL; print\\(PIL.__version__\\)\")",
+      "Bash(pip install *)"
     ],
     "additionalDirectories": [
       "C:\\Users\\maxra\\AppData\\Local\\Temp",
