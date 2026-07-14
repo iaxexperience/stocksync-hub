@@ -4046,7 +4046,7 @@ function ClientePerfil({
           }
         }}
       >
-        <DialogContent className="max-w-5xl w-[95vw] max-h-[95vh] overflow-y-auto">
+        <DialogContent className="max-w-5xl w-[95vw] max-h-[95vh] overflow-y-auto print-dialog-content">
           {signingOrder && (
             <SignatureCollector
               customer={customer}
@@ -4430,7 +4430,7 @@ function SignatureCollector({
           body * {
             visibility: hidden !important;
           }
-          [data-radix-portal], [data-radix-portal] * {
+          .print-dialog-content, .print-dialog-content * {
             position: static !important;
             inset: auto !important;
             transform: none !important;
@@ -6348,7 +6348,7 @@ function DocumentosList({
           }
         }}
       >
-        <DialogContent className="max-w-5xl w-[95vw] max-h-[95vh] overflow-y-auto">
+        <DialogContent className="max-w-5xl w-[95vw] max-h-[95vh] overflow-y-auto print-dialog-content">
           {signingOrder && signingCustomer && (
             <SignatureCollector
               customer={signingCustomer}
