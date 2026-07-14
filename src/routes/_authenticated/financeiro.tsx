@@ -1082,7 +1082,7 @@ function Financeiro() {
                 <span className="text-slate-800">
                   +
                   {Number(
-                    activeSession?.additions || 0 - activeSession?.withdrawals || 0,
+                    (activeSession?.additions || 0) - (activeSession?.withdrawals || 0),
                   ).toLocaleString("pt-BR", {
                     style: "currency",
                     currency: "BRL",
