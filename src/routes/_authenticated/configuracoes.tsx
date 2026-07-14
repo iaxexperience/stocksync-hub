@@ -87,9 +87,9 @@ function Configuracoes() {
       }
       const { data, error } = await supabase.rpc("create_new_organization", {
         org_name: newOrgName.trim(),
-        org_document: newOrgDocument.trim() || null,
-        org_phone: newOrgPhone.trim() || null,
-        org_email: newOrgEmail.trim() || null,
+        org_document: newOrgDocument.trim() || undefined,
+        org_phone: newOrgPhone.trim() || undefined,
+        org_email: newOrgEmail.trim() || undefined,
       });
       if (error) throw error;
       return data;
