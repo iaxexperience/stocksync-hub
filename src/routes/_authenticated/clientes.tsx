@@ -4087,6 +4087,7 @@ function SignatureCollector({
   const [isDrawing, setIsDrawing] = useState(false);
   const [termsAccepted, setTermsAccepted] = useState(prefilledSignature ? true : false);
   const [signedResult, setSignedResult] = useState<any | null>(prefilledSignature || null);
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
 
   const productTypeMap: Record<string, string> = {
     eletrodomestico: "Eletrodoméstico",
@@ -4404,71 +4405,103 @@ function SignatureCollector({
     window.open(`mailto:${customer.email}?subject=${subject}&body=${body}`, "_blank");
   }
 
-  function generateContractPDF() {
+  async function generateContractPDF() {
     const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
     const W = 210;
     const H = 297;
-    const margin = 18;
-    const contentW = W - margin * 2;
+    const MARGIN = 20; // 20mm em todos os lados
+    const HEADER_H = 22; // zona reservada para o cabeçalho institucional
+    const FOOTER_H = 16; // zona reservada para o rodapé (paginação, hash, QR)
+    const contentW = W - MARGIN * 2;
+    const contentTop = MARGIN + HEADER_H;
+    const contentBottom = H - MARGIN - FOOTER_H;
     const dark = "#1e293b";
-    let y = margin;
+    const FONT = "times"; // aproximação de Times New Roman (fonte nativa do jsPDF, sem embutir arquivo)
+    const TITLE_SIZE = 16;
+    const CLAUSE_SIZE = 14;
+    const BODY_SIZE = 12;
+    const LINE_SPACING = 1.4;
+    const BODY_LINE_H = BODY_SIZE * 0.3528 * LINE_SPACING; // pt → mm, já com entrelinha de 1.4
+    const PARA_GAP = 2.2; // espaço entre parágrafos (compacto, evita vãos grandes)
+    const FIRST_LINE_INDENT = 12.5; // 1,25 cm
+    let y = contentTop;
 
     function addPage() {
       doc.addPage();
-      y = margin;
+      y = contentTop;
     }
-    function checkSpace(needed: number) {
-      if (y + needed > H - margin) addPage();
+    // Garante espaço para um bloco atômico (cláusula, tabela, assinatura, promissória).
+    // Se não couber, pula para a página seguinte ANTES de desenhar — nunca no meio.
+    function ensureSpace(needed: number) {
+      if (y + needed > contentBottom) addPage();
     }
-    function clauseTitle(text: string) {
-      checkSpace(12);
-      doc.setFontSize(10);
-      doc.setFont("helvetica", "bold");
+
+    const brl = (v: number) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+
+    // ── Medição e desenho de parágrafo justificado com recuo na 1ª linha ──
+    function measureParagraph(text: string, indentFirst = true) {
+      doc.setFontSize(BODY_SIZE);
+      const indent = indentFirst ? FIRST_LINE_INDENT : 0;
+      const firstLineArr = indent
+        ? doc.splitTextToSize(text, contentW - indent)
+        : doc.splitTextToSize(text, contentW);
+      const firstLine = firstLineArr[0] || "";
+      const rest = text.slice(firstLine.length).trim();
+      const restLines = rest ? doc.splitTextToSize(rest, contentW) : [];
+      return (1 + restLines.length) * BODY_LINE_H + PARA_GAP;
+    }
+    function drawParagraph(text: string, opts: { bold?: boolean; indentFirst?: boolean } = {}) {
+      doc.setFont(FONT, opts.bold ? "bold" : "normal");
+      doc.setFontSize(BODY_SIZE);
       doc.setTextColor(dark);
-      doc.text(text, margin, y);
-      y += 2;
-      doc.setDrawColor(200);
-      doc.setLineWidth(0.2);
-      doc.line(margin, y, W - margin, y);
-      y += 6;
+      const indent = opts.indentFirst === false ? 0 : FIRST_LINE_INDENT;
+      const firstLineArr = indent
+        ? doc.splitTextToSize(text, contentW - indent)
+        : doc.splitTextToSize(text, contentW);
+      const firstLine = firstLineArr[0] || "";
+      const rest = text.slice(firstLine.length).trim();
+      const restLines = rest ? doc.splitTextToSize(rest, contentW) : [];
+      const isOnlyLine = restLines.length === 0;
+      doc.text(firstLine, MARGIN + indent, y, isOnlyLine ? {} : { align: "justify", maxWidth: contentW - indent });
+      y += BODY_LINE_H;
+      restLines.forEach((ln: string, i: number) => {
+        const isLast = i === restLines.length - 1;
+        doc.text(ln, MARGIN, y, isLast ? {} : { align: "justify", maxWidth: contentW });
+        y += BODY_LINE_H;
+      });
+      y += PARA_GAP;
     }
-    function paragraph(text: string, opts: { bold?: boolean; size?: number } = {}) {
-      doc.setFontSize(opts.size || 9.5);
-      doc.setFont("helvetica", opts.bold ? "bold" : "normal");
-      doc.setTextColor(dark);
-      const lines = doc.splitTextToSize(text, contentW);
-      checkSpace(lines.length * 4.6 + 2);
-      doc.text(lines, margin, y);
-      y += lines.length * 4.6 + 3;
+    function measureLabelValue(_label: string, _value: string) {
+      return BODY_LINE_H + 0.8;
     }
-    function labelValue(label: string, value: string) {
-      doc.setFontSize(9.5);
-      checkSpace(5);
-      doc.setFont("helvetica", "bold");
+    function drawLabelValue(label: string, value: string) {
+      doc.setFontSize(BODY_SIZE);
+      doc.setFont(FONT, "bold");
       doc.setTextColor(dark);
       const labelW = doc.getTextWidth(label);
-      doc.text(label, margin, y);
-      doc.setFont("helvetica", "normal");
+      doc.text(label, MARGIN, y);
+      doc.setFont(FONT, "normal");
       const lines = doc.splitTextToSize(value || "—", contentW - labelW);
-      doc.text(lines, margin + labelW, y);
-      y += lines.length * 4.6 + 1.5;
+      doc.text(lines, MARGIN + labelW, y);
+      y += Math.max(1, lines.length) * BODY_LINE_H + 0.8;
     }
-    function divider() {
-      checkSpace(4);
-      doc.setDrawColor(220);
+    function drawDivider() {
+      doc.setDrawColor(210);
       doc.setLineWidth(0.2);
-      doc.line(margin, y, W - margin, y);
-      y += 5;
+      doc.line(MARGIN, y, W - MARGIN, y);
+      y += 4;
+    }
+    function measureTable(rowCount: number) {
+      return (rowCount + 1) * 7 + 3;
     }
     function drawTable(
       headers: { label: string; w: number; align?: "left" | "right" | "center" }[],
       rows: string[][],
     ) {
-      const rowH = 6.5;
-      checkSpace(rowH + 2);
-      let x = margin;
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(8);
+      const rowH = 7;
+      let x = MARGIN;
+      doc.setFont(FONT, "bold");
+      doc.setFontSize(9);
       headers.forEach((h) => {
         doc.setFillColor(241, 245, 249);
         doc.setDrawColor(180);
@@ -4477,209 +4510,283 @@ function SignatureCollector({
         doc.setTextColor(dark);
         const align = h.align || "left";
         const tx = align === "right" ? x + h.w - 1.5 : align === "center" ? x + h.w / 2 : x + 1.5;
-        doc.text(h.label, tx, y + rowH - 2.2, { align, maxWidth: h.w - 3 });
+        doc.text(h.label, tx, y + rowH - 2.4, { align, maxWidth: h.w - 3 });
         x += h.w;
       });
       y += rowH;
-      doc.setFont("helvetica", "normal");
+      doc.setFont(FONT, "normal");
+      doc.setFontSize(9);
       rows.forEach((row) => {
-        checkSpace(rowH + 1);
-        x = margin;
+        x = MARGIN;
         row.forEach((cell, i) => {
           const h = headers[i];
           doc.setDrawColor(200);
           doc.rect(x, y, h.w, rowH);
           const align = h.align || "left";
           const tx = align === "right" ? x + h.w - 1.5 : align === "center" ? x + h.w / 2 : x + 1.5;
-          doc.text(String(cell), tx, y + rowH - 2.2, { align, maxWidth: h.w - 3 });
+          doc.text(String(cell), tx, y + rowH - 2.4, { align, maxWidth: h.w - 3 });
           x += h.w;
         });
         y += rowH;
       });
-      y += 4;
     }
 
-    const brl = (v: number) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+    // Bloco atômico: mede TUDO antes de desenhar, garante espaço uma única vez
+    // e só então desenha — cláusula nunca é cortada no meio.
+    type Block =
+      | { type: "p"; text: string; bold?: boolean; indentFirst?: boolean }
+      | { type: "lv"; label: string; value: string }
+      | { type: "table"; headers: any[]; rows: string[][] }
+      | { type: "gap"; h: number };
 
-    // ── TÍTULO ──────────────────────────────────────────────
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(13);
+    function renderClause(title: string | null, blocks: Block[]) {
+      const titleH = title ? CLAUSE_SIZE * 0.3528 * 1.2 + 6 : 0;
+      let total = titleH;
+      for (const b of blocks) {
+        if (b.type === "p") total += measureParagraph(b.text, b.indentFirst);
+        else if (b.type === "lv") total += measureLabelValue(b.label, b.value);
+        else if (b.type === "table") total += measureTable(b.rows.length);
+        else if (b.type === "gap") total += b.h;
+      }
+      ensureSpace(Math.min(total, contentBottom - contentTop)); // clamp: cláusulas maiores que 1 página fluem normalmente
+      if (title) {
+        doc.setFont(FONT, "bold");
+        doc.setFontSize(CLAUSE_SIZE);
+        doc.setTextColor(dark);
+        doc.text(title, MARGIN, y);
+        y += 2;
+        doc.setDrawColor(190);
+        doc.setLineWidth(0.25);
+        doc.line(MARGIN, y, W - MARGIN, y);
+        y += 6;
+      }
+      blocks.forEach((b) => {
+        if (b.type === "p") drawParagraph(b.text, { bold: b.bold, indentFirst: b.indentFirst });
+        else if (b.type === "lv") drawLabelValue(b.label, b.value);
+        else if (b.type === "table") drawTable(b.headers, b.rows);
+        else if (b.type === "gap") y += b.h;
+      });
+      y += 3;
+      drawDivider();
+      y += 3;
+    }
+
+    // ── TÍTULO PRINCIPAL ────────────────────────────────────
+    doc.setFont(FONT, "bold");
+    doc.setFontSize(TITLE_SIZE);
     doc.setTextColor(dark);
     doc.text("CONTRATO PARTICULAR DE COMPRA E VENDA COM RESERVA DE DOMÍNIO", W / 2, y, {
       align: "center",
       maxWidth: contentW,
     });
-    y += 10;
+    y += 11;
 
-    labelValue("Contrato nº: ", order.order_number);
-    labelValue("Pedido nº: ", order.order_number);
-    labelValue("Data: ", new Date(order.created_at).toLocaleDateString("pt-BR"));
-    y += 2;
-    divider();
+    renderClause(null, [
+      { type: "lv", label: "Contrato nº: ", value: order.order_number },
+      { type: "lv", label: "Pedido nº: ", value: order.order_number },
+      { type: "lv", label: "Data: ", value: new Date(order.created_at).toLocaleDateString("pt-BR") },
+    ]);
 
     // ── DAS PARTES ──────────────────────────────────────────
-    clauseTitle("DAS PARTES");
-    paragraph("VENDEDORA", { bold: true, size: 10 });
-    labelValue("Razão Social: ", organization?.name || "StockFlow Gestão");
-    labelValue("CNPJ: ", organization?.document || "00.000.000/0001-00");
-    labelValue("Endereço: ", organization?.address || "Av. Principal, 1000 - Centro");
-    labelValue("Telefone: ", organization?.phone || "(00) 3000-0000");
-    labelValue("E-mail: ", organization?.email || "contato@stockflow.com");
-    labelValue("Representante Legal: ", sellerName);
-    y += 2;
-    paragraph("COMPRADOR(A)", { bold: true, size: 10 });
-    labelValue("Nome: ", customer.name);
-    labelValue("CPF/CNPJ: ", customer.cpf_cnpj);
-    labelValue("RG: ", customer.rg_state_registration || "Não informado");
-    labelValue("Estado Civil: ", customer.marital_status || "Não informado");
-    labelValue("Profissão: ", customer.profession || "Não informado");
-    labelValue("Telefone: ", customer.phone || "Não informado");
-    labelValue("WhatsApp: ", customer.whatsapp || "Não informado");
-    labelValue("E-mail: ", customer.email || "Não informado");
-    labelValue("Endereço: ", customerAddress);
-    divider();
+    renderClause("DAS PARTES", [
+      { type: "p", text: "VENDEDORA", bold: true, indentFirst: false },
+      { type: "lv", label: "Razão Social: ", value: organization?.name || "StockFlow Gestão" },
+      { type: "lv", label: "CNPJ: ", value: organization?.document || "00.000.000/0001-00" },
+      { type: "lv", label: "Endereço: ", value: organization?.address || "Av. Principal, 1000 - Centro" },
+      { type: "lv", label: "Telefone: ", value: organization?.phone || "(00) 3000-0000" },
+      { type: "lv", label: "E-mail: ", value: organization?.email || "contato@stockflow.com" },
+      { type: "lv", label: "Representante Legal: ", value: sellerName },
+      { type: "gap", h: 3 },
+      { type: "p", text: "COMPRADOR(A)", bold: true, indentFirst: false },
+      { type: "lv", label: "Nome: ", value: customer.name },
+      { type: "lv", label: "CPF/CNPJ: ", value: customer.cpf_cnpj },
+      { type: "lv", label: "RG: ", value: customer.rg_state_registration || "Não informado" },
+      { type: "lv", label: "Estado Civil: ", value: customer.marital_status || "Não informado" },
+      { type: "lv", label: "Profissão: ", value: customer.profession || "Não informado" },
+      { type: "lv", label: "Telefone: ", value: customer.phone || "Não informado" },
+      { type: "lv", label: "WhatsApp: ", value: customer.whatsapp || "Não informado" },
+      { type: "lv", label: "E-mail: ", value: customer.email || "Não informado" },
+      { type: "lv", label: "Endereço: ", value: customerAddress },
+    ]);
 
     // ── CLÁUSULA PRIMEIRA ───────────────────────────────────
-    clauseTitle("CLÁUSULA PRIMEIRA – DO OBJETO");
-    paragraph("A VENDEDORA vende ao COMPRADOR os seguintes bens:");
-    drawTable(
-      [
-        { label: "Produto", w: 32 },
-        { label: "Tipo", w: 22 },
-        { label: "Marca", w: 20 },
-        { label: "Modelo", w: 20 },
-        { label: "Nº Série", w: 18 },
-        { label: "Qtd", w: 12, align: "center" },
-        { label: "Vl. Unitário", w: 25, align: "right" },
-        { label: "Total", w: 25, align: "right" },
-      ],
-      (order.order_items || []).map((item: any) => [
-        item.products?.name || "Produto",
-        getProductTypeLabel(item.products?.product_type),
-        item.products?.brand || "Genérica",
-        item.products?.model || "Padrão",
-        item.serial_number || "S/N",
-        String(Number(item.quantity)),
-        brl(Number(item.unit_price)),
-        brl(Number(item.total_amount)),
-      ]),
-    );
-    paragraph(
-      `Valor Total da Venda: ${brl(Number(order.total_amount))} (${numberToWords(Number(order.total_amount))}), dividido em ${installmentsCount} parcelas mensais de ${brl(installmentAmount)}.`,
-      { bold: true },
-    );
-    divider();
+    renderClause("CLÁUSULA PRIMEIRA – DO OBJETO", [
+      { type: "p", text: "A VENDEDORA vende ao COMPRADOR os seguintes bens:", indentFirst: false },
+      {
+        type: "table",
+        headers: [
+          { label: "Produto", w: 32 },
+          { label: "Tipo", w: 22 },
+          { label: "Marca", w: 20 },
+          { label: "Modelo", w: 20 },
+          { label: "Nº Série", w: 18 },
+          { label: "Qtd", w: 12, align: "center" },
+          { label: "Vl. Unitário", w: 25, align: "right" },
+          { label: "Total", w: 25, align: "right" },
+        ],
+        rows: (order.order_items || []).map((item: any) => [
+          item.products?.name || "Produto",
+          getProductTypeLabel(item.products?.product_type),
+          item.products?.brand || "Genérica",
+          item.products?.model || "Padrão",
+          item.serial_number || "S/N",
+          String(Number(item.quantity)),
+          brl(Number(item.unit_price)),
+          brl(Number(item.total_amount)),
+        ]),
+      },
+      { type: "gap", h: 3 },
+      {
+        type: "p",
+        bold: true,
+        indentFirst: false,
+        text: `Valor Total da Venda: ${brl(Number(order.total_amount))} (${numberToWords(Number(order.total_amount))}), dividido em ${installmentsCount} parcelas mensais de ${brl(installmentAmount)}.`,
+      },
+    ]);
 
     // ── CLÁUSULA SEGUNDA ────────────────────────────────────
-    clauseTitle("CLÁUSULA SEGUNDA – DA FORMA DE PAGAMENTO");
-    paragraph("O pagamento será realizado nas seguintes condições:");
-    labelValue("Entrada: ", brl(downPayment));
-    labelValue("Saldo financiado: ", brl(financedBalance));
-    labelValue("Quantidade de parcelas: ", String(installmentsCount));
-    labelValue("Valor de cada parcela: ", brl(installmentAmount));
-    labelValue("Primeiro vencimento: ", firstDueDate);
-    paragraph(
-      "Demais vencimentos ocorrerão mensalmente na mesma data. Em caso de atraso, poderão incidir multa, juros e atualização monetária conforme legislação vigente.",
-    );
-    divider();
+    renderClause("CLÁUSULA SEGUNDA – DA FORMA DE PAGAMENTO", [
+      { type: "p", text: "O pagamento será realizado nas seguintes condições:", indentFirst: false },
+      { type: "lv", label: "Entrada: ", value: brl(downPayment) },
+      { type: "lv", label: "Saldo financiado: ", value: brl(financedBalance) },
+      { type: "lv", label: "Quantidade de parcelas: ", value: String(installmentsCount) },
+      { type: "lv", label: "Valor de cada parcela: ", value: brl(installmentAmount) },
+      { type: "lv", label: "Primeiro vencimento: ", value: firstDueDate },
+      { type: "gap", h: 2 },
+      {
+        type: "p",
+        text: "Demais vencimentos ocorrerão mensalmente na mesma data. Em caso de atraso, poderão incidir multa, juros e atualização monetária conforme legislação vigente.",
+      },
+    ]);
 
     // ── DEMAIS CLÁUSULAS ────────────────────────────────────
-    clauseTitle("CLÁUSULA TERCEIRA – DA RESERVA DE DOMÍNIO");
-    paragraph(
-      "A propriedade do(s) bem(ns) permanecerá pertencente à VENDEDORA até a quitação integral do contrato.",
-    );
-    paragraph("Enquanto existir saldo devedor, o COMPRADOR possuirá apenas a posse direta do(s) bem(ns).");
-    divider();
+    renderClause("CLÁUSULA TERCEIRA – DA RESERVA DE DOMÍNIO", [
+      {
+        type: "p",
+        text: "A propriedade do(s) bem(ns) permanecerá pertencente à VENDEDORA até a quitação integral do contrato.",
+      },
+      {
+        type: "p",
+        text: "Enquanto existir saldo devedor, o COMPRADOR possuirá apenas a posse direta do(s) bem(ns).",
+      },
+    ]);
 
-    clauseTitle("CLÁUSULA QUARTA – DA POSSE E CONSERVAÇÃO");
-    paragraph("O COMPRADOR compromete-se a:");
-    paragraph("• conservar adequadamente o(s) produto(s);");
-    paragraph(
-      "• não vender, emprestar, alugar ou dar o bem em garantia sem autorização da VENDEDORA;",
-    );
-    paragraph("• comunicar qualquer dano, perda, roubo ou furto.");
-    paragraph("A VENDEDORA poderá solicitar informações sobre a localização e estado do bem.");
-    divider();
+    renderClause("CLÁUSULA QUARTA – DA POSSE E CONSERVAÇÃO", [
+      { type: "p", text: "O COMPRADOR compromete-se a:", indentFirst: false },
+      { type: "p", text: "• conservar adequadamente o(s) produto(s);", indentFirst: false },
+      {
+        type: "p",
+        indentFirst: false,
+        text: "• não vender, emprestar, alugar ou dar o bem em garantia sem autorização da VENDEDORA;",
+      },
+      { type: "p", text: "• comunicar qualquer dano, perda, roubo ou furto.", indentFirst: false },
+      {
+        type: "p",
+        text: "A VENDEDORA poderá solicitar informações sobre a localização e estado do bem.",
+      },
+    ]);
 
-    clauseTitle("CLÁUSULA QUINTA – DO INADIMPLEMENTO");
-    paragraph(
-      "O atraso no pagamento de qualquer parcela constituirá automaticamente o COMPRADOR em mora.",
-    );
-    paragraph(
-      "A VENDEDORA poderá cobrar judicial ou extrajudicialmente os valores devidos, considerar rescindido o contrato, requerer a restituição do bem, promover a execução das Notas Promissórias emitidas e adotar todas as medidas previstas na legislação.",
-    );
-    divider();
+    renderClause("CLÁUSULA QUINTA – DO INADIMPLEMENTO", [
+      {
+        type: "p",
+        text: "O atraso no pagamento de qualquer parcela constituirá automaticamente o COMPRADOR em mora.",
+      },
+      {
+        type: "p",
+        text: "A VENDEDORA poderá cobrar judicial ou extrajudicialmente os valores devidos, considerar rescindido o contrato, requerer a restituição do bem, promover a execução das Notas Promissórias emitidas e adotar todas as medidas previstas na legislação.",
+      },
+    ]);
 
-    clauseTitle("CLÁUSULA SEXTA – DA GARANTIA");
-    paragraph("O(s) produto(s) possui(em) garantia conforme especificação do fabricante e/ou da VENDEDORA.");
-    paragraph(
-      "Não estão cobertos: mau uso, acidentes, instalação inadequada, quedas, violação dos lacres e desgaste natural.",
-    );
-    divider();
+    renderClause("CLÁUSULA SEXTA – DA GARANTIA", [
+      {
+        type: "p",
+        text: "O(s) produto(s) possui(em) garantia conforme especificação do fabricante e/ou da VENDEDORA.",
+      },
+      {
+        type: "p",
+        text: "Não estão cobertos: mau uso, acidentes, instalação inadequada, quedas, violação dos lacres e desgaste natural.",
+      },
+    ]);
 
-    clauseTitle("CLÁUSULA SÉTIMA – DA LGPD");
-    paragraph(
-      "As partes autorizam o tratamento dos dados pessoais exclusivamente para execução deste contrato, emissão de documentos fiscais, cobrança, assistência técnica e cumprimento das obrigações legais, nos termos da Lei nº 13.709/2018.",
-    );
-    divider();
+    renderClause("CLÁUSULA SÉTIMA – DA LGPD", [
+      {
+        type: "p",
+        text: "As partes autorizam o tratamento dos dados pessoais exclusivamente para execução deste contrato, emissão de documentos fiscais, cobrança, assistência técnica e cumprimento das obrigações legais, nos termos da Lei nº 13.709/2018.",
+      },
+    ]);
 
-    clauseTitle("CLÁUSULA OITAVA – DA ASSINATURA ELETRÔNICA");
-    paragraph(
-      "As partes reconhecem como válida a assinatura eletrônica realizada através do sistema da VENDEDORA, possuindo a mesma validade jurídica da assinatura manuscrita.",
-    );
-    paragraph(
-      "O sistema registrará automaticamente: Data e hora, IP, Dispositivo utilizado, Geolocalização (quando autorizada), Hash criptográfico do documento e Usuário responsável.",
-    );
-    divider();
+    renderClause("CLÁUSULA OITAVA – DA ASSINATURA ELETRÔNICA", [
+      {
+        type: "p",
+        text: "As partes reconhecem como válida a assinatura eletrônica realizada através do sistema da VENDEDORA, possuindo a mesma validade jurídica da assinatura manuscrita.",
+      },
+      {
+        type: "p",
+        text: "O sistema registrará automaticamente: Data e hora, IP, Dispositivo utilizado, Geolocalização (quando autorizada), Hash criptográfico do documento e Usuário responsável.",
+      },
+    ]);
 
-    clauseTitle("CLÁUSULA NONA – DAS DISPOSIÇÕES GERAIS");
-    paragraph(
-      "Este contrato obriga as partes e seus sucessores. Qualquer tolerância quanto ao descumprimento contratual não implicará renúncia de direitos.",
-    );
-    divider();
+    renderClause("CLÁUSULA NONA – DAS DISPOSIÇÕES GERAIS", [
+      {
+        type: "p",
+        text: "Este contrato obriga as partes e seus sucessores. Qualquer tolerância quanto ao descumprimento contratual não implicará renúncia de direitos.",
+      },
+    ]);
 
-    clauseTitle("CLÁUSULA DÉCIMA – DO FORO");
     const foroCidade = customer.customer_addresses?.[0]?.city || "Cidade";
     const foroEstado = customer.customer_addresses?.[0]?.state || "UF";
-    paragraph(
-      `Fica eleito o foro da Comarca de ${foroCidade} / ${foroEstado}, renunciando as partes a qualquer outro, por mais privilegiado que seja.`,
-    );
-    divider();
+    renderClause("CLÁUSULA DÉCIMA – DO FORO", [
+      {
+        type: "p",
+        text: `Fica eleito o foro da Comarca de ${foroCidade} / ${foroEstado}, renunciando as partes a qualquer outro, por mais privilegiado que seja.`,
+      },
+    ]);
 
-    // ── ASSINATURAS ─────────────────────────────────────────
-    checkSpace(70);
-    clauseTitle("ASSINATURAS");
+    // ── ASSINATURAS + TESTEMUNHAS (bloco atômico único) ─────
     const sigColW = contentW / 2;
-    const sigStartY = y;
+    const sigBlockH = 68; // VENDEDOR/COMPRADOR + linha + 1ª/2ª testemunha, tudo junto
+    ensureSpace(sigBlockH);
+    doc.setFont(FONT, "bold");
+    doc.setFontSize(CLAUSE_SIZE);
+    doc.setTextColor(dark);
+    doc.text("ASSINATURAS", MARGIN, y);
+    y += 2;
+    doc.setDrawColor(190);
+    doc.setLineWidth(0.25);
+    doc.line(MARGIN, y, W - MARGIN, y);
+    y += 8;
 
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(9);
-    doc.text("VENDEDORA", margin + sigColW / 2, y, { align: "center" });
-    doc.setFont("helvetica", "normal");
-    doc.text(`Empresa: ${organization?.name || "StockFlow Gestão"}`, margin + sigColW / 2, y + 6, {
+    const sigStartY = y;
+    doc.setFont(FONT, "bold");
+    doc.setFontSize(10);
+    doc.text("VENDEDOR", MARGIN + sigColW / 2, y, { align: "center" });
+    doc.setFont(FONT, "normal");
+    doc.setFontSize(BODY_SIZE);
+    doc.text(`Nome: ${organization?.name || "StockFlow Gestão"}`, MARGIN + sigColW / 2, y + 7, {
       align: "center",
       maxWidth: sigColW - 6,
     });
-    doc.text(`Representante: ${sellerName}`, margin + sigColW / 2, y + 12, {
+    doc.text(`CPF/CNPJ: ${organization?.document || "—"}`, MARGIN + sigColW / 2, y + 13, {
       align: "center",
       maxWidth: sigColW - 6,
     });
     doc.setDrawColor(150);
-    doc.line(margin + 8, y + 24, margin + sigColW - 8, y + 24);
-    doc.setFontSize(7);
+    doc.line(MARGIN + 8, y + 24, MARGIN + sigColW - 8, y + 24);
+    doc.setFontSize(8);
     doc.setTextColor(120);
-    doc.text("[Assinatura Digital no Sistema]", margin + sigColW / 2, y + 22, { align: "center" });
+    doc.text("[Assinatura Digital no Sistema]", MARGIN + sigColW / 2, y + 22, { align: "center" });
 
-    doc.setFontSize(9);
+    doc.setFontSize(10);
     doc.setTextColor(dark);
-    doc.setFont("helvetica", "bold");
-    doc.text("COMPRADOR", margin + sigColW + sigColW / 2, y, { align: "center" });
-    doc.setFont("helvetica", "normal");
-    doc.text(`Nome: ${customer.name}`, margin + sigColW + sigColW / 2, y + 6, {
+    doc.setFont(FONT, "bold");
+    doc.text("COMPRADOR", MARGIN + sigColW + sigColW / 2, y, { align: "center" });
+    doc.setFont(FONT, "normal");
+    doc.setFontSize(BODY_SIZE);
+    doc.text(`Nome: ${customer.name}`, MARGIN + sigColW + sigColW / 2, y + 7, {
       align: "center",
       maxWidth: sigColW - 6,
     });
-    doc.text(`CPF/CNPJ: ${customer.cpf_cnpj}`, margin + sigColW + sigColW / 2, y + 12, {
+    doc.text(`CPF/CNPJ: ${customer.cpf_cnpj}`, MARGIN + sigColW + sigColW / 2, y + 13, {
       align: "center",
       maxWidth: sigColW - 6,
     });
@@ -4687,44 +4794,46 @@ function SignatureCollector({
     const sigDataUrl = signedResult?.signature_url || order.customer_signatures?.[0]?.signature_url;
     if (sigDataUrl) {
       try {
-        doc.addImage(sigDataUrl, "PNG", margin + sigColW + sigColW / 2 - 25, y + 13, 50, 16);
+        doc.addImage(sigDataUrl, "PNG", MARGIN + sigColW + sigColW / 2 - 25, y + 14, 50, 16);
       } catch {
         // ignore invalid image data
       }
     } else {
-      doc.setFontSize(7);
+      doc.setFontSize(8);
       doc.setTextColor(120);
-      doc.text("[Pendente Assinatura]", margin + sigColW + sigColW / 2, y + 22, { align: "center" });
+      doc.text("[Pendente Assinatura]", MARGIN + sigColW + sigColW / 2, y + 22, { align: "center" });
     }
     doc.setDrawColor(150);
-    doc.line(margin + sigColW + 8, y + 24, margin + contentW - 8, y + 24);
+    doc.line(MARGIN + sigColW + 8, y + 24, MARGIN + contentW - 8, y + 24);
 
     y = sigStartY + 32;
     doc.setTextColor(dark);
 
     const witnessY = y + 6;
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(8.5);
-    doc.text("1ª TESTEMUNHA", margin, witnessY);
-    doc.text("2ª TESTEMUNHA", margin + sigColW, witnessY);
-    doc.setFont("helvetica", "normal");
+    doc.setFont(FONT, "bold");
+    doc.setFontSize(9.5);
+    doc.text("1ª TESTEMUNHA", MARGIN, witnessY);
+    doc.text("2ª TESTEMUNHA", MARGIN + sigColW, witnessY);
+    doc.setFont(FONT, "normal");
+    doc.setFontSize(BODY_SIZE);
     ["Nome: ______________________________", "CPF: _______________________________", "Assinatura: _________________________"].forEach(
       (line, i) => {
-        doc.text(line, margin, witnessY + 6 + i * 5.5);
-        doc.text(line, margin + sigColW, witnessY + 6 + i * 5.5);
+        doc.text(line, MARGIN, witnessY + 6 + i * 5.8);
+        doc.text(line, MARGIN + sigColW, witnessY + 6 + i * 5.8);
       },
     );
-    y = witnessY + 6 + 3 * 5.5 + 6;
+    y = witnessY + 6 + 3 * 5.8 + 4;
 
-    // ── ANEXO I: NOTAS PROMISSÓRIAS ─────────────────────────
+    // ── ANEXO I: NOTAS PROMISSÓRIAS (sempre em página própria) ──
     if (unpaidInstallments.length > 0) {
       addPage();
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(12);
-      doc.text("ANEXO I – NOTAS PROMISSÓRIAS", W / 2, y, { align: "center" });
+      doc.setFont(FONT, "bold");
+      doc.setFontSize(TITLE_SIZE);
+      doc.setTextColor(dark);
+      doc.text("NOTA PROMISSÓRIA", W / 2, y, { align: "center" });
       y += 6;
-      doc.setFont("helvetica", "italic");
-      doc.setFontSize(8);
+      doc.setFont(FONT, "italic");
+      doc.setFontSize(9);
       doc.setTextColor(100);
       doc.text(
         "As notas promissórias abaixo integram este contrato e correspondem às parcelas em aberto, podendo ser destacadas e utilizadas individualmente.",
@@ -4736,43 +4845,142 @@ function SignatureCollector({
       doc.setTextColor(dark);
 
       unpaidInstallments.forEach((ins: any) => {
-        const boxH = 34;
-        checkSpace(boxH + 4);
+        const boxH = 46;
+        ensureSpace(boxH + 4);
         const boxY = y;
         doc.setDrawColor(30);
         doc.setLineWidth(0.4);
-        doc.rect(margin, boxY, contentW, boxH);
+        doc.rect(MARGIN, boxY, contentW, boxH);
 
         const promissoriaNumero = `${ins.installment_number}/${orderInstallments.length}`;
         const dataVencimento = new Date(ins.due_date + "T12:00:00").toLocaleDateString("pt-BR");
         const valorParcela = Number(ins.amount);
 
-        doc.setFont("helvetica", "bold");
+        doc.setFont(FONT, "bold");
+        doc.setFontSize(11);
+        doc.text(`Nº ${promissoriaNumero}`, MARGIN + 4, boxY + 8);
+        doc.text(`VENCIMENTO: ${dataVencimento}`, MARGIN + contentW - 4, boxY + 8, { align: "right" });
+
+        doc.setFont(FONT, "normal");
+        doc.setFontSize(BODY_SIZE);
+        doc.text(`Valor: ${brl(valorParcela)}`, MARGIN + 4, boxY + 15);
+        doc.text(`(${numberToWords(valorParcela)})`, MARGIN + 4, boxY + 21, { maxWidth: contentW - 8 });
+
         doc.setFontSize(9);
-        doc.text(`NOTA PROMISSÓRIA Nº ${promissoriaNumero}`, margin + 3, boxY + 6);
-        doc.text(`VENCIMENTO: ${dataVencimento}`, margin + contentW - 3, boxY + 6, { align: "right" });
-
-        doc.setFont("helvetica", "normal");
-        doc.setFontSize(8);
-        doc.text(`Contrato: ${order.order_number}`, margin + 3, boxY + 12);
-        doc.text(`Pedido: ${order.order_number}`, margin + 3 + contentW / 3, boxY + 12);
-        doc.text(`Valor: ${brl(valorParcela)}`, margin + 3 + (contentW / 3) * 2, boxY + 12);
-
-        const promissoriaTexto = `No vencimento acima indicado, pagarei, por esta única via de NOTA PROMISSÓRIA, sem qualquer condição, à empresa ${organization?.name || "StockFlow Gestão"}, inscrita no CNPJ nº ${organization?.document || "00.000.000/0001-00"}, ou à sua ordem, a quantia de ${brl(valorParcela)} (${numberToWords(valorParcela)}), referente à ${ins.installment_number}ª parcela do Contrato Particular de Compra e Venda nº ${order.order_number}.`;
-        doc.setFontSize(7.5);
-        const promLines = doc.splitTextToSize(promissoriaTexto, contentW - 6);
-        doc.text(promLines, margin + 3, boxY + 18);
-
-        doc.setFontSize(7.5);
+        doc.text(`Emitente: ${customer.name}  |  CPF: ${customer.cpf_cnpj}`, MARGIN + 4, boxY + 28);
         doc.text(
-          `Cidade, ${new Date().toLocaleDateString("pt-BR")}`,
-          margin + contentW - 3,
-          boxY + boxH - 3,
-          { align: "right" },
+          `Beneficiário: ${organization?.name || "StockFlow Gestão"}  |  CNPJ: ${organization?.document || "—"}`,
+          MARGIN + 4,
+          boxY + 33,
         );
+        doc.text(`Referente à ${ins.installment_number}ª parcela do Contrato nº ${order.order_number}.`, MARGIN + 4, boxY + 38);
 
-        y = boxY + boxH + 5;
+        doc.text(`Local: ${foroCidade}/${foroEstado}`, MARGIN + 4, boxY + boxH - 3);
+        doc.text(`Assinatura: ____________________________`, MARGIN + contentW - 4, boxY + boxH - 3, {
+          align: "right",
+        });
+
+        y = boxY + boxH + 6;
       });
+    }
+
+    // ── HASH DE AUTENTICIDADE + QR CODE ─────────────────────
+    const hashPayload = [
+      order.order_number,
+      customer.cpf_cnpj,
+      customer.name,
+      String(order.total_amount),
+      order.created_at,
+    ].join("|");
+    let shortHash = "";
+    try {
+      const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(hashPayload));
+      shortHash = Array.from(new Uint8Array(digest))
+        .map((b) => b.toString(16).padStart(2, "0"))
+        .join("")
+        .slice(0, 16);
+    } catch {
+      shortHash = "N/A";
+    }
+    const issuedAt = new Date().toLocaleString("pt-BR");
+    const qrText = `Contrato ${order.order_number} | ${customer.name} | Hash ${shortHash} | Emitido ${issuedAt}`;
+    let qrDataUrl: string | null = null;
+    try {
+      const QRCode = (await import("qrcode")).default;
+      qrDataUrl = await QRCode.toDataURL(qrText, { margin: 0, width: 160 });
+    } catch {
+      qrDataUrl = null;
+    }
+
+    // Logo da empresa (opcional, convertido para data URL se disponível)
+    let logoDataUrl: string | null = null;
+    if (settings?.company_logo_url) {
+      try {
+        const res = await fetch(settings.company_logo_url);
+        const blob = await res.blob();
+        logoDataUrl = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result as string);
+          reader.onerror = reject;
+          reader.readAsDataURL(blob);
+        });
+      } catch {
+        logoDataUrl = null;
+      }
+    }
+
+    // ── CABEÇALHO E RODAPÉ EM TODAS AS PÁGINAS (passe final) ──
+    const totalPages = doc.internal.getNumberOfPages();
+    for (let p = 1; p <= totalPages; p++) {
+      doc.setPage(p);
+
+      // Cabeçalho institucional centralizado
+      let hy = MARGIN - 4;
+      if (logoDataUrl) {
+        try {
+          doc.addImage(logoDataUrl, W / 2 - 6, hy, 12, 12);
+          hy += 13;
+        } catch {
+          // ignora logo inválida
+        }
+      }
+      doc.setFont(FONT, "bold");
+      doc.setFontSize(11);
+      doc.setTextColor(dark);
+      doc.text(organization?.name || "StockFlow Gestão", W / 2, hy, { align: "center" });
+      hy += 4.5;
+      doc.setFont(FONT, "normal");
+      doc.setFontSize(8);
+      doc.setTextColor(100);
+      doc.text(
+        `CNPJ: ${organization?.document || "—"}  ·  Tel: ${organization?.phone || "—"}`,
+        W / 2,
+        hy,
+        { align: "center" },
+      );
+      hy += 4;
+      doc.text(organization?.address || "Endereço não cadastrado", W / 2, hy, { align: "center" });
+      doc.setDrawColor(210);
+      doc.setLineWidth(0.2);
+      doc.line(MARGIN, MARGIN + HEADER_H - 3, W - MARGIN, MARGIN + HEADER_H - 3);
+
+      // Rodapé institucional
+      const fy = H - MARGIN - FOOTER_H + 6;
+      doc.setDrawColor(210);
+      doc.line(MARGIN, fy - 4, W - MARGIN, fy - 4);
+      doc.setFont(FONT, "normal");
+      doc.setFontSize(7.5);
+      doc.setTextColor(100);
+      doc.text(`Emitido em: ${issuedAt}`, MARGIN, fy);
+      doc.text(`Hash: ${shortHash}`, MARGIN, fy + 4);
+      doc.text(`Página ${p} de ${totalPages}`, W / 2, fy + 2, { align: "center" });
+      if (qrDataUrl) {
+        try {
+          doc.addImage(qrDataUrl, "PNG", W - MARGIN - 12, fy - 8, 12, 12);
+        } catch {
+          // ignora QR inválido
+        }
+      }
     }
 
     doc.save(`contrato-${order.order_number}.pdf`);
@@ -4780,72 +4988,6 @@ function SignatureCollector({
 
   return (
     <div className="space-y-5 py-2 text-xs">
-      <style>{`
-        @page {
-          size: A4;
-          margin: 15mm 20mm;
-        }
-        @media print {
-          html, body {
-            height: auto !important;
-            overflow: visible !important;
-            background: white !important;
-          }
-          body * {
-            visibility: hidden !important;
-          }
-          .print-dialog-content, .print-dialog-content * {
-            position: static !important;
-            inset: auto !important;
-            top: auto !important;
-            left: auto !important;
-            right: auto !important;
-            bottom: auto !important;
-            transform: none !important;
-            translate: none !important;
-            rotate: none !important;
-            scale: none !important;
-            width: auto !important;
-            height: auto !important;
-            max-width: none !important;
-            max-height: none !important;
-            min-height: 0 !important;
-            overflow: visible !important;
-            margin: 0 !important;
-            padding: 0 !important;
-            border: none !important;
-            box-shadow: none !important;
-            background: white !important;
-          }
-          /* DialogContent defaults to display:grid, which browsers paginate very
-             poorly when printing (content gets clipped/cut mid-line across pages).
-             Force it back to normal block flow for print only. */
-          .print-dialog-content {
-            display: block !important;
-          }
-
-          .print-container, .print-container * {
-            visibility: visible !important;
-          }
-          .print-container {
-            display: block !important;
-            width: 100% !important;
-            padding: 0 !important;
-          }
-          .no-print {
-            display: none !important;
-          }
-          .page-break-before {
-            page-break-before: always !important;
-            break-before: always !important;
-          }
-          .print-avoid-break {
-            page-break-inside: avoid !important;
-            break-inside: avoid !important;
-          }
-        }
-      `}</style>
-
       <DialogHeader className="no-print">
         <DialogTitle className="flex items-center gap-1.5">
           <FileSignature className="h-5 w-5 text-primary" /> Formalização e Assinatura Digital
@@ -4867,18 +5009,25 @@ function SignatureCollector({
             <Button
               variant="outline"
               size="sm"
-              className="flex items-center gap-1"
-              onClick={() => window.print()}
-            >
-              <Printer className="h-3.5 w-3.5" /> Imprimir Contrato e Promissórias
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
               className="flex items-center gap-1 text-indigo-700 bg-indigo-50"
-              onClick={generateContractPDF}
+              disabled={isGeneratingPdf}
+              onClick={async () => {
+                setIsGeneratingPdf(true);
+                try {
+                  await generateContractPDF();
+                } catch (err: any) {
+                  toast.error("Erro ao gerar PDF do contrato: " + err.message);
+                } finally {
+                  setIsGeneratingPdf(false);
+                }
+              }}
             >
-              <Download className="h-3.5 w-3.5" /> Baixar Contrato em PDF
+              {isGeneratingPdf ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <Download className="h-3.5 w-3.5" />
+              )}
+              {isGeneratingPdf ? "Gerando PDF..." : "Baixar Contrato em PDF"}
             </Button>
             <Button
               variant="outline"
