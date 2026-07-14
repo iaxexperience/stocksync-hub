@@ -33,7 +33,8 @@
       "Bash(awk 'NR==4405,NR==4990' /d/stocksync-hub/src/routes/_authenticated/clientes.tsx)",
       "Bash(git submodule *)",
       "Bash(git worktree *)",
-      "Bash(git rm *)"
+      "Bash(git rm *)",
+      "Bash(git ls-tree *)"
     ],
     "additionalDirectories": [
       "C:\\Users\\maxra\\AppData\\Local\\Temp"
