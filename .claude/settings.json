@@ -61,7 +61,8 @@
       "Bash(grep -i -E \"^sharp$|^jimp$|^pngjs$\")",
       "Bash(where python *)",
       "Bash(python -c \"import PIL; print\\(PIL.__version__\\)\")",
-      "Bash(pip install *)"
+      "Bash(pip install *)",
+      "Bash(python -c ' *)"
     ],
     "additionalDirectories": [
       "C:\\Users\\maxra\\AppData\\Local\\Temp",
