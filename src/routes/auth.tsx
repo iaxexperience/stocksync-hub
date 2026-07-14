@@ -84,7 +84,7 @@ function AuthPage() {
         <div>
           <div className="text-5xl font-black mb-4 leading-none">Josi & Jo</div>
           <h2 className="text-2xl font-bold leading-tight">
-            Sistema de Gestão de Eletrodomésticos
+            Sistema de Gestão de Utilidades Domésticas
           </h2>
           <p className="mt-3 text-white/80 max-w-md text-sm">
              Controle de estoque, clientes, vendas, contratos e muito mais — em um único lugar.
