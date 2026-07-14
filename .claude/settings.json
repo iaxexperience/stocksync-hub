@@ -65,7 +65,8 @@
       "Bash(python -c ' *)",
       "Bash(grep -rn \"\\\\.or\\(\\\\`\" src/)",
       "Bash(grep -rn \"\\\\.filter\\(\\\\`\" src/)",
-      "WebSearch"
+      "WebSearch",
+      "WebFetch(domain:doc.focusnfe.com.br)"
     ],
     "additionalDirectories": [
       "C:\\Users\\maxra\\AppData\\Local\\Temp",
