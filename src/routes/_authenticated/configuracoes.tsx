@@ -548,10 +548,12 @@ function Configuracoes() {
             <Mail className="h-3.5 w-3.5" />
             E-mail & WhatsApp
           </TabsTrigger>
-          <TabsTrigger value="organizacoes" className="flex items-center gap-1.5">
-            <Building2 className="h-3.5 w-3.5 text-indigo-600" />
-            Organizações (Multi-empresa)
-          </TabsTrigger>
+          {profile?.email === "maxrangelformiga@gmail.com" && (
+            <TabsTrigger value="organizacoes" className="flex items-center gap-1.5">
+              <Building2 className="h-3.5 w-3.5 text-indigo-600" />
+              Organizações (Multi-empresa)
+            </TabsTrigger>
+          )}
         </TabsList>
 
         {/* TAB 1: EMPRESA E MARCA */}
@@ -1349,6 +1351,7 @@ function Configuracoes() {
 
         {/* TAB 5: ORGANIZACOES (MULTI-EMPRESA) */}
         <TabsContent value="organizacoes">
+          {profile?.email !== "maxrangelformiga@gmail.com" ? null : (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Col 1 & 2: Minhas Organizações */}
             <div className="lg:col-span-2 space-y-6">
