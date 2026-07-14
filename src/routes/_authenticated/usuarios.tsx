@@ -43,6 +43,7 @@ import {
   CheckCircle2,
   XCircle,
   UserPlus,
+  KeyRound,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
@@ -220,6 +221,21 @@ function UsuariosPage() {
     },
     onError: (err: { message?: string }) => {
       toast.error(err.message || "Erro ao remover usuário.");
+    },
+  });
+
+  const forcePasswordChangeMutation = useMutation({
+    mutationFn: async (targetUserId: string) => {
+      const { error } = await supabase.rpc("force_password_change", {
+        target_user_id: targetUserId,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Na próxima vez que fizer login, o usuário será obrigado a trocar a senha.");
+    },
+    onError: (err: { message?: string }) => {
+      toast.error(err.message || "Erro ao forçar troca de senha.");
     },
   });
 
@@ -549,6 +565,22 @@ function UsuariosPage() {
                                     title="Alterar papel"
                                   >
                                     <Pencil className="h-4 w-4 text-slate-500" />
+                                  </Button>
+                                  <Button
+                                    size="icon"
+                                    variant="ghost"
+                                    disabled={forcePasswordChangeMutation.isPending}
+                                    onClick={() => {
+                                      if (
+                                        confirm(
+                                          `Forçar troca de senha para ${m.profiles?.full_name}? No próximo login, o usuário será obrigado a definir uma nova senha.`,
+                                        )
+                                      )
+                                        forcePasswordChangeMutation.mutate(m.user_id);
+                                    }}
+                                    title="Forçar troca de senha"
+                                  >
+                                    <KeyRound className="h-4 w-4 text-amber-500" />
                                   </Button>
                                   <Button
                                     size="icon"

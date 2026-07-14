@@ -4395,16 +4395,6 @@ function SignatureCollector({
     window.open(`https://wa.me/${phoneNum}?text=${text}`, "_blank");
   }
 
-  function handleSendEmail() {
-    const subject = encodeURIComponent(
-      `Contrato Assinado - Pedido #${order.order_number} - StockFlow`,
-    );
-    const body = encodeURIComponent(
-      `Prezado(a) ${customer.name},\n\nAgradecemos a contratação. Segue em anexo a cópia assinada digitalmente do seu contrato #${order.order_number}.\n\nAtenciosamente,\nEquipe StockFlow.`,
-    );
-    window.open(`mailto:${customer.email}?subject=${subject}&body=${body}`, "_blank");
-  }
-
   async function generateContractPDF() {
     const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
     const W = 210;
@@ -5025,14 +5015,6 @@ function SignatureCollector({
               onClick={handleSendWhatsApp}
             >
               <Share2 className="h-3.5 w-3.5" /> Enviar WhatsApp
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              className="flex items-center gap-1 text-indigo-700 bg-indigo-50"
-              onClick={handleSendEmail}
-            >
-              <Mail className="h-3.5 w-3.5" /> Enviar E-mail
             </Button>
             <Button
               variant="outline"
