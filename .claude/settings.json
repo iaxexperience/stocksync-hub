@@ -64,7 +64,8 @@
       "Bash(pip install *)",
       "Bash(python -c ' *)",
       "Bash(grep -rn \"\\\\.or\\(\\\\`\" src/)",
-      "Bash(grep -rn \"\\\\.filter\\(\\\\`\" src/)"
+      "Bash(grep -rn \"\\\\.filter\\(\\\\`\" src/)",
+      "WebSearch"
     ],
     "additionalDirectories": [
       "C:\\Users\\maxra\\AppData\\Local\\Temp",
