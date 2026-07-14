@@ -1,6 +1,5 @@
 import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import jsPDF from "jspdf";
 import { supabase } from "@/integrations/supabase/client";
 import { useProfile } from "@/hooks/useProfile";
 import React, { useState, useEffect, useRef, useMemo } from "react";
@@ -4400,6 +4399,7 @@ function SignatureCollector({
   }
 
   async function generateContractPDF() {
+    const { default: jsPDF } = await import("jspdf");
     const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
     const W = 210;
     const H = 297;
@@ -4958,7 +4958,8 @@ function SignatureCollector({
       for (const line of infoLines) {
         doc.setFont(FONT, line.bold ? "bold" : "normal");
         doc.setFontSize(line.size);
-        doc.setTextColor(line.bold ? dark : 90);
+        if (line.bold) doc.setTextColor(dark);
+        else doc.setTextColor(90);
         doc.text(line.text, infoX, infoY, { align: infoAlign });
         infoY += line.size * 0.42 + 1.3;
       }

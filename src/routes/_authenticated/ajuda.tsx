@@ -29,7 +29,6 @@ import {
   Loader2,
   FileText,
 } from "lucide-react";
-import jsPDF from "jspdf";
 
 export const Route = createFileRoute("/_authenticated/ajuda")({
   head: () => ({ meta: [{ title: "Ajuda · StockFlow" }] }),
@@ -279,7 +278,8 @@ const quickSteps = [
 // PDF GENERATOR
 // ────────────────────────────────────────────────────────────
 
-function generatePortfolioPDF() {
+async function generatePortfolioPDF() {
+  const { default: jsPDF } = await import("jspdf");
   const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
   const W = 210;
   const margin = 18;
@@ -642,7 +642,7 @@ function AjudaPage() {
   async function handleDownload() {
     setDownloading(true);
     try {
-      generatePortfolioPDF();
+      await generatePortfolioPDF();
     } finally {
       setTimeout(() => setDownloading(false), 1200);
     }
