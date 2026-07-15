@@ -7,7 +7,11 @@
 // Autenticação com a Focus NFe: HTTP Basic Auth com o token da empresa como
 // usuário e senha em branco (padrão deles, não é uma escolha nossa).
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { corsHeaders } from "../_shared/cors.ts";
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+};
 
 const FOCUS_NFE_BASE_URL: Record<string, string> = {
   homologacao: "https://homologacao.focusnfe.com.br",
