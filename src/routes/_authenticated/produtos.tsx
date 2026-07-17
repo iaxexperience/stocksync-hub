@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useProfile } from "@/hooks/useProfile";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -151,6 +151,14 @@ function Produtos() {
     },
     onError: (e: any) => toast.error(e.message),
   });
+
+  const salePriceInputRef = useRef<HTMLInputElement>(null);
+  function handleCostPriceChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const cost = Number(e.target.value || 0);
+    if (salePriceInputRef.current) {
+      salePriceInputRef.current.value = (cost * 2).toFixed(2);
+    }
+  }
 
   const filtered = products.filter(
     (p: any) =>
@@ -309,11 +317,13 @@ function Produtos() {
                   type="number"
                   step="0.01"
                   defaultValue={editing?.cost_price ?? 0}
+                  onChange={handleCostPriceChange}
                 />
               </div>
               <div className="space-y-1">
                 <Label>Preço venda</Label>
                 <Input
+                  ref={salePriceInputRef}
                   name="sale_price"
                   type="number"
                   step="0.01"
