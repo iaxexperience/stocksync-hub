@@ -5854,6 +5854,8 @@ function HistoricoCompras({
 
   const filtered = useMemo(() => {
     return orders.filter((o) => {
+      // Pedido cancelado (ex: pagamento excluído) some do histórico — regra do usuário.
+      if (o.status === "Cancelado") return false;
       const q = search.toLowerCase();
       const matchesSearch =
         o.order_number.toLowerCase().includes(q) || o.customers?.name?.toLowerCase().includes(q);
