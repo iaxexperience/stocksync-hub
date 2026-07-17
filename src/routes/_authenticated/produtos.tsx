@@ -123,6 +123,25 @@ function Produtos() {
       Object.keys(payload).forEach((k) => {
         if (payload[k] === "" || payload[k] === "none") payload[k] = null;
       });
+
+      // Regra: nunca criar um produto que já existe (mesmo nome, ignorando
+      // maiúsculas/minúsculas e espaços) — evita duplicatas como "Escada 3
+      // degraus" cadastrada mais de uma vez.
+      if (!editing?.id) {
+        const { data: existing, error: dupErr } = await supabase
+          .from("products")
+          .select("id")
+          .eq("organization_id", orgId!)
+          .ilike("name", payload.name.trim())
+          .limit(1);
+        if (dupErr) throw dupErr;
+        if (existing && existing.length > 0) {
+          throw new Error(
+            `Já existe um produto chamado "${payload.name.trim()}". Edite o produto existente em vez de criar um novo.`,
+          );
+        }
+      }
+
       if (editing?.id) {
         const { error } = await supabase.from("products").update(payload).eq("id", editing.id);
         if (error) throw error;
