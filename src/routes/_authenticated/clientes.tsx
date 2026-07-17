@@ -500,8 +500,9 @@ function ClientesLayout() {
   });
 
   // Mutação para excluir parcela — junto com o pagamento, remove também a
-  // assinatura e o contrato digital do mesmo pedido (produto comprado), a
-  // pedido do usuário: excluir a parcela invalida o contrato assinado.
+  // assinatura e o contrato digital do mesmo pedido (produto comprado), e
+  // cancela o pedido para que ele saia da Relação de Produtos Contratados
+  // (Ativos) — regra do usuário: excluir a parcela invalida a venda inteira.
   const deleteInstallment = useMutation({
     mutationFn: async (installment: { id: string; order_id: string }) => {
       const { error: sigErr } = await supabase
@@ -512,6 +513,12 @@ function ClientesLayout() {
 
       const { error } = await supabase.from("installments").delete().eq("id", installment.id);
       if (error) throw error;
+
+      const { error: orderErr } = await supabase
+        .from("orders")
+        .update({ status: "Cancelado" })
+        .eq("id", installment.order_id);
+      if (orderErr) throw orderErr;
     },
     onSuccess: () => {
       toast.success("Parcela, assinatura e contrato digital excluídos com sucesso!");
@@ -6554,7 +6561,7 @@ function PagamentosControle({
   function handleDelete(ins: any) {
     if (
       confirm(
-        `Tem certeza que deseja excluir a parcela ${ins.installment_number}/${ins.orders?.installments || 1} do pedido #${ins.orders?.order_number}?\nA assinatura e o contrato digital deste pedido também serão excluídos. Esta ação não pode ser desfeita.`,
+        `Tem certeza que deseja excluir a parcela ${ins.installment_number}/${ins.orders?.installments || 1} do pedido #${ins.orders?.order_number}?\nA assinatura e o contrato digital deste pedido também serão excluídos, e o pedido sairá da Relação de Produtos Contratados (Ativos). Esta ação não pode ser desfeita.`,
       )
     ) {
       deleteInstallment({ id: ins.id, order_id: ins.order_id });
