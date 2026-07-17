@@ -499,15 +499,24 @@ function ClientesLayout() {
     },
   });
 
-  // Mutação para excluir parcela
+  // Mutação para excluir parcela — junto com o pagamento, remove também a
+  // assinatura e o contrato digital do mesmo pedido (produto comprado), a
+  // pedido do usuário: excluir a parcela invalida o contrato assinado.
   const deleteInstallment = useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase.from("installments").delete().eq("id", id);
+    mutationFn: async (installment: { id: string; order_id: string }) => {
+      const { error: sigErr } = await supabase
+        .from("customer_signatures")
+        .delete()
+        .eq("order_id", installment.order_id);
+      if (sigErr) throw sigErr;
+
+      const { error } = await supabase.from("installments").delete().eq("id", installment.id);
       if (error) throw error;
     },
     onSuccess: () => {
-      toast.success("Parcela excluída com sucesso!");
+      toast.success("Parcela, assinatura e contrato digital excluídos com sucesso!");
       qc.invalidateQueries({ queryKey: ["all_installments"] });
+      qc.invalidateQueries({ queryKey: ["signatures"] });
       qc.invalidateQueries({ queryKey: ["orders"] });
     },
     onError: (err: any) => {
@@ -6545,10 +6554,10 @@ function PagamentosControle({
   function handleDelete(ins: any) {
     if (
       confirm(
-        `Tem certeza que deseja excluir a parcela ${ins.installment_number}/${ins.orders?.installments || 1} do pedido #${ins.orders?.order_number}?\nEsta ação não pode ser desfeita.`,
+        `Tem certeza que deseja excluir a parcela ${ins.installment_number}/${ins.orders?.installments || 1} do pedido #${ins.orders?.order_number}?\nA assinatura e o contrato digital deste pedido também serão excluídos. Esta ação não pode ser desfeita.`,
       )
     ) {
-      deleteInstallment(ins.id);
+      deleteInstallment({ id: ins.id, order_id: ins.order_id });
     }
   }
 
