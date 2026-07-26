@@ -9,11 +9,15 @@ import { toast } from "sonner";
 import { Eye, EyeOff, Loader2, LogIn, ArrowLeft } from "lucide-react";
 import { z } from "zod";
 
-type Search = { mode?: "login" };
+type Search = { mode?: "login"; next?: string };
 
 export const Route = createFileRoute("/auth")({
   validateSearch: (s: Record<string, unknown>): Search => ({
     mode: "login",
+    next:
+      typeof s.next === "string" && s.next.startsWith("/") && !s.next.startsWith("//")
+        ? s.next
+        : undefined,
   }),
   head: () => ({
     meta: [{ title: "Acessar · StockFlow Gestão" }, { name: "robots", content: "noindex" }],
@@ -28,6 +32,7 @@ const loginSchema = z.object({
 
 function AuthPage() {
   const navigate = useNavigate();
+  const { next } = Route.useSearch();
   const [showPw, setShowPw] = useState(false);
   const [loading, setLoading] = useState(false);
 
@@ -47,7 +52,11 @@ function AuthPage() {
       return;
     }
     toast.success("Bem-vindo(a) de volta!");
-    navigate({ to: "/dashboard" });
+    if (next) {
+      window.location.href = next;
+    } else {
+      navigate({ to: "/dashboard" });
+    }
   }
 
   return (
