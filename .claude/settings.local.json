@@ -12,7 +12,9 @@
       "Skill(superpowers:subagent-driven-development)",
       "Bash(xargs grep *)",
       "Bash(npx --no-install wrangler deploy --config wrangler.json --dry-run)",
-      "Bash(npx --no-install wrangler deploy --config wrangler.json)"
+      "Bash(npx --no-install wrangler deploy --config wrangler.json)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" https://stocksync-hub.maxrangelformiga.workers.dev/produtos)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" https://josiejo.com.br/produtos)"
     ]
   }
 }
