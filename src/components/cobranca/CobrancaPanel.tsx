@@ -114,8 +114,7 @@ export function CobrancaPanel() {
           if (!matchesText && !matchesDigits) return false;
         }
         if (localQ) {
-          const addr = (row.orders.customers?.customer_addresses ?? []).find((a) => a.is_primary) ??
-            row.orders.customers?.customer_addresses?.[0];
+          const addr = row.orders.customers?.customer_addresses?.[0];
           const matches =
             addr?.city?.toLowerCase().includes(localQ) || addr?.neighborhood?.toLowerCase().includes(localQ);
           if (!matches) return false;

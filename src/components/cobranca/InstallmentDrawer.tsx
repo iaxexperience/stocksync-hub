@@ -103,7 +103,7 @@ export function InstallmentDrawer({
 
   const customer = installment.orders.customers;
   const address =
-    (customer?.customer_addresses ?? []).find((a) => a.is_primary) ?? customer?.customer_addresses?.[0];
+    customer?.customer_addresses?.[0];
   const saldo = round2(installment.amount - installment.amount_paid);
   const situacao = situacaoParcela({
     amount: installment.amount,

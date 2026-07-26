@@ -14,7 +14,7 @@ export function generateInstallmentReceiptPDF(row: CobrancaInstallmentRow, organ
   let y = 25;
 
   const customer = row.orders.customers;
-  const address = (customer?.customer_addresses ?? []).find((a) => a.is_primary) ?? customer?.customer_addresses?.[0];
+  const address = customer?.customer_addresses?.[0];
   const saldo = Number(row.amount) - Number(row.amount_paid);
 
   doc.setFontSize(16);

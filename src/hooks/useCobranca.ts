@@ -35,7 +35,6 @@ export interface CobrancaInstallmentRow {
         street: string | null;
         number: string | null;
         complement: string | null;
-        is_primary: boolean | null;
       }[];
     };
     order_items: { quantity: number; products: { name: string } | null }[];
@@ -58,7 +57,7 @@ export function useCobrancaInstallments() {
         .select(
           `*, orders!inner(
             id, order_number, order_type, total_amount, installments, status, created_at, customer_id, organization_id,
-            customers(id, name, cpf_cnpj, phone, whatsapp, is_deleted, customer_addresses(city, neighborhood, street, number, complement, is_primary)),
+            customers(id, name, cpf_cnpj, phone, whatsapp, is_deleted, customer_addresses(city, neighborhood, street, number, complement)),
             order_items(quantity, products(name))
           )`,
         )

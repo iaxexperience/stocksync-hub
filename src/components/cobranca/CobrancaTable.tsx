@@ -64,7 +64,7 @@ export function CobrancaTable({ rows, onRowClick }: Props) {
         header: "Cidade",
         accessorFn: (r) => {
           const addr = r.orders.customers?.customer_addresses ?? [];
-          return (addr.find((a) => a.is_primary) ?? addr[0])?.city ?? "";
+          return addr[0]?.city ?? "";
         },
         cell: ({ getValue }) => <span className="text-sm">{(getValue() as string) || "—"}</span>,
       },
@@ -73,7 +73,7 @@ export function CobrancaTable({ rows, onRowClick }: Props) {
         header: "Bairro",
         accessorFn: (r) => {
           const addr = r.orders.customers?.customer_addresses ?? [];
-          return (addr.find((a) => a.is_primary) ?? addr[0])?.neighborhood ?? "";
+          return addr[0]?.neighborhood ?? "";
         },
         cell: ({ getValue }) => <span className="text-sm">{(getValue() as string) || "—"}</span>,
       },
