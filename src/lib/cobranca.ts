@@ -111,6 +111,21 @@ export function situacaoBadgeClass(situacao: SituacaoParcela): string {
   }
 }
 
+// Prioridade de urgência quando agregamos várias parcelas de uma mesma venda
+// num único status: vencida sempre vence (mais acionável), quitada só quando
+// TODAS estão quitadas.
+const SITUACAO_RANK: Record<SituacaoParcela, number> = {
+  vencida: 4,
+  parcial: 3,
+  vence_em_breve: 2,
+  a_vencer: 1,
+  quitada: 0,
+};
+
+export function worseSituacao(a: SituacaoParcela, b: SituacaoParcela): SituacaoParcela {
+  return SITUACAO_RANK[a] >= SITUACAO_RANK[b] ? a : b;
+}
+
 export function atrasoBucket(dias: number): "1-30" | "31-60" | "61-90" | "90+" | null {
   if (dias <= 0) return null;
   if (dias <= 30) return "1-30";
