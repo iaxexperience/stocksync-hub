@@ -51,14 +51,20 @@ BEGIN
   END LOOP;
 END $$;
 
+-- NOT VALID: adiciona a regra sem varrer/validar as linhas já existentes.
+-- Se algum registro histórico tiver um status fora do esperado (já vimos
+-- valores inesperados noutras tabelas deste banco), uma constraint validada
+-- na hora derrubaria a transação inteira — incluindo o ADD COLUMN acima.
+-- A regra passa a valer normalmente para todo INSERT/UPDATE novo mesmo assim.
 ALTER TABLE public.installments
   ADD CONSTRAINT installments_status_check
-  CHECK (status IN ('Pendente', 'Parcialmente Pago', 'Pago', 'Atrasado', 'Cancelado'));
+  CHECK (status IN ('Pendente', 'Parcialmente Pago', 'Pago', 'Atrasado', 'Cancelado')) NOT VALID;
 
 -- ============================================================
 -- 5. Nunca permitir valor pago negativo ou maior que o valor da parcela.
 --    Esta é a garantia real de "nunca receber mais que o saldo" — a RPC
 --    também valida, mas a constraint vale mesmo para qualquer escrita futura.
+--    Também NOT VALID pelo mesmo motivo acima.
 -- ============================================================
 DO $$
 BEGIN
@@ -68,7 +74,7 @@ BEGIN
   ) THEN
     ALTER TABLE public.installments
       ADD CONSTRAINT installments_amount_paid_check
-      CHECK (amount_paid >= 0 AND amount_paid <= amount);
+      CHECK (amount_paid >= 0 AND amount_paid <= amount) NOT VALID;
   END IF;
 END $$;
 
