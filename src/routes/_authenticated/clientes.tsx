@@ -62,6 +62,7 @@ import {
   Activity,
   Paperclip,
   ChevronRight,
+  ChevronDown,
   Info,
   Check,
   Loader2,
