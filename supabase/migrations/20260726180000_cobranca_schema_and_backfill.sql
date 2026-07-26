@@ -151,7 +151,7 @@ SELECT
   'Migração — recebimento anterior ao módulo de Cobrança',
   gen_random_uuid(),
   NULL,
-  COALESCE(i.updated_at, i.created_at, now())
+  COALESCE(i.created_at, now())
 FROM public.installments i
 JOIN public.orders o ON o.id = i.order_id
 WHERE i.status = 'Pago'
