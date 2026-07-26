@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
@@ -9,7 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Search } from "lucide-react";
+import { Search, Printer } from "lucide-react";
 import { useProfile } from "@/hooks/useProfile";
 import {
   groupInstallmentsByOrder,
@@ -23,8 +24,11 @@ import {
   PAYMENT_METHODS,
   atrasoBucket,
   formatCurrencyBRL,
+  formatDateBR,
   onlyDigits,
+  paymentMethodLabel,
   round2,
+  situacaoLabel,
   situacaoParcela,
 } from "@/lib/cobranca";
 
@@ -178,9 +182,69 @@ export function CobrancaPanel() {
     formaRecebimento,
   ]);
 
+  const filterSummary = useMemo(() => {
+    const parts: string[] = [];
+    if (clienteSearch.trim()) parts.push(`Cliente: "${clienteSearch.trim()}"`);
+    if (localizacaoSearch.trim()) parts.push(`Localização: "${localizacaoSearch.trim()}"`);
+    if (dataInicial) parts.push(`Compra de ${formatDateBR(dataInicial)}`);
+    if (dataFinal) parts.push(`até ${formatDateBR(dataFinal)}`);
+    if (situacaoFiltro !== "todos")
+      parts.push(`Situação: ${SITUACAO_OPTIONS.find((o) => o.value === situacaoFiltro)?.label}`);
+    if (atrasoFiltro !== "todos")
+      parts.push(`Atraso: ${ATRASO_OPTIONS.find((o) => o.value === atrasoFiltro)?.label}`);
+    if (formaRecebimento !== "todos")
+      parts.push(`Recebimento: ${paymentMethodLabel(formaRecebimento)}`);
+    return parts.length > 0 ? parts.join(" · ") : "Todas as vendas parceladas, sem filtro aplicado";
+  }, [clienteSearch, localizacaoSearch, dataInicial, dataFinal, situacaoFiltro, atrasoFiltro, formaRecebimento]);
+
+  const generatedAt = useMemo(
+    () => new Date().toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" }),
+    [],
+  );
+
   return (
-    <div className="space-y-6">
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+    <div className="space-y-6 cobranca-print-container">
+      <style>{`
+        @page { size: A4 landscape; margin: 12mm; }
+        @media print {
+          html, body, main {
+            position: static !important;
+            width: 100% !important;
+            height: auto !important;
+            overflow: visible !important;
+            background: white !important;
+          }
+          body * { visibility: hidden !important; }
+          .cobranca-print-container, .cobranca-print-container * { visibility: visible !important; }
+          .cobranca-print-container {
+            position: static !important;
+            width: 100% !important;
+            max-width: none !important;
+            margin: 0 !important;
+            padding: 0 !important;
+          }
+          .no-print { display: none !important; }
+          .print-only { display: block !important; }
+          table.print-only { display: table !important; }
+        }
+      `}</style>
+
+      <div className="print-only hidden pb-3 mb-2 border-b">
+        <h1 className="text-xl font-bold">
+          {(profile as any)?.organizations?.name || "StockFlow Gestão"} — Relatório de Cobrança
+        </h1>
+        <p className="text-xs text-muted-foreground mt-1">Filtros: {filterSummary}</p>
+        <p className="text-xs text-muted-foreground">Gerado em {generatedAt}</p>
+      </div>
+
+      <div className="flex items-center justify-between no-print">
+        <div />
+        <Button variant="outline" onClick={() => window.print()}>
+          <Printer className="mr-1.5 h-4 w-4" /> Imprimir / PDF
+        </Button>
+      </div>
+
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 no-print">
         <KpiCard label="Total a receber" value={formatCurrencyBRL(kpis.totalAReceber)} />
         <KpiCard label="Recebido hoje" value={formatCurrencyBRL(periodo?.recebidoHoje ?? 0)} tone="success" />
         <KpiCard label="Recebido no mês" value={formatCurrencyBRL(periodo?.recebidoNoMes ?? 0)} tone="success" />
@@ -193,7 +257,7 @@ export function CobrancaPanel() {
 
       <Card className="shadow-card">
         <CardContent className="p-4 space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-3">
+          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-3 no-print">
             <div className="space-y-1">
               <Label>Cliente (nome, CPF ou telefone)</Label>
               <div className="relative">
@@ -273,16 +337,71 @@ export function CobrancaPanel() {
           ) : isLoading ? (
             <p className="text-center py-8 text-muted-foreground">Carregando…</p>
           ) : (
-            <CobrancaTable
-              rows={filteredGroups}
-              onRowClick={(group) => {
-                setSelectedGroup(group);
-                setDrawerOpen(true);
-              }}
-            />
+            <>
+              {/* Tabela interativa (paginada) — some na impressão, pois só mostraria a página atual. */}
+              <div className="no-print">
+                <CobrancaTable
+                  rows={filteredGroups}
+                  onRowClick={(group) => {
+                    setSelectedGroup(group);
+                    setDrawerOpen(true);
+                  }}
+                />
+              </div>
+
+              {/* Versão simples e completa (todas as vendas filtradas, sem paginação) só para impressão/PDF. */}
+              <table className="print-only hidden w-full text-xs border-collapse">
+                <thead>
+                  <tr className="border-b border-black">
+                    <th className="text-left py-1 pr-2">Cliente</th>
+                    <th className="text-left py-1 pr-2">Cidade/Bairro</th>
+                    <th className="text-left py-1 pr-2">Telefone</th>
+                    <th className="text-left py-1 pr-2">Nº Venda</th>
+                    <th className="text-left py-1 pr-2">Data Compra</th>
+                    <th className="text-right py-1 pr-2">Valor Total</th>
+                    <th className="text-left py-1 pr-2">Parcelas</th>
+                    <th className="text-right py-1 pr-2">Pago</th>
+                    <th className="text-right py-1 pr-2">Saldo</th>
+                    <th className="text-left py-1 pr-2">Próx. Vencimento</th>
+                    <th className="text-left py-1">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredGroups.map((g) => {
+                    const addr = g.customer?.customer_addresses?.[0];
+                    return (
+                      <tr key={g.order_id} className="border-b">
+                        <td className="py-1 pr-2">{g.customer?.name ?? "—"}</td>
+                        <td className="py-1 pr-2">
+                          {addr?.city ?? "—"}/{addr?.neighborhood ?? "—"}
+                        </td>
+                        <td className="py-1 pr-2">{g.customer?.whatsapp || g.customer?.phone || "—"}</td>
+                        <td className="py-1 pr-2">{g.order_number}</td>
+                        <td className="py-1 pr-2">{formatDateBR(g.created_at)}</td>
+                        <td className="text-right py-1 pr-2">{formatCurrencyBRL(g.total_amount)}</td>
+                        <td className="py-1 pr-2">
+                          {g.paid_count} de {g.installments_count}
+                        </td>
+                        <td className="text-right py-1 pr-2">{formatCurrencyBRL(g.total_paid)}</td>
+                        <td className="text-right py-1 pr-2">{formatCurrencyBRL(g.total_saldo)}</td>
+                        <td className="py-1 pr-2">
+                          {g.next_due_date ? formatDateBR(g.next_due_date) : "Quitado"}
+                        </td>
+                        <td className="py-1">{situacaoLabel(g.situacao)}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </>
           )}
         </CardContent>
       </Card>
+
+      <p className="print-only hidden mt-4 pt-2 border-t text-[10px] text-muted-foreground">
+        {(profile as any)?.organizations?.name || "StockFlow Gestão"} · Relatório de Cobrança gerado em{" "}
+        {generatedAt} · {filteredGroups.length} venda(s) no filtro
+      </p>
 
       <OrderDrawer
         group={selectedGroup}
