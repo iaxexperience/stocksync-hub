@@ -256,7 +256,11 @@ export function CobrancaPanel() {
             </div>
           </div>
 
-          {isLoading ? (
+          {isError ? (
+            <p className="text-center py-8 text-destructive">
+              Erro ao carregar parcelas: {(error as any)?.message ?? "erro desconhecido"}
+            </p>
+          ) : isLoading ? (
             <p className="text-center py-8 text-muted-foreground">Carregando…</p>
           ) : (
             <CobrancaTable
