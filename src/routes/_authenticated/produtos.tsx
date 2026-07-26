@@ -566,7 +566,22 @@ function Produtos() {
                     const out = Number(p.stock_current) <= 0;
                     return (
                       <TableRow key={p.id}>
-                        <TableCell className="font-medium">{p.name}</TableCell>
+                        <TableCell className="font-medium">
+                          <div className="flex items-center gap-2">
+                            {p.image_url ? (
+                              <img
+                                src={p.image_url}
+                                alt={p.name}
+                                className="h-8 w-8 rounded object-cover shrink-0"
+                              />
+                            ) : (
+                              <div className="h-8 w-8 rounded bg-muted flex items-center justify-center shrink-0">
+                                <PackageIcon className="h-4 w-4 text-muted-foreground opacity-50" />
+                              </div>
+                            )}
+                            {p.name}
+                          </div>
+                        </TableCell>
                         <TableCell className="text-muted-foreground text-xs">
                           {p.sku ?? "—"}
                         </TableCell>
