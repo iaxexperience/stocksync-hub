@@ -23,7 +23,8 @@
       "Bash(nslookup fyvatfnpdoqowjckhtkb.supabase.co)",
       "Bash(bun --version)",
       "Bash(bun add *)",
-      "Bash(./node_modules/.bin/tsc --noEmit -p tsconfig.json)"
+      "Bash(./node_modules/.bin/tsc --noEmit -p tsconfig.json)",
+      "Bash(node -e ' *)"
     ]
   }
 }
