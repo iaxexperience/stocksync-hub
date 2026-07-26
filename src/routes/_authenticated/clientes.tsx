@@ -1601,6 +1601,7 @@ function ClienteForm({
   // vendedor navega os produtos com o cliente do lado — adicionar à sacola
   // continua funcionando normalmente, só o preço fica oculto na busca.
   const [presentationMode, setPresentationMode] = useState(!!sacolaMode);
+  const [zoomedImage, setZoomedImage] = useState<{ url: string; name: string } | null>(null);
   const [installationFee, setInstallationFee] = useState(0);
   const [shippingFee, setShippingFee] = useState(0);
   const [discountType, setDiscountType] = useState("val"); // val ou pct
@@ -2566,7 +2567,13 @@ function ClienteForm({
                               key={prod.id}
                               className="p-3 border rounded-lg bg-card hover:bg-slate-50 transition flex items-center gap-3"
                             >
-                              <div className="h-16 w-16 border rounded bg-slate-100 flex items-center justify-center shrink-0 text-xs overflow-hidden">
+                              <div
+                                className={`h-16 w-16 border rounded bg-slate-100 flex items-center justify-center shrink-0 text-xs overflow-hidden ${prod.image_url ? "cursor-zoom-in" : ""}`}
+                                onClick={() =>
+                                  prod.image_url &&
+                                  setZoomedImage({ url: prod.image_url, name: prod.name })
+                                }
+                              >
                                 {prod.image_url ? (
                                   <img
                                     src={prod.image_url}
@@ -2597,7 +2604,13 @@ function ClienteForm({
                             key={prod.id}
                             className="p-3 border rounded-lg bg-card hover:bg-slate-50 transition flex items-center gap-3"
                           >
-                            <div className="h-12 w-12 border rounded bg-slate-100 flex items-center justify-center shrink-0 text-xs overflow-hidden">
+                            <div
+                              className={`h-12 w-12 border rounded bg-slate-100 flex items-center justify-center shrink-0 text-xs overflow-hidden ${prod.image_url ? "cursor-zoom-in" : ""}`}
+                              onClick={() =>
+                                prod.image_url &&
+                                setZoomedImage({ url: prod.image_url, name: prod.name })
+                              }
+                            >
                               {prod.image_url ? (
                                 <img
                                   src={prod.image_url}
@@ -2648,6 +2661,21 @@ function ClienteForm({
                     )}
                   </div>
                 </div>
+
+                <Dialog open={!!zoomedImage} onOpenChange={(o) => !o && setZoomedImage(null)}>
+                  <DialogContent className="max-w-2xl">
+                    <DialogHeader>
+                      <DialogTitle>{zoomedImage?.name}</DialogTitle>
+                    </DialogHeader>
+                    {zoomedImage && (
+                      <img
+                        src={zoomedImage.url}
+                        alt={zoomedImage.name}
+                        className="w-full max-h-[75vh] object-contain rounded"
+                      />
+                    )}
+                  </DialogContent>
+                </Dialog>
 
                 {/* Lado Direito: Carrinho de Compras (7 colunas) */}
                 <div className="lg:col-span-7 space-y-6">
