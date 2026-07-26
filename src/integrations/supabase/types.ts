@@ -16,34 +16,37 @@ export type Database = {
     Tables: {
       audit_logs: {
         Row: {
-          action: string
-          created_at: string
-          details: Json | null
-          entity_id: string | null
-          entity_type: string | null
           id: string
           organization_id: string
-          user_id: string | null
+          table_name: string | null
+          record_id: string | null
+          action: string
+          old_data: Json | null
+          new_data: Json | null
+          performed_by: string | null
+          created_at: string
         }
         Insert: {
-          action: string
-          created_at?: string
-          details?: Json | null
-          entity_id?: string | null
-          entity_type?: string | null
           id?: string
           organization_id: string
-          user_id?: string | null
+          table_name?: string | null
+          record_id?: string | null
+          action: string
+          old_data?: Json | null
+          new_data?: Json | null
+          performed_by?: string | null
+          created_at?: string
         }
         Update: {
-          action?: string
-          created_at?: string
-          details?: Json | null
-          entity_id?: string | null
-          entity_type?: string | null
           id?: string
           organization_id?: string
-          user_id?: string | null
+          table_name?: string | null
+          record_id?: string | null
+          action?: string
+          old_data?: Json | null
+          new_data?: Json | null
+          performed_by?: string | null
+          created_at?: string
         }
         Relationships: [
           {
@@ -409,40 +412,37 @@ export type Database = {
           amount: number
           category: string | null
           created_at: string
-          created_by: string | null
           date: string
           description: string | null
           id: string
           organization_id: string
           payment_method: string | null
+          reference_id: string | null
           type: string
-          updated_at: string
         }
         Insert: {
           amount?: number
           category?: string | null
           created_at?: string
-          created_by?: string | null
           date?: string
           description?: string | null
           id?: string
           organization_id: string
           payment_method?: string | null
+          reference_id?: string | null
           type: string
-          updated_at?: string
         }
         Update: {
           amount?: number
           category?: string | null
           created_at?: string
-          created_by?: string | null
           date?: string
           description?: string | null
           id?: string
           organization_id?: string
           payment_method?: string | null
+          reference_id?: string | null
           type?: string
-          updated_at?: string
         }
         Relationships: [
           {
