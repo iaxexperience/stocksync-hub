@@ -16,7 +16,11 @@
       "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" https://stocksync-hub.maxrangelformiga.workers.dev/produtos)",
       "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" https://josiejo.com.br/produtos)",
       "Bash(grep -n \"supabase\\\\s*$\\\\|from\\(\\\\\"\\\\|useQuery\\\\|queryKey\" src/routes/_authenticated/relatorios.tsx)",
-      "Bash(grep -n \"^function \\\\|^const .* = \\(\\\\|// ──\\\\|/\\\\* ===\\\\|=== TAB\\\\|function .*Tab\\\\b\" src/routes/_authenticated/clientes.tsx)"
+      "Bash(grep -n \"^function \\\\|^const .* = \\(\\\\|// ──\\\\|/\\\\* ===\\\\|=== TAB\\\\|function .*Tab\\\\b\" src/routes/_authenticated/clientes.tsx)",
+      "Bash(nslookup hianqcduecxkwmfbnncf.supabase.co)",
+      "Bash(nslookup supabase.co)",
+      "Bash(nslookup google.com)",
+      "Bash(nslookup fyvatfnpdoqowjckhtkb.supabase.co)"
     ]
   }
 }
