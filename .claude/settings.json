@@ -68,7 +68,10 @@
       "WebSearch",
       "WebFetch(domain:doc.focusnfe.com.br)",
       "Bash(supabase --version)",
-      "WebFetch(domain:focusnfe.com.br)"
+      "WebFetch(domain:focusnfe.com.br)",
+      "Bash(npx --no-install tsc --noEmit -p tsconfig.json)",
+      "Bash(./node_modules/.bin/tsc --noEmit -p tsconfig.json)",
+      "Bash(git -C . remote -v)"
     ],
     "additionalDirectories": [
       "C:\\Users\\maxra\\AppData\\Local\\Temp",

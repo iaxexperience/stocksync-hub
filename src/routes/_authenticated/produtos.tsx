@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useProfile } from "@/hooks/useProfile";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -31,7 +31,15 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, Pencil, Trash2, Search, Package as PackageIcon } from "lucide-react";
+import {
+  Plus,
+  Pencil,
+  Trash2,
+  Search,
+  Package as PackageIcon,
+  ImagePlus,
+  Loader2,
+} from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 
@@ -176,6 +184,61 @@ function Produtos() {
     const cost = Number(e.target.value || 0);
     if (salePriceInputRef.current) {
       salePriceInputRef.current.value = (cost * 2).toFixed(2);
+    }
+  }
+
+  const [imageUrl, setImageUrl] = useState("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isUploading, setIsUploading] = useState(false);
+
+  useEffect(() => {
+    setImageUrl(editing?.image_url ?? "");
+  }, [editing, open]);
+
+  async function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      toast.error("Por favor, selecione um arquivo de imagem.");
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("A imagem deve ter no máximo 5MB.");
+      return;
+    }
+
+    try {
+      setIsUploading(true);
+      const fileExt = file.name.split(".").pop();
+      const fileName = `${Math.random().toString(36).substring(2, 15)}_${Date.now()}.${fileExt}`;
+      const filePath = `${fileName}`;
+
+      const { error } = await supabase.storage
+        .from("product-photos")
+        .upload(filePath, file, {
+          cacheControl: "3600",
+          upsert: false,
+        });
+
+      if (error) throw error;
+
+      const { data: publicUrlData } = supabase.storage
+        .from("product-photos")
+        .getPublicUrl(filePath);
+
+      if (publicUrlData?.publicUrl) {
+        setImageUrl(publicUrlData.publicUrl);
+        toast.success("Foto enviada com sucesso!");
+      } else {
+        throw new Error("Não foi possível gerar a URL da imagem.");
+      }
+    } catch (err: any) {
+      console.error("Erro no upload:", err);
+      toast.error("Erro ao enviar imagem: " + err.message);
+    } finally {
+      setIsUploading(false);
     }
   }
 
@@ -391,6 +454,54 @@ function Produtos() {
               <div className="space-y-1">
                 <Label>Potência</Label>
                 <Input name="power" defaultValue={editing?.power ?? ""} />
+              </div>
+              <div className="col-span-2 md:col-span-4 space-y-1">
+                <Label>Foto do produto</Label>
+                <input type="hidden" name="image_url" value={imageUrl} readOnly />
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleFileUpload}
+                  accept="image/*"
+                  className="hidden"
+                />
+                <div className="flex gap-2 items-center">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    disabled={isUploading}
+                    onClick={() => fileInputRef.current?.click()}
+                    className="h-16 w-16 shrink-0 relative overflow-hidden"
+                    title="Enviar foto do produto"
+                  >
+                    {isUploading ? (
+                      <Loader2 className="h-5 w-5 animate-spin opacity-70" />
+                    ) : imageUrl ? (
+                      <img src={imageUrl} className="h-full w-full object-cover" />
+                    ) : (
+                      <ImagePlus className="h-5 w-5 opacity-70" />
+                    )}
+                  </Button>
+                  <div className="flex-1 space-y-1">
+                    <Input
+                      value={imageUrl}
+                      onChange={(e) => setImageUrl(e.target.value)}
+                      placeholder="https://exemplo.com/foto.png ou envie um arquivo"
+                    />
+                    {imageUrl && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="h-auto p-0 text-xs text-muted-foreground"
+                        onClick={() => setImageUrl("")}
+                      >
+                        Remover foto
+                      </Button>
+                    )}
+                  </div>
+                </div>
               </div>
               <div className="col-span-2 md:col-span-4 space-y-1">
                 <Label>Descrição</Label>
