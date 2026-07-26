@@ -20,7 +20,8 @@
       "Bash(nslookup hianqcduecxkwmfbnncf.supabase.co)",
       "Bash(nslookup supabase.co)",
       "Bash(nslookup google.com)",
-      "Bash(nslookup fyvatfnpdoqowjckhtkb.supabase.co)"
+      "Bash(nslookup fyvatfnpdoqowjckhtkb.supabase.co)",
+      "Bash(bun --version)"
     ]
   }
 }
