@@ -66,7 +66,16 @@ export function useCobrancaInstallments() {
         .neq("orders.status", "Cancelado")
         .order("due_date");
       if (error) throw error;
-      return (data ?? []) as unknown as CobrancaInstallmentRow[];
+      // Normaliza amount/amount_paid para número — protege contra o cache de
+      // schema do PostgREST ainda não conhecer uma coluna recém-criada (nesse
+      // caso ela some do JSON, virando undefined) e contra numeric vindo como
+      // string. Sem isso, um NaN silencioso esconde a opção de baixa (NaN>0
+      // é falso) em vez de mostrar o saldo real.
+      return ((data ?? []) as unknown as CobrancaInstallmentRow[]).map((row) => ({
+        ...row,
+        amount: Number(row.amount ?? 0),
+        amount_paid: Number(row.amount_paid ?? 0),
+      }));
     },
   });
 }
