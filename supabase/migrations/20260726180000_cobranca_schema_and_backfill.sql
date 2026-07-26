@@ -104,7 +104,10 @@ CREATE TABLE IF NOT EXISTS public.installment_payments (
   cancellation_reason text,
   financial_transaction_id uuid REFERENCES public.financial_transactions(id) ON DELETE SET NULL,
   reversal_transaction_id uuid REFERENCES public.financial_transactions(id) ON DELETE SET NULL,
-  created_by uuid NOT NULL DEFAULT auth.uid() REFERENCES auth.users(id),
+  -- Nullable: pagamentos novos (via RPC) sempre preenchem com auth.uid();
+  -- o backfill sintético de pagamentos históricos (abaixo) não tem um
+  -- usuário real associado, então fica NULL nesses casos.
+  created_by uuid DEFAULT auth.uid() REFERENCES auth.users(id),
   created_at timestamptz NOT NULL DEFAULT now(),
   UNIQUE (installment_id, client_request_id)
 );
