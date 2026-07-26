@@ -144,6 +144,7 @@ export function InstallmentDrawer({
   }
 
   function handleWhatsapp() {
+    if (!installment) return;
     if (!whatsappNumber) {
       toast.error("Cliente sem WhatsApp/telefone cadastrado.");
       return;
@@ -154,6 +155,7 @@ export function InstallmentDrawer({
   }
 
   function handleGeneratePdf() {
+    if (!installment) return;
     generateInstallmentReceiptPDF(installment, organizationName);
     logAttempt.mutate({ installmentId: installment.id, channel: "carne_pdf" });
   }
