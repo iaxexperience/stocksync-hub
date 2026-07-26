@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useRouter } from "@tanstack/react-router";
 import { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -26,6 +26,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { CobrancaPanel } from "@/components/cobranca/CobrancaPanel";
 import {
   Dialog,
   DialogContent,
@@ -51,9 +52,22 @@ import {
 } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/financeiro")({
+  validateSearch: (search: Record<string, unknown>) => {
+    return { aba: (search.aba as string) || "fluxo" };
+  },
   head: () => ({ meta: [{ title: "Financeiro & Caixa · StockFlow" }] }),
   component: Financeiro,
 });
+
+const CATEGORY_LABELS: Record<string, string> = {
+  recebimento_parcela: "Recebimento de parcela",
+  estorno_recebimento: "Estorno de recebimento",
+};
+
+function categoryLabel(category: string | null | undefined): string {
+  if (!category) return "—";
+  return CATEGORY_LABELS[category] ?? category;
+}
 
 interface CashSession {
   id: string;
@@ -68,8 +82,9 @@ function Financeiro() {
   const queryClient = useQueryClient();
   const { data: profile } = useProfile();
   const orgId = profile?.active_org_id;
-
-  const [activeTab, setActiveTab] = useState("fluxo");
+  const router = useRouter();
+  const { aba: activeTab } = Route.useSearch();
+  const setActiveTab = (v: string) => router.navigate({ to: "/financeiro", search: { aba: v } });
 
   // Local State: Cash Flow Tab
   const [txTypeFilter, setTxTypeFilter] = useState<"todos" | "receita" | "despesa">("todos");
@@ -167,20 +182,36 @@ function Financeiro() {
     },
   });
 
-  // 4. Inflows in cash during active session (payment_method = 'Dinheiro')
+  // 4. Inflows in cash during active session (payment_method = 'Dinheiro'),
+  //    descontando estornos de recebimento de parcela lançados como despesa
+  //    (ver módulo Cobrança) para o saldo esperado do caixa bater certinho.
   const { data: sessionCashInflows = 0 } = useQuery({
     queryKey: ["session_cash_inflows", activeSession?.opened_at],
     enabled: !!activeSession,
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("financial_transactions")
-        .select("amount")
-        .eq("organization_id", orgId!)
-        .eq("type", "receita")
-        .eq("payment_method", "Dinheiro")
-        .gte("created_at", activeSession!.opened_at);
-      if (error) throw error;
-      return data.reduce((sum, tx) => sum + Number(tx.amount), 0);
+      const [{ data: receitas, error: errReceitas }, { data: estornos, error: errEstornos }] =
+        await Promise.all([
+          supabase
+            .from("financial_transactions")
+            .select("amount")
+            .eq("organization_id", orgId!)
+            .eq("type", "receita")
+            .eq("payment_method", "Dinheiro")
+            .gte("created_at", activeSession!.opened_at),
+          supabase
+            .from("financial_transactions")
+            .select("amount")
+            .eq("organization_id", orgId!)
+            .eq("type", "despesa")
+            .eq("category", "estorno_recebimento")
+            .eq("payment_method", "Dinheiro")
+            .gte("created_at", activeSession!.opened_at),
+        ]);
+      if (errReceitas) throw errReceitas;
+      if (errEstornos) throw errEstornos;
+      const totalReceitas = (receitas ?? []).reduce((sum, tx) => sum + Number(tx.amount), 0);
+      const totalEstornos = (estornos ?? []).reduce((sum, tx) => sum + Number(tx.amount), 0);
+      return totalReceitas - totalEstornos;
     },
   });
 
@@ -385,6 +416,10 @@ function Financeiro() {
             <Calendar className="h-3.5 w-3.5" />
             Extrato de Vendas
           </TabsTrigger>
+          <TabsTrigger value="cobranca" className="flex items-center gap-1.5">
+            <DollarSign className="h-3.5 w-3.5" />
+            Cobrança
+          </TabsTrigger>
         </TabsList>
 
         {/* ========================================================
@@ -514,8 +549,11 @@ function Financeiro() {
                             {tx.description}
                           </TableCell>
                           <TableCell>
-                            <Badge variant="outline" className="capitalize">
-                              {tx.category}
+                            <Badge
+                              variant="outline"
+                              className={`capitalize ${tx.category === "estorno_recebimento" ? "border-destructive text-destructive" : ""}`}
+                            >
+                              {categoryLabel(tx.category)}
                             </Badge>
                           </TableCell>
                           <TableCell>{tx.payment_method}</TableCell>
@@ -869,6 +907,13 @@ function Financeiro() {
             </CardContent>
           </Card>
         </TabsContent>
+
+        {/* ========================================================
+            TAB 4: COBRANÇA
+            ======================================================== */}
+        <TabsContent value="cobranca" className="space-y-6">
+          <CobrancaPanel />
+        </TabsContent>
       </Tabs>
 
       {/* ========================================================
@@ -955,6 +1000,8 @@ function Financeiro() {
                     <SelectItem value="Cartão de débito">Cartão de débito</SelectItem>
                     <SelectItem value="Boleto">Boleto</SelectItem>
                     <SelectItem value="Transferência bancária">Transferência bancária</SelectItem>
+                    <SelectItem value="Cheque">Cheque</SelectItem>
+                    <SelectItem value="Outros">Outros</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

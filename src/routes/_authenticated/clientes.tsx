@@ -428,64 +428,50 @@ function ClientesLayout() {
     },
   });
 
-  // Mutação para dar baixa em parcela
+  // Mutação para dar baixa em parcela — passa pela mesma RPC usada pelo
+  // módulo Cobrança (fn_receive_installment_payment), única fonte de
+  // verdade para recebimentos: garante histórico, auditoria e sincronismo
+  // com Fluxo de Caixa/Contas a Receber a partir de qualquer tela.
+  // paymentDate é aceito por compatibilidade com as telas existentes mas
+  // não é usado — a RPC sempre registra a data real do recebimento.
   const payInstallment = useMutation({
     mutationFn: async ({
       id,
       paymentMethod,
-      paymentDate,
     }: {
       id: string;
       paymentMethod: string;
-      paymentDate: string;
+      paymentDate?: string;
     }) => {
-      const { error } = await supabase
-        .from("installments")
-        .update({
-          status: "Pago",
-          payment_method: paymentMethod,
-          payment_date: paymentDate,
-          receipt_url: "recibo-" + Math.floor(Math.random() * 900000 + 100000),
-        })
-        .eq("id", id);
+      const { error } = await supabase.rpc("fn_receive_installment_payment" as never, {
+        p_installment_id: id,
+        p_payment_method: paymentMethod,
+        p_amount: null,
+        p_client_request_id: crypto.randomUUID(),
+      } as never);
       if (error) throw error;
     },
     onSuccess: () => {
       toast.success("Pagamento da parcela registrado!");
       qc.invalidateQueries({ queryKey: ["all_installments"] });
       qc.invalidateQueries({ queryKey: ["orders"] });
+      qc.invalidateQueries({ queryKey: ["cobranca_installments"] });
+      qc.invalidateQueries({ queryKey: ["financial_transactions"] });
     },
     onError: (err: any) => {
       toast.error("Erro ao registrar pagamento: " + err.message);
     },
   });
 
-  // Mutação para editar parcela
+  // Mutação para editar parcela — apenas vencimento e valor. Status, forma
+  // de pagamento e data de recebimento só mudam através da RPC de
+  // recebimento (fn_receive_installment_payment), para nunca haver uma
+  // parcela marcada "Pago" sem histórico/auditoria por trás.
   const updateInstallment = useMutation({
-    mutationFn: async ({
-      id,
-      dueDate,
-      amount,
-      status,
-      paymentMethod,
-      paymentDate,
-    }: {
-      id: string;
-      dueDate: string;
-      amount: number;
-      status: string;
-      paymentMethod: string | null;
-      paymentDate: string | null;
-    }) => {
+    mutationFn: async ({ id, dueDate, amount }: { id: string; dueDate: string; amount: number }) => {
       const { error } = await supabase
         .from("installments")
-        .update({
-          due_date: dueDate,
-          amount,
-          status,
-          payment_method: paymentMethod,
-          payment_date: paymentDate,
-        })
+        .update({ due_date: dueDate, amount })
         .eq("id", id);
       if (error) throw error;
     },
@@ -527,6 +513,12 @@ function ClientesLayout() {
       qc.invalidateQueries({ queryKey: ["orders"] });
     },
     onError: (err: any) => {
+      if (err?.code === "23503" || /installment_payments/i.test(err?.message || "")) {
+        toast.error(
+          "Esta parcela já tem recebimentos registrados e não pode ser excluída — cancele os recebimentos pelo módulo Cobrança antes de excluir a parcela.",
+        );
+        return;
+      }
       toast.error("Erro ao excluir parcela: " + err.message);
     },
   });
@@ -3604,7 +3596,8 @@ function ClientePerfil({
                       ) : (
                         customerInstallments.map((ins: any) => {
                           const isLate =
-                            ins.status === "Pendente" && new Date(ins.due_date) < new Date();
+                            (ins.status === "Pendente" || ins.status === "Parcialmente Pago") &&
+                            new Date(ins.due_date) < new Date();
                           return (
                             <TableRow key={ins.id} className="hover:bg-slate-50/50">
                               <TableCell className="font-semibold text-center">
@@ -6504,9 +6497,6 @@ function PagamentosControle({
   const [editingIns, setEditingIns] = useState<any | null>(null);
   const [editDueDate, setEditDueDate] = useState("");
   const [editAmount, setEditAmount] = useState("");
-  const [editStatus, setEditStatus] = useState("Pendente");
-  const [editPayMethod, setEditPayMethod] = useState("");
-  const [editPayDate, setEditPayDate] = useState("");
   const [openEditModal, setOpenEditModal] = useState(false);
 
   const filtered = useMemo(() => {
@@ -6516,7 +6506,9 @@ function PagamentosControle({
         ins.orders?.order_number?.toLowerCase().includes(q) ||
         ins.orders?.customers?.name?.toLowerCase().includes(q);
 
-      const isLate = ins.status === "Pendente" && new Date(ins.due_date) < new Date();
+      const isLate =
+        (ins.status === "Pendente" || ins.status === "Parcialmente Pago") &&
+        new Date(ins.due_date) < new Date();
       let matchesStatus = true;
       if (statusFilter !== "all") {
         if (statusFilter === "Pago") matchesStatus = ins.status === "Pago";
@@ -6541,21 +6533,23 @@ function PagamentosControle({
     setEditingIns(ins);
     setEditDueDate(ins.due_date);
     setEditAmount(String(ins.amount));
-    setEditStatus(ins.status);
-    setEditPayMethod(ins.payment_method || "");
-    setEditPayDate(ins.payment_date || "");
     setOpenEditModal(true);
   }
 
   async function handleConfirmEdit() {
     if (!editingIns) return;
+    const novoValor = Number(editAmount);
+    const jaPago = Number(editingIns.amount_paid || 0);
+    if (novoValor < jaPago) {
+      toast.error(
+        `O valor não pode ser menor que o já pago (${jaPago.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}).`,
+      );
+      return;
+    }
     await updateInstallment({
       id: editingIns.id,
       dueDate: editDueDate,
-      amount: Number(editAmount),
-      status: editStatus,
-      paymentMethod: editPayMethod || null,
-      paymentDate: editPayDate || null,
+      amount: novoValor,
     });
     setOpenEditModal(false);
   }
@@ -6626,7 +6620,9 @@ function PagamentosControle({
                 </TableRow>
               ) : (
                 filtered.map((ins: any) => {
-                  const isLate = ins.status === "Pendente" && new Date(ins.due_date) < new Date();
+                  const isLate =
+        (ins.status === "Pendente" || ins.status === "Parcialmente Pago") &&
+        new Date(ins.due_date) < new Date();
                   return (
                     <TableRow key={ins.id} className="hover:bg-slate-50/50">
                       <TableCell className="font-semibold text-center">
@@ -6835,48 +6831,11 @@ function PagamentosControle({
                 </div>
               </div>
 
-              <div className="space-y-1">
-                <Label>Status</Label>
-                <Select value={editStatus} onValueChange={setEditStatus}>
-                  <SelectTrigger className="h-9">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Pendente">Pendente</SelectItem>
-                    <SelectItem value="Pago">Pago</SelectItem>
-                    <SelectItem value="Atrasado">Atrasado</SelectItem>
-                    <SelectItem value="Cancelado">Cancelado</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1">
-                  <Label>Forma de Pagamento</Label>
-                  <Select value={editPayMethod} onValueChange={setEditPayMethod}>
-                    <SelectTrigger className="h-9">
-                      <SelectValue placeholder="—" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Dinheiro">Dinheiro</SelectItem>
-                      <SelectItem value="Pix">Pix</SelectItem>
-                      <SelectItem value="Cartão de débito">Cartão de débito</SelectItem>
-                      <SelectItem value="Cartão de crédito">Cartão de crédito</SelectItem>
-                      <SelectItem value="Boleto">Boleto</SelectItem>
-                      <SelectItem value="Transferência bancária">Transferência bancária</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-1">
-                  <Label>Data do Pagamento</Label>
-                  <Input
-                    type="date"
-                    value={editPayDate}
-                    onChange={(e) => setEditPayDate(e.target.value)}
-                    className="h-9"
-                  />
-                </div>
-              </div>
+              <p className="text-xs text-muted-foreground">
+                Status, forma de pagamento e data do recebimento agora só são alterados através do
+                fluxo de "Confirmar Recebimento" (ou pelo módulo Cobrança), para manter o histórico de
+                pagamentos e o Fluxo de Caixa sempre corretos.
+              </p>
             </div>
           )}
           <DialogFooter>

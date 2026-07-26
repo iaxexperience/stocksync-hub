@@ -24,6 +24,7 @@ import {
   TrendingUp,
   FileBarChart,
   ChevronDown,
+  HandCoins,
 } from "lucide-react";
 import {
   Sidebar,
@@ -51,7 +52,8 @@ const groups = [
     label: "Visão geral",
     items: [
       { title: "Dashboard", to: "/dashboard", icon: LayoutDashboard },
-      { title: "Financeiro & Caixa", to: "/financeiro", icon: TrendingUp },
+      { title: "Financeiro & Caixa", to: "/financeiro", notSearchAba: "cobranca", icon: TrendingUp },
+      { title: "Cobrança", to: "/financeiro", search: { aba: "cobranca" }, icon: HandCoins },
     ],
   },
   {
@@ -231,7 +233,9 @@ export function AppSidebar() {
                           ? pathname.startsWith(`/cadastros/${it.params.tipo}`)
                           : it.search
                             ? pathname === it.to && searchParams.aba === it.search.aba
-                            : pathname === it.to;
+                            : (it as any).notSearchAba
+                              ? pathname === it.to && searchParams.aba !== (it as any).notSearchAba
+                              : pathname === it.to;
                         return (
                           <SidebarMenuItem key={it.title}>
                             <SidebarMenuButton asChild isActive={active}>
