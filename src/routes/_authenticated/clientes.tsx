@@ -6512,6 +6512,8 @@ function PagamentosControle({
   const [editAmount, setEditAmount] = useState("");
   const [openEditModal, setOpenEditModal] = useState(false);
 
+  const [expandedOrderId, setExpandedOrderId] = useState<string | null>(null);
+
   const filtered = useMemo(() => {
     return installments.filter((ins) => {
       const q = search.toLowerCase();
@@ -6531,6 +6533,47 @@ function PagamentosControle({
       return matchesSearch && matchesStatus;
     });
   }, [installments, search, statusFilter]);
+
+  // Agrupa as parcelas por venda — 1 linha por venda na tabela, evitando
+  // repetir cliente/pedido a cada parcela; clicar expande as parcelas dela.
+  const groupedByOrder = useMemo(() => {
+    const groups = new Map<string, any>();
+    for (const ins of filtered) {
+      const orderId = ins.order_id;
+      let g = groups.get(orderId);
+      if (!g) {
+        g = {
+          order_id: orderId,
+          order_number: ins.orders?.order_number,
+          customer_id: ins.orders?.customer_id,
+          customer_name: ins.orders?.customers?.name,
+          installments_count: ins.orders?.installments || 1,
+          paid_count: 0,
+          total_amount: 0,
+          total_paid: 0,
+          next_due_date: null as string | null,
+          has_late: false,
+          items: [] as any[],
+        };
+        groups.set(orderId, g);
+      }
+      g.items.push(ins);
+      g.total_amount += Number(ins.amount || 0);
+      g.total_paid += Number(ins.amount_paid || 0);
+      if (ins.status === "Pago") g.paid_count++;
+      const saldo = Number(ins.amount || 0) - Number(ins.amount_paid || 0);
+      const isLate =
+        (ins.status === "Pendente" || ins.status === "Parcialmente Pago") &&
+        new Date(ins.due_date) < new Date();
+      if (isLate) g.has_late = true;
+      if (saldo > 0 && (!g.next_due_date || ins.due_date < g.next_due_date)) {
+        g.next_due_date = ins.due_date;
+      }
+    }
+    return Array.from(groups.values()).sort((a, b) =>
+      (a.next_due_date || "9999-99-99").localeCompare(b.next_due_date || "9999-99-99"),
+    );
+  }, [filtered]);
 
   async function handleConfirmPayment() {
     if (!payingIns) return;
