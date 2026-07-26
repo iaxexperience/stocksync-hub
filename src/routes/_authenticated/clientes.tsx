@@ -764,6 +764,7 @@ function ClientesLayout() {
             )}
             {aba === "novo" && (
               <ClienteForm
+                key={`${id || edit || "new"}-${modo || "padrao"}`}
                 customers={customers}
                 id={id || edit}
                 upsertCustomer={upsertCustomer.mutateAsync}
@@ -1602,16 +1603,6 @@ function ClienteForm({
   // continua funcionando normalmente, só o preço fica oculto na busca.
   const [presentationMode, setPresentationMode] = useState(!!sacolaMode);
   const [zoomedImage, setZoomedImage] = useState<{ url: string; name: string } | null>(null);
-
-  // Garantia extra (independente da ordem de hidratação/estado inicial):
-  // sempre que entrar via "Sacola", força a aba de Produtos & Carrinho e o
-  // Modo Apresentação ligado.
-  useEffect(() => {
-    if (sacolaMode) {
-      setActiveTab("cobranca");
-      setPresentationMode(true);
-    }
-  }, [sacolaMode]);
   const [installationFee, setInstallationFee] = useState(0);
   const [shippingFee, setShippingFee] = useState(0);
   const [discountType, setDiscountType] = useState("val"); // val ou pct
@@ -1625,9 +1616,10 @@ function ClienteForm({
     return d.toISOString().split("T")[0];
   });
 
-  // Load draft on mount (if creating a new client, i.e., no id is provided)
+  // Load draft on mount (if creating a new client, i.e., no id is provided).
+  // Nunca restaura rascunho na Sacola — ela deve sempre abrir zerada.
   useEffect(() => {
-    if (!id) {
+    if (!id && !sacolaMode) {
       try {
         const saved = localStorage.getItem("stocksync_cliente_form_draft");
         if (saved) {
@@ -1673,9 +1665,21 @@ function ClienteForm({
     }
   }, [id]);
 
-  // Save draft to localStorage on state changes (if creating a new client)
+  // Garantia extra: sempre que for a Sacola, força a aba de Produtos &
+  // Carrinho e o Modo Apresentação ligado — roda depois do efeito acima
+  // para nunca ser sobrescrito por um rascunho restaurado.
   useEffect(() => {
-    if (!id) {
+    if (sacolaMode) {
+      setActiveTab("cobranca");
+      setPresentationMode(true);
+    }
+  }, [sacolaMode]);
+
+  // Save draft to localStorage on state changes (if creating a new client).
+  // Nunca grava rascunho a partir da Sacola — evita misturar/sobrescrever o
+  // rascunho do cadastro normal de cliente.
+  useEffect(() => {
+    if (!id && !sacolaMode) {
       const draft = {
         activeTab,
         customerType,
