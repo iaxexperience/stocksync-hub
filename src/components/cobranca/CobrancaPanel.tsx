@@ -11,13 +11,17 @@ import {
 } from "@/components/ui/select";
 import { Search } from "lucide-react";
 import { useProfile } from "@/hooks/useProfile";
-import { useCobrancaInstallments, useCobrancaRecebimentosPeriodo, type CobrancaInstallmentRow } from "@/hooks/useCobranca";
+import {
+  groupInstallmentsByOrder,
+  useCobrancaInstallments,
+  useCobrancaRecebimentosPeriodo,
+  type CobrancaOrderGroup,
+} from "@/hooks/useCobranca";
 import { CobrancaTable } from "@/components/cobranca/CobrancaTable";
-import { InstallmentDrawer } from "@/components/cobranca/InstallmentDrawer";
+import { OrderDrawer } from "@/components/cobranca/OrderDrawer";
 import {
   PAYMENT_METHODS,
   atrasoBucket,
-  diasEmAtraso,
   formatCurrencyBRL,
   onlyDigits,
   round2,
@@ -79,9 +83,11 @@ export function CobrancaPanel() {
   const [atrasoFiltro, setAtrasoFiltro] = useState("todos");
   const [formaRecebimento, setFormaRecebimento] = useState("todos");
 
-  const [selected, setSelected] = useState<CobrancaInstallmentRow | null>(null);
+  const [selectedGroup, setSelectedGroup] = useState<CobrancaOrderGroup | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
 
+  // KPIs continuam calculados por PARCELA (não por venda) — "Parcelas
+  // vencidas"/"a vencer" contam parcelas individuais, não vendas.
   const enriched = useMemo(
     () =>
       installments.map((row) => {
@@ -90,53 +96,10 @@ export function CobrancaPanel() {
           row,
           saldo,
           situacao: situacaoParcela({ amount: row.amount, amountPaid: row.amount_paid, dueDate: row.due_date }),
-          dias: diasEmAtraso(row.due_date, saldo),
         };
       }),
     [installments],
   );
-
-  const filtered = useMemo(() => {
-    const clienteQ = clienteSearch.trim().toLowerCase();
-    const clienteDigits = onlyDigits(clienteSearch);
-    const localQ = localizacaoSearch.trim().toLowerCase();
-
-    return enriched
-      .filter(({ row, situacao, dias }) => {
-        if (clienteQ) {
-          const c = row.orders.customers;
-          const matchesText = c?.name?.toLowerCase().includes(clienteQ);
-          const matchesDigits =
-            clienteDigits.length >= 3 &&
-            (onlyDigits(c?.cpf_cnpj).includes(clienteDigits) ||
-              onlyDigits(c?.phone).includes(clienteDigits) ||
-              onlyDigits(c?.whatsapp).includes(clienteDigits));
-          if (!matchesText && !matchesDigits) return false;
-        }
-        if (localQ) {
-          const addr = row.orders.customers?.customer_addresses?.[0];
-          const matches =
-            addr?.city?.toLowerCase().includes(localQ) || addr?.neighborhood?.toLowerCase().includes(localQ);
-          if (!matches) return false;
-        }
-        if (dataInicial && row.orders.created_at < `${dataInicial}T00:00:00`) return false;
-        if (dataFinal && row.orders.created_at > `${dataFinal}T23:59:59`) return false;
-        if (situacaoFiltro !== "todos" && situacao !== situacaoFiltro) return false;
-        if (atrasoFiltro !== "todos" && atrasoBucket(dias) !== atrasoFiltro) return false;
-        if (formaRecebimento !== "todos" && row.payment_method !== formaRecebimento) return false;
-        return true;
-      })
-      .map((e) => e.row);
-  }, [
-    enriched,
-    clienteSearch,
-    localizacaoSearch,
-    dataInicial,
-    dataFinal,
-    situacaoFiltro,
-    atrasoFiltro,
-    formaRecebimento,
-  ]);
 
   const kpis = useMemo(() => {
     let totalAReceber = 0;
@@ -166,6 +129,54 @@ export function CobrancaPanel() {
       clientesInadimplentes: clientesInadimplentes.size,
     };
   }, [enriched]);
+
+  // Tabela: 1 linha por venda — evita repetir cliente/telefone/etc. a cada
+  // parcela da mesma venda. Filtros são aplicados no nível da venda
+  // (agregado), mantendo todas as parcelas dentro do grupo intactas para o
+  // drawer (senão perderíamos parcelas "fora do filtro" que o usuário
+  // precisa ver ao abrir a venda).
+  const groups = useMemo(() => groupInstallmentsByOrder(installments), [installments]);
+
+  const filteredGroups = useMemo(() => {
+    const clienteQ = clienteSearch.trim().toLowerCase();
+    const clienteDigits = onlyDigits(clienteSearch);
+    const localQ = localizacaoSearch.trim().toLowerCase();
+
+    return groups.filter((g) => {
+      if (clienteQ) {
+        const c = g.customer;
+        const matchesText = c?.name?.toLowerCase().includes(clienteQ);
+        const matchesDigits =
+          clienteDigits.length >= 3 &&
+          (onlyDigits(c?.cpf_cnpj).includes(clienteDigits) ||
+            onlyDigits(c?.phone).includes(clienteDigits) ||
+            onlyDigits(c?.whatsapp).includes(clienteDigits));
+        if (!matchesText && !matchesDigits) return false;
+      }
+      if (localQ) {
+        const addr = g.customer?.customer_addresses?.[0];
+        const matches =
+          addr?.city?.toLowerCase().includes(localQ) || addr?.neighborhood?.toLowerCase().includes(localQ);
+        if (!matches) return false;
+      }
+      if (dataInicial && g.created_at < `${dataInicial}T00:00:00`) return false;
+      if (dataFinal && g.created_at > `${dataFinal}T23:59:59`) return false;
+      if (situacaoFiltro !== "todos" && g.situacao !== situacaoFiltro) return false;
+      if (atrasoFiltro !== "todos" && atrasoBucket(g.max_dias_atraso) !== atrasoFiltro) return false;
+      if (formaRecebimento !== "todos" && !g.installments.some((i) => i.payment_method === formaRecebimento))
+        return false;
+      return true;
+    });
+  }, [
+    groups,
+    clienteSearch,
+    localizacaoSearch,
+    dataInicial,
+    dataFinal,
+    situacaoFiltro,
+    atrasoFiltro,
+    formaRecebimento,
+  ]);
 
   return (
     <div className="space-y-6">
@@ -263,9 +274,9 @@ export function CobrancaPanel() {
             <p className="text-center py-8 text-muted-foreground">Carregando…</p>
           ) : (
             <CobrancaTable
-              rows={filtered}
-              onRowClick={(row) => {
-                setSelected(row);
+              rows={filteredGroups}
+              onRowClick={(group) => {
+                setSelectedGroup(group);
                 setDrawerOpen(true);
               }}
             />
@@ -273,8 +284,8 @@ export function CobrancaPanel() {
         </CardContent>
       </Card>
 
-      <InstallmentDrawer
-        installment={selected}
+      <OrderDrawer
+        group={selectedGroup}
         open={drawerOpen}
         onOpenChange={setDrawerOpen}
         canCancelPayment={canCancelPayment}
