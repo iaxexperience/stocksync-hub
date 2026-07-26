@@ -92,8 +92,7 @@ BEGIN
   SET amount_paid = v_new_paid,
       status = v_new_status,
       payment_date = CURRENT_DATE,
-      payment_method = p_payment_method,
-      updated_at = now()
+      payment_method = p_payment_method
   WHERE id = p_installment_id;
 
   INSERT INTO public.installment_payments
@@ -186,7 +185,7 @@ BEGIN
   RETURNING id INTO v_reversal_id;
 
   UPDATE public.installments
-  SET amount_paid = v_new_paid, status = v_new_status, updated_at = now()
+  SET amount_paid = v_new_paid, status = v_new_status
   WHERE id = v_installment.id;
 
   UPDATE public.installment_payments
