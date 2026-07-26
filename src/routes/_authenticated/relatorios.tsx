@@ -115,7 +115,14 @@ function RelatoriosPage() {
           methodCategory: classifyPaymentMethod(o.payment_method),
           installmentsCount: o.installments || 1,
           isQuitado,
-          paidCount: orderInstallments.filter((i: any) => i.status === "Pago").length,
+          // Conta parcelas com saldo zerado (Pago) OU parcialmente pagas
+          // contam como "0.5" para o indicador não subestimar o progresso
+          // quando existem recebimentos parciais.
+          paidCount: orderInstallments.reduce((sum: number, i: any) => {
+            if (i.status === "Pago") return sum + 1;
+            if (Number(i.amount_paid || 0) > 0) return sum + 0.5;
+            return sum;
+          }, 0),
         };
       });
   }, [orders, installments]);
