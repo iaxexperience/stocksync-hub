@@ -25,6 +25,7 @@ import {
   FileBarChart,
   ChevronDown,
   HandCoins,
+  ShoppingBag,
 } from "lucide-react";
 import {
   Sidebar,
@@ -60,7 +61,19 @@ const groups = [
     label: "Clientes",
     items: [
       { title: "Lista de Clientes", to: "/clientes", search: { aba: "lista" }, icon: Users },
-      { title: "Novo Cliente", to: "/clientes", search: { aba: "novo" }, icon: UserPlus },
+      {
+        title: "Novo Cliente",
+        to: "/clientes",
+        search: { aba: "novo" },
+        excludeSearch: { modo: "sacola" },
+        icon: UserPlus,
+      },
+      {
+        title: "Sacola",
+        to: "/clientes",
+        search: { aba: "novo", modo: "sacola" },
+        icon: ShoppingBag,
+      },
       {
         title: "Produtos Contratados",
         to: "/clientes",
@@ -232,7 +245,14 @@ export function AppSidebar() {
                         const active = it.params
                           ? pathname.startsWith(`/cadastros/${it.params.tipo}`)
                           : it.search
-                            ? pathname === it.to && searchParams.aba === it.search.aba
+                            ? pathname === it.to &&
+                              Object.entries(it.search).every(
+                                ([k, v]) => (searchParams as any)?.[k] === v,
+                              ) &&
+                              (!(it as any).excludeSearch ||
+                                !Object.entries((it as any).excludeSearch).some(
+                                  ([k, v]) => (searchParams as any)?.[k] === v,
+                                ))
                             : (it as any).notSearchAba
                               ? pathname === it.to && searchParams.aba !== (it as any).notSearchAba
                               : pathname === it.to;

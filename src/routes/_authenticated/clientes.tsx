@@ -1500,6 +1500,7 @@ function ClienteForm({
   sellers,
   isEditMode,
   navegarAba,
+  sacolaMode,
 }: {
   customers: any[];
   id?: string;
@@ -1509,10 +1510,13 @@ function ClienteForm({
   sellers: any[];
   isEditMode: boolean;
   navegarAba: any;
+  sacolaMode?: boolean;
 }) {
   const isVendaMode = id && !isEditMode; // se passar ID mas não estiver editando, é venda!
 
-  const [activeTab, setActiveTab] = useState(id && !isEditMode ? "cobranca" : "dados");
+  const [activeTab, setActiveTab] = useState(
+    sacolaMode || (id && !isEditMode) ? "cobranca" : "dados",
+  );
 
   // Cadastro States
   const [customerType, setCustomerType] = useState("PF");
@@ -1596,7 +1600,7 @@ function ClienteForm({
   // Modo Apresentação: esconde o valor de venda no catálogo enquanto o
   // vendedor navega os produtos com o cliente do lado — adicionar à sacola
   // continua funcionando normalmente, só o preço fica oculto na busca.
-  const [presentationMode, setPresentationMode] = useState(false);
+  const [presentationMode, setPresentationMode] = useState(!!sacolaMode);
   const [installationFee, setInstallationFee] = useState(0);
   const [shippingFee, setShippingFee] = useState(0);
   const [discountType, setDiscountType] = useState("val"); // val ou pct
