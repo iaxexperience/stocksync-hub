@@ -88,6 +88,7 @@ export const Route = createFileRoute("/_authenticated/clientes")({
       aba: (search.aba as string) || "dashboard",
       id: (search.id as string) || undefined,
       edit: (search.edit as string) || undefined,
+      modo: (search.modo as string) || undefined,
     };
   },
   head: () => ({ meta: [{ title: "Clientes · StockFlow" }] }),
@@ -95,7 +96,7 @@ export const Route = createFileRoute("/_authenticated/clientes")({
 });
 
 function ClientesLayout() {
-  const { aba = "dashboard", id, edit } = Route.useSearch();
+  const { aba = "dashboard", id, edit, modo } = Route.useSearch();
   const router = useRouter();
   const { data: profile } = useProfile();
   const orgId = profile?.active_org_id;
