@@ -6680,9 +6680,8 @@ function PagamentosControle({
                   const saldoTotal = g.total_amount - g.total_paid;
                   const quitado = saldoTotal <= 0;
                   return (
-                    <>
+                    <React.Fragment key={g.order_id}>
                       <TableRow
-                        key={g.order_id}
                         className="hover:bg-slate-50/50 cursor-pointer bg-slate-50/30"
                         onClick={() => setExpandedOrderId(isExpanded ? null : g.order_id)}
                       >
@@ -6818,7 +6817,7 @@ function PagamentosControle({
                             </TableRow>
                           );
                         })}
-                    </>
+                    </React.Fragment>
                   );
                 })
               )}
