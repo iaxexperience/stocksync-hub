@@ -75,7 +75,7 @@ BEGIN
   v_new_status := CASE WHEN v_new_paid >= v_installment.amount THEN 'Pago' ELSE 'Parcialmente Pago' END;
 
   INSERT INTO public.financial_transactions
-    (organization_id, type, amount, description, category, payment_method, date, created_by)
+    (organization_id, type, amount, description, category, payment_method, date, reference_id)
   VALUES (
     v_order.organization_id,
     'receita',
@@ -84,7 +84,7 @@ BEGIN
     'recebimento_parcela',
     p_payment_method,
     CURRENT_DATE,
-    auth.uid()
+    p_installment_id
   )
   RETURNING id INTO v_ft_id;
 
@@ -106,13 +106,15 @@ BEGIN
     WHERE installment_id = p_installment_id AND client_request_id = p_client_request_id;
   END IF;
 
-  INSERT INTO public.audit_logs (organization_id, user_id, action, entity_type, entity_id, details)
+  INSERT INTO public.audit_logs (organization_id, table_name, record_id, action, old_data, new_data, performed_by)
   VALUES (
-    v_order.organization_id, auth.uid(), 'recebimento_parcela', 'installment', p_installment_id,
+    v_order.organization_id, 'installments', p_installment_id, 'recebimento_parcela',
+    jsonb_build_object('amount_paid', v_installment.amount_paid, 'status', v_installment.status),
     jsonb_build_object(
-      'amount', v_amount, 'payment_method', p_payment_method, 'new_status', v_new_status,
+      'amount_paid', v_new_paid, 'status', v_new_status, 'amount', v_amount, 'payment_method', p_payment_method,
       'notes', p_notes, 'order_number', v_order.order_number, 'installment_number', v_installment.installment_number
-    )
+    ),
+    auth.uid()
   );
 
   RETURN v_payment;
@@ -171,7 +173,7 @@ BEGIN
   END;
 
   INSERT INTO public.financial_transactions
-    (organization_id, type, amount, description, category, payment_method, date, created_by)
+    (organization_id, type, amount, description, category, payment_method, date, reference_id)
   VALUES (
     v_order.organization_id,
     'despesa',
@@ -180,7 +182,7 @@ BEGIN
     'estorno_recebimento',
     v_payment.payment_method,
     CURRENT_DATE,
-    auth.uid()
+    v_payment.installment_id
   )
   RETURNING id INTO v_reversal_id;
 
