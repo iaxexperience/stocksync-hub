@@ -1993,23 +1993,26 @@ function ClienteForm({
 
   // Salvar cadastro geral (Aba dados + Aba endereço)
   async function handleSaveCustomerOnly() {
-    if (!name || !cpfCnpj) {
-      toast.error("Nome e CPF/CNPJ são campos obrigatórios.");
+    if (!name || !whatsapp) {
+      toast.error("Nome e WhatsApp são campos obrigatórios.");
       return;
     }
 
-    // Validação matemática de CPF/CNPJ
-    if (customerType === "PF") {
-      if (!isValidCPF(cpfCnpj)) {
-        toast.error("CPF inválido. Por favor, digite um CPF válido.");
-        setActiveTab("dados");
-        return;
-      }
-    } else {
-      if (!isValidCNPJ(cpfCnpj)) {
-        toast.error("CNPJ inválido. Por favor, digite um CNPJ válido.");
-        setActiveTab("dados");
-        return;
+    // Validação matemática de CPF/CNPJ — só roda se o campo foi preenchido,
+    // já que CPF/CNPJ deixou de ser obrigatório no cadastro.
+    if (cpfCnpj) {
+      if (customerType === "PF") {
+        if (!isValidCPF(cpfCnpj)) {
+          toast.error("CPF inválido. Por favor, digite um CPF válido.");
+          setActiveTab("dados");
+          return;
+        }
+      } else {
+        if (!isValidCNPJ(cpfCnpj)) {
+          toast.error("CNPJ inválido. Por favor, digite um CNPJ válido.");
+          setActiveTab("dados");
+          return;
+        }
       }
     }
 
@@ -2065,24 +2068,26 @@ function ClienteForm({
 
     // Se for um novo cliente cadastrando junto com a venda
     if (!customerId) {
-      if (!name || !cpfCnpj) {
-        toast.error("Preencha os dados do cliente para prosseguir com a venda.");
+      if (!name || !whatsapp) {
+        toast.error("Preencha nome e WhatsApp do cliente para prosseguir com a venda.");
         setActiveTab("dados");
         return;
       }
 
-      // Validação matemática de CPF/CNPJ
-      if (customerType === "PF") {
-        if (!isValidCPF(cpfCnpj)) {
-          toast.error("CPF inválido. Por favor, digite um CPF válido.");
-          setActiveTab("dados");
-          return;
-        }
-      } else {
-        if (!isValidCNPJ(cpfCnpj)) {
-          toast.error("CNPJ inválido. Por favor, digite um CNPJ válido.");
-          setActiveTab("dados");
-          return;
+      // Validação matemática de CPF/CNPJ — só roda se foi preenchido.
+      if (cpfCnpj) {
+        if (customerType === "PF") {
+          if (!isValidCPF(cpfCnpj)) {
+            toast.error("CPF inválido. Por favor, digite um CPF válido.");
+            setActiveTab("dados");
+            return;
+          }
+        } else {
+          if (!isValidCNPJ(cpfCnpj)) {
+            toast.error("CNPJ inválido. Por favor, digite um CNPJ válido.");
+            setActiveTab("dados");
+            return;
+          }
         }
       }
 
@@ -2249,11 +2254,10 @@ function ClienteForm({
                   </div>
                 )}
                 <div className="space-y-1">
-                  <Label>{customerType === "PF" ? "CPF *" : "CNPJ *"}</Label>
+                  <Label>{customerType === "PF" ? "CPF" : "CNPJ"}</Label>
                   <Input
                     value={cpfCnpj}
                     onChange={(e) => setCpfCnpj(e.target.value)}
-                    required
                     placeholder={customerType === "PF" ? "000.000.000-00" : "00.000.000/0000-00"}
                     className={duplicateCustomer ? "border-destructive focus-visible:ring-destructive" : ""}
                   />
@@ -2296,10 +2300,11 @@ function ClienteForm({
                   />
                 </div>
                 <div className="space-y-1">
-                  <Label>WhatsApp</Label>
+                  <Label>WhatsApp *</Label>
                   <Input
                     value={whatsapp}
                     onChange={(e) => setWhatsapp(e.target.value)}
+                    required
                     placeholder="(00) 90000-0000"
                   />
                 </div>
