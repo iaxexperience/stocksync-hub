@@ -39,6 +39,8 @@ import {
   EyeOff,
   ShieldCheck,
   Keyboard,
+  Briefcase,
+  Wallet,
   Users,
   CheckCircle2,
   XCircle,
@@ -84,6 +86,24 @@ const ROLES = [
     color: "bg-blue-50 text-blue-700 border-blue-200",
     iconColor: "text-blue-600",
     bg: "bg-blue-50",
+  },
+  {
+    value: "gerente",
+    label: "Gerente",
+    desc: "Acesso a clientes, vendas e financeiro, incluindo cancelamento de recebimentos no módulo Cobrança.",
+    icon: Briefcase,
+    color: "bg-amber-50 text-amber-700 border-amber-200",
+    iconColor: "text-amber-600",
+    bg: "bg-amber-50",
+  },
+  {
+    value: "financeiro",
+    label: "Financeiro",
+    desc: "Acesso ao Financeiro & Caixa e ao módulo Cobrança, incluindo cancelamento de recebimentos.",
+    icon: Wallet,
+    color: "bg-emerald-50 text-emerald-700 border-emerald-200",
+    iconColor: "text-emerald-600",
+    bg: "bg-emerald-50",
   },
 ];
 

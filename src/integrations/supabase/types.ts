@@ -457,6 +457,7 @@ export type Database = {
       installments: {
         Row: {
           amount: number
+          amount_paid: number
           created_at: string
           due_date: string
           id: string
@@ -470,6 +471,7 @@ export type Database = {
         }
         Insert: {
           amount?: number
+          amount_paid?: number
           created_at?: string
           due_date: string
           id?: string
@@ -483,6 +485,7 @@ export type Database = {
         }
         Update: {
           amount?: number
+          amount_paid?: number
           created_at?: string
           due_date?: string
           id?: string
@@ -500,6 +503,85 @@ export type Database = {
             columns: ["order_id"]
             isOneToOne: false
             referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      installment_payments: {
+        Row: {
+          id: string
+          installment_id: string
+          organization_id: string
+          amount: number
+          payment_method: string
+          payment_date: string
+          notes: string | null
+          client_request_id: string
+          status: string
+          cancelled_at: string | null
+          cancelled_by: string | null
+          cancellation_reason: string | null
+          financial_transaction_id: string | null
+          reversal_transaction_id: string | null
+          created_by: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          installment_id: string
+          organization_id: string
+          amount: number
+          payment_method: string
+          payment_date?: string
+          notes?: string | null
+          client_request_id: string
+          status?: string
+          cancelled_at?: string | null
+          cancelled_by?: string | null
+          cancellation_reason?: string | null
+          financial_transaction_id?: string | null
+          reversal_transaction_id?: string | null
+          created_by?: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          installment_id?: string
+          organization_id?: string
+          amount?: number
+          payment_method?: string
+          payment_date?: string
+          notes?: string | null
+          client_request_id?: string
+          status?: string
+          cancelled_at?: string | null
+          cancelled_by?: string | null
+          cancellation_reason?: string | null
+          financial_transaction_id?: string | null
+          reversal_transaction_id?: string | null
+          created_by?: string
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "installment_payments_installment_id_fkey"
+            columns: ["installment_id"]
+            isOneToOne: false
+            referencedRelation: "installments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "installment_payments_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "installment_payments_financial_transaction_id_fkey"
+            columns: ["financial_transaction_id"]
+            isOneToOne: false
+            referencedRelation: "financial_transactions"
             referencedColumns: ["id"]
           },
         ]
@@ -1216,6 +1298,20 @@ export type Database = {
       }
       is_org_member: { Args: { _org_id: string }; Returns: boolean }
       user_org_ids: { Args: never; Returns: string[] }
+      fn_receive_installment_payment: {
+        Args: {
+          p_installment_id: string
+          p_payment_method: string
+          p_amount?: number | null
+          p_notes?: string | null
+          p_client_request_id?: string
+        }
+        Returns: Database["public"]["Tables"]["installment_payments"]["Row"]
+      }
+      fn_cancel_installment_payment: {
+        Args: { p_payment_id: string; p_reason?: string | null }
+        Returns: Database["public"]["Tables"]["installment_payments"]["Row"]
+      }
     }
     Enums: {
       app_role:
