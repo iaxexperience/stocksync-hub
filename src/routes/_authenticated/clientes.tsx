@@ -43,6 +43,7 @@ import {
   FileSignature,
   Search,
   Eye,
+  EyeOff,
   Pencil,
   Trash2,
   ShoppingCart,
@@ -1590,6 +1591,10 @@ function ClienteForm({
   // Carrinho States
   const [cartItems, setCartItems] = useState<any[]>([]);
   const [searchProduct, setSearchProduct] = useState("");
+  // Modo Apresentação: esconde o valor de venda no catálogo enquanto o
+  // vendedor navega os produtos com o cliente do lado — adicionar à sacola
+  // continua funcionando normalmente, só o preço fica oculto na busca.
+  const [presentationMode, setPresentationMode] = useState(false);
   const [installationFee, setInstallationFee] = useState(0);
   const [shippingFee, setShippingFee] = useState(0);
   const [discountType, setDiscountType] = useState("val"); // val ou pct
@@ -2511,7 +2516,24 @@ function ClienteForm({
                 {/* Lado Esquerdo: Catálogo de Produtos (5 colunas) */}
                 <div className="lg:col-span-5 space-y-4">
                   <div className="bg-muted/40 p-3 rounded-lg border">
-                    <h3 className="font-bold text-sm mb-2">Catálogo de Produtos Disponíveis</h3>
+                    <div className="flex items-center justify-between mb-2">
+                      <h3 className="font-bold text-sm">Catálogo de Produtos Disponíveis</h3>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant={presentationMode ? "default" : "outline"}
+                        className="h-7 text-[11px]"
+                        onClick={() => setPresentationMode((v) => !v)}
+                        title="Esconde o valor de venda enquanto você navega os produtos com o cliente"
+                      >
+                        {presentationMode ? (
+                          <EyeOff className="h-3 w-3 mr-1" />
+                        ) : (
+                          <Eye className="h-3 w-3 mr-1" />
+                        )}
+                        Modo Apresentação
+                      </Button>
+                    </div>
                     <div className="relative">
                       <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
                       <Input
@@ -2560,12 +2582,18 @@ function ClienteForm({
                                 </span>
                               </div>
                               <div className="flex items-center justify-between mt-1">
-                                <span className="text-xs font-extrabold text-primary">
-                                  {Number(prod.sale_price).toLocaleString("pt-BR", {
-                                    style: "currency",
-                                    currency: "BRL",
-                                  })}
-                                </span>
+                                {presentationMode ? (
+                                  <span className="text-[10px] text-muted-foreground italic">
+                                    Valor oculto (modo apresentação)
+                                  </span>
+                                ) : (
+                                  <span className="text-xs font-extrabold text-primary">
+                                    {Number(prod.sale_price).toLocaleString("pt-BR", {
+                                      style: "currency",
+                                      currency: "BRL",
+                                    })}
+                                  </span>
+                                )}
                                 <span
                                   className={`text-[10px] font-semibold ${outOfStock ? "text-destructive" : "text-emerald-600"}`}
                                 >
