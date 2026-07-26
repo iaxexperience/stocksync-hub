@@ -610,12 +610,15 @@ function ClientesLayout() {
     );
     const ticketMedio = approvedOrders.length > 0 ? totalVendido / approvedOrders.length : 0;
 
+    // Considera amount_paid (não só status='Pago') para incluir parcelas
+    // parcialmente pagas — status binário sozinho subestima o recebido e
+    // superestima o a receber.
     const totalRecebido = installments
-      .filter((i: any) => i.status === "Pago")
-      .reduce((sum: number, i: any) => sum + Number(i.amount), 0);
+      .filter((i: any) => i.status !== "Cancelado")
+      .reduce((sum: number, i: any) => sum + Number(i.amount_paid || 0), 0);
     const totalAReceber = installments
-      .filter((i: any) => i.status === "Pendente" || i.status === "Atrasado")
-      .reduce((sum: number, i: any) => sum + Number(i.amount), 0);
+      .filter((i: any) => i.status !== "Cancelado")
+      .reduce((sum: number, i: any) => sum + Math.max(Number(i.amount) - Number(i.amount_paid || 0), 0), 0);
 
     // Maiores compradores
     const buyerAmounts: Record<
@@ -1181,13 +1184,17 @@ function ClientesList({
         (ins: any) => ins.orders?.customer_id === c.id,
       );
       const saldoPendente = customerInstallments
-        .filter((ins: any) => ins.status === "Pendente" || ins.status === "Atrasado")
-        .reduce((sum: number, ins: any) => sum + Number(ins.amount), 0);
+        .filter((ins: any) => ins.status !== "Cancelado")
+        .reduce(
+          (sum: number, ins: any) => sum + Math.max(Number(ins.amount) - Number(ins.amount_paid || 0), 0),
+          0,
+        );
 
       const hasAtrasada = customerInstallments.some(
         (ins: any) =>
           ins.status === "Atrasado" ||
-          (ins.status === "Pendente" && new Date(ins.due_date) < new Date()),
+          ((ins.status === "Pendente" || ins.status === "Parcialmente Pago") &&
+            new Date(ins.due_date) < new Date()),
       );
 
       // Última compra
