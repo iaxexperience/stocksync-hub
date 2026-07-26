@@ -6668,94 +6668,157 @@ function PagamentosControle({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filtered.length === 0 ? (
+              {groupedByOrder.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={9} className="text-center py-10 text-muted-foreground">
                     Nenhuma parcela financeira localizada.
                   </TableCell>
                 </TableRow>
               ) : (
-                filtered.map((ins: any) => {
-                  const isLate =
-        (ins.status === "Pendente" || ins.status === "Parcialmente Pago") &&
-        new Date(ins.due_date) < new Date();
+                groupedByOrder.map((g) => {
+                  const isExpanded = expandedOrderId === g.order_id;
+                  const saldoTotal = g.total_amount - g.total_paid;
+                  const quitado = saldoTotal <= 0;
                   return (
-                    <TableRow key={ins.id} className="hover:bg-slate-50/50">
-                      <TableCell className="font-semibold text-center">
-                        {ins.installment_number} / {ins.orders?.installments || 1}
-                      </TableCell>
-                      <TableCell className="font-bold">#{ins.orders?.order_number}</TableCell>
-                      <TableCell
-                        className="font-semibold text-primary cursor-pointer hover:underline"
-                        onClick={() => navegarAba("perfil", { id: ins.orders?.customer_id })}
+                    <>
+                      <TableRow
+                        key={g.order_id}
+                        className="hover:bg-slate-50/50 cursor-pointer bg-slate-50/30"
+                        onClick={() => setExpandedOrderId(isExpanded ? null : g.order_id)}
                       >
-                        {ins.orders?.customers?.name}
-                      </TableCell>
-                      <TableCell className={isLate ? "text-destructive font-bold" : ""}>
-                        {new Date(ins.due_date + "T00:00:00").toLocaleDateString("pt-BR")}{" "}
-                        {isLate && "(Vencida!)"}
-                      </TableCell>
-                      <TableCell className="text-right font-extrabold">
-                        {Number(ins.amount).toLocaleString("pt-BR", {
-                          style: "currency",
-                          currency: "BRL",
-                        })}
-                      </TableCell>
-                      <TableCell>
-                        <Badge
-                          className={
-                            ins.status === "Pago"
-                              ? "bg-success/15 text-success border-success/30"
-                              : isLate || ins.status === "Atrasado"
-                                ? "bg-rose-100 text-rose-700 border-rose-200 font-bold"
-                                : "bg-amber-50 text-amber-700 border-amber-200"
-                          }
-                          variant="outline"
+                        <TableCell className="font-semibold text-center">
+                          <div className="flex items-center justify-center gap-1">
+                            {isExpanded ? (
+                              <ChevronDown className="h-3.5 w-3.5" />
+                            ) : (
+                              <ChevronRight className="h-3.5 w-3.5" />
+                            )}
+                            {g.paid_count} de {g.installments_count} pagas
+                          </div>
+                        </TableCell>
+                        <TableCell className="font-bold">#{g.order_number}</TableCell>
+                        <TableCell
+                          className="font-semibold text-primary hover:underline"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navegarAba("perfil", { id: g.customer_id });
+                          }}
                         >
-                          {isLate ? "Atrasado" : ins.status}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-muted-foreground">
-                        {ins.payment_date
-                          ? new Date(ins.payment_date + "T12:00:00").toLocaleDateString("pt-BR")
-                          : "—"}
-                      </TableCell>
-                      <TableCell>{ins.payment_method || "—"}</TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex items-center justify-end gap-1.5">
-                          {ins.status !== "Pago" && (
-                            <Button
-                              size="sm"
-                              className="h-7 text-xs bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border-emerald-300 font-semibold"
-                              onClick={() => {
-                                setPayingIns(ins);
-                                setOpenPayModal(true);
-                              }}
-                            >
-                              Dar Baixa
-                            </Button>
-                          )}
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            className="h-7 w-7 text-slate-500 hover:text-blue-700 hover:bg-blue-50"
-                            title="Editar parcela"
-                            onClick={() => handleOpenEdit(ins)}
+                          {g.customer_name}
+                        </TableCell>
+                        <TableCell className={g.has_late ? "text-destructive font-bold" : ""}>
+                          {g.next_due_date
+                            ? new Date(g.next_due_date + "T00:00:00").toLocaleDateString("pt-BR")
+                            : "—"}
+                          {g.has_late && " (Vencida!)"}
+                        </TableCell>
+                        <TableCell className="text-right font-extrabold">
+                          {g.total_amount.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+                        </TableCell>
+                        <TableCell>
+                          <Badge
+                            className={
+                              quitado
+                                ? "bg-success/15 text-success border-success/30"
+                                : g.has_late
+                                  ? "bg-rose-100 text-rose-700 border-rose-200 font-bold"
+                                  : "bg-amber-50 text-amber-700 border-amber-200"
+                            }
+                            variant="outline"
                           >
-                            <Pencil className="h-3.5 w-3.5" />
-                          </Button>
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            className="h-7 w-7 text-slate-500 hover:text-destructive hover:bg-destructive/10"
-                            title="Excluir parcela"
-                            onClick={() => handleDelete(ins)}
-                          >
-                            <Trash2 className="h-3.5 w-3.5" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
+                            {quitado ? "Quitado" : g.has_late ? "Atrasado" : "Em aberto"}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-muted-foreground">—</TableCell>
+                        <TableCell>—</TableCell>
+                        <TableCell className="text-right text-muted-foreground">
+                          {isExpanded ? "Recolher" : "Ver parcelas"}
+                        </TableCell>
+                      </TableRow>
+                      {isExpanded &&
+                        g.items.map((ins: any) => {
+                          const isLate =
+                            (ins.status === "Pendente" || ins.status === "Parcialmente Pago") &&
+                            new Date(ins.due_date) < new Date();
+                          return (
+                            <TableRow key={ins.id} className="hover:bg-slate-50/50 bg-slate-50/10">
+                              <TableCell className="font-semibold text-center pl-6">
+                                {ins.installment_number} / {ins.orders?.installments || 1}
+                              </TableCell>
+                              <TableCell className="font-bold text-muted-foreground">
+                                #{ins.orders?.order_number}
+                              </TableCell>
+                              <TableCell className="text-muted-foreground">
+                                {ins.orders?.customers?.name}
+                              </TableCell>
+                              <TableCell className={isLate ? "text-destructive font-bold" : ""}>
+                                {new Date(ins.due_date + "T00:00:00").toLocaleDateString("pt-BR")}{" "}
+                                {isLate && "(Vencida!)"}
+                              </TableCell>
+                              <TableCell className="text-right font-extrabold">
+                                {Number(ins.amount).toLocaleString("pt-BR", {
+                                  style: "currency",
+                                  currency: "BRL",
+                                })}
+                              </TableCell>
+                              <TableCell>
+                                <Badge
+                                  className={
+                                    ins.status === "Pago"
+                                      ? "bg-success/15 text-success border-success/30"
+                                      : isLate || ins.status === "Atrasado"
+                                        ? "bg-rose-100 text-rose-700 border-rose-200 font-bold"
+                                        : "bg-amber-50 text-amber-700 border-amber-200"
+                                  }
+                                  variant="outline"
+                                >
+                                  {isLate ? "Atrasado" : ins.status}
+                                </Badge>
+                              </TableCell>
+                              <TableCell className="text-muted-foreground">
+                                {ins.payment_date
+                                  ? new Date(ins.payment_date + "T12:00:00").toLocaleDateString("pt-BR")
+                                  : "—"}
+                              </TableCell>
+                              <TableCell>{ins.payment_method || "—"}</TableCell>
+                              <TableCell className="text-right">
+                                <div className="flex items-center justify-end gap-1.5">
+                                  {ins.status !== "Pago" && (
+                                    <Button
+                                      size="sm"
+                                      className="h-7 text-xs bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border-emerald-300 font-semibold"
+                                      onClick={() => {
+                                        setPayingIns(ins);
+                                        setOpenPayModal(true);
+                                      }}
+                                    >
+                                      Dar Baixa
+                                    </Button>
+                                  )}
+                                  <Button
+                                    size="icon"
+                                    variant="ghost"
+                                    className="h-7 w-7 text-slate-500 hover:text-blue-700 hover:bg-blue-50"
+                                    title="Editar parcela"
+                                    onClick={() => handleOpenEdit(ins)}
+                                  >
+                                    <Pencil className="h-3.5 w-3.5" />
+                                  </Button>
+                                  <Button
+                                    size="icon"
+                                    variant="ghost"
+                                    className="h-7 w-7 text-slate-500 hover:text-destructive hover:bg-destructive/10"
+                                    title="Excluir parcela"
+                                    onClick={() => handleDelete(ins)}
+                                  >
+                                    <Trash2 className="h-3.5 w-3.5" />
+                                  </Button>
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })}
+                    </>
                   );
                 })
               )}
