@@ -2553,6 +2553,39 @@ function ClienteForm({
                     ) : (
                       filteredCatalog.map((prod) => {
                         const outOfStock = Number(prod.stock_current) <= 0;
+
+                        if (presentationMode) {
+                          return (
+                            <div
+                              key={prod.id}
+                              className="p-3 border rounded-lg bg-card hover:bg-slate-50 transition flex items-center gap-3"
+                            >
+                              <div className="h-16 w-16 border rounded bg-slate-100 flex items-center justify-center shrink-0 text-xs overflow-hidden">
+                                {prod.image_url ? (
+                                  <img
+                                    src={prod.image_url}
+                                    alt=""
+                                    className="h-full w-full object-cover"
+                                  />
+                                ) : (
+                                  "IMG"
+                                )}
+                              </div>
+                              <p className="flex-1 min-w-0 text-sm font-semibold truncate text-slate-800">
+                                {prod.name}
+                              </p>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleAddProduct(prod)}
+                                className="h-9 rounded"
+                              >
+                                <Plus className="h-3.5 w-3.5 mr-0.5" /> Colocar na sacola
+                              </Button>
+                            </div>
+                          );
+                        }
+
                         return (
                           <div
                             key={prod.id}
@@ -2582,18 +2615,12 @@ function ClienteForm({
                                 </span>
                               </div>
                               <div className="flex items-center justify-between mt-1">
-                                {presentationMode ? (
-                                  <span className="text-[10px] text-muted-foreground italic">
-                                    Valor oculto (modo apresentação)
-                                  </span>
-                                ) : (
-                                  <span className="text-xs font-extrabold text-primary">
-                                    {Number(prod.sale_price).toLocaleString("pt-BR", {
-                                      style: "currency",
-                                      currency: "BRL",
-                                    })}
-                                  </span>
-                                )}
+                                <span className="text-xs font-extrabold text-primary">
+                                  {Number(prod.sale_price).toLocaleString("pt-BR", {
+                                    style: "currency",
+                                    currency: "BRL",
+                                  })}
+                                </span>
                                 <span
                                   className={`text-[10px] font-semibold ${outOfStock ? "text-destructive" : "text-emerald-600"}`}
                                 >
