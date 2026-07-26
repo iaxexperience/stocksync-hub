@@ -10,7 +10,9 @@
       "Bash(git commit *)",
       "Skill(superpowers:writing-plans)",
       "Skill(superpowers:subagent-driven-development)",
-      "Bash(xargs grep *)"
+      "Bash(xargs grep *)",
+      "Bash(npx --no-install wrangler deploy --config wrangler.json --dry-run)",
+      "Bash(npx --no-install wrangler deploy --config wrangler.json)"
     ]
   }
 }
