@@ -1602,6 +1602,16 @@ function ClienteForm({
   // continua funcionando normalmente, só o preço fica oculto na busca.
   const [presentationMode, setPresentationMode] = useState(!!sacolaMode);
   const [zoomedImage, setZoomedImage] = useState<{ url: string; name: string } | null>(null);
+
+  // Garantia extra (independente da ordem de hidratação/estado inicial):
+  // sempre que entrar via "Sacola", força a aba de Produtos & Carrinho e o
+  // Modo Apresentação ligado.
+  useEffect(() => {
+    if (sacolaMode) {
+      setActiveTab("cobranca");
+      setPresentationMode(true);
+    }
+  }, [sacolaMode]);
   const [installationFee, setInstallationFee] = useState(0);
   const [shippingFee, setShippingFee] = useState(0);
   const [discountType, setDiscountType] = useState("val"); // val ou pct
@@ -2189,36 +2199,50 @@ function ClienteForm({
   return (
     <div className="grid grid-cols-1 gap-6 animate-fade-in">
       <Card className="shadow-sm">
-        <CardHeader className="pb-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <CardTitle className="text-xl font-bold">
-              {isVendaMode
-                ? `Lançamento de Venda: ${activeCustomer?.name}`
-                : isEditMode
-                  ? "Editar Ficha de Cliente"
-                  : "Formulário de Cadastro"}
+        {!sacolaMode && (
+          <CardHeader className="pb-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+              <CardTitle className="text-xl font-bold">
+                {isVendaMode
+                  ? `Lançamento de Venda: ${activeCustomer?.name}`
+                  : isEditMode
+                    ? "Editar Ficha de Cliente"
+                    : "Formulário de Cadastro"}
+              </CardTitle>
+              <CardDescription>
+                {isVendaMode
+                  ? "Preencha o carrinho e condições de faturamento do cliente."
+                  : "Forneça os dados pessoais, endereço e opcionais de faturamento."}
+              </CardDescription>
+            </div>
+            <Button
+              variant="ghost"
+              onClick={() => navegarAba("lista")}
+              className="self-start sm:self-center"
+            >
+              <X className="h-4 w-4 mr-1" /> Fechar
+            </Button>
+          </CardHeader>
+        )}
+        {sacolaMode && (
+          <CardHeader className="pb-3 flex flex-row items-center justify-between gap-4">
+            <CardTitle className="text-xl font-bold flex items-center gap-2">
+              <ShoppingCart className="h-5 w-5" /> Sacola de Compras
             </CardTitle>
-            <CardDescription>
-              {isVendaMode
-                ? "Preencha o carrinho e condições de faturamento do cliente."
-                : "Forneça os dados pessoais, endereço e opcionais de faturamento."}
-            </CardDescription>
-          </div>
-          <Button
-            variant="ghost"
-            onClick={() => navegarAba("lista")}
-            className="self-start sm:self-center"
-          >
-            <X className="h-4 w-4 mr-1" /> Fechar
-          </Button>
-        </CardHeader>
+            <Button variant="ghost" onClick={() => navegarAba("lista")}>
+              <X className="h-4 w-4 mr-1" /> Fechar
+            </Button>
+          </CardHeader>
+        )}
         <CardContent>
           <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="mb-4">
-              {!isVendaMode && <TabsTrigger value="dados">Dados Cadastrais</TabsTrigger>}
-              {!isVendaMode && <TabsTrigger value="endereco">Endereço</TabsTrigger>}
-              <TabsTrigger value="cobranca">Produtos & Carrinho</TabsTrigger>
-            </TabsList>
+            {!sacolaMode && (
+              <TabsList className="mb-4">
+                {!isVendaMode && <TabsTrigger value="dados">Dados Cadastrais</TabsTrigger>}
+                {!isVendaMode && <TabsTrigger value="endereco">Endereço</TabsTrigger>}
+                <TabsTrigger value="cobranca">Produtos & Carrinho</TabsTrigger>
+              </TabsList>
+            )}
 
             {/* TAB: DADOS CADASTRAIS */}
             <TabsContent value="dados" className="space-y-4">
