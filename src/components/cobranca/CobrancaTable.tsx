@@ -20,33 +20,30 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ArrowUpDown, ChevronLeft, ChevronRight, Package as PackageIcon } from "lucide-react";
 import {
-  diasEmAtraso,
   formatCurrencyBRL,
   formatDateBR,
   situacaoBadgeClass,
   situacaoLabel,
-  situacaoParcela,
-  situacaoRowClass,
-  round2,
+  type SituacaoParcela,
 } from "@/lib/cobranca";
-import type { CobrancaInstallmentRow } from "@/hooks/useCobranca";
+import type { CobrancaOrderGroup } from "@/hooks/useCobranca";
 
 interface Props {
-  rows: CobrancaInstallmentRow[];
-  onRowClick: (row: CobrancaInstallmentRow) => void;
+  rows: CobrancaOrderGroup[];
+  onRowClick: (row: CobrancaOrderGroup) => void;
 }
 
 export function CobrancaTable({ rows, onRowClick }: Props) {
-  const [sorting, setSorting] = useState<SortingState>([{ id: "due_date", desc: false }]);
+  const [sorting, setSorting] = useState<SortingState>([{ id: "vencimento", desc: false }]);
 
-  const columns = useMemo<ColumnDef<CobrancaInstallmentRow>[]>(
+  const columns = useMemo<ColumnDef<CobrancaOrderGroup>[]>(
     () => [
       {
         id: "cliente",
         header: "Cliente",
-        accessorFn: (r) => r.orders.customers?.name ?? "",
+        accessorFn: (r) => r.customer?.name ?? "",
         cell: ({ row }) => {
-          const c = row.original.orders.customers;
+          const c = row.original.customer;
           return (
             <div className="flex items-center gap-2">
               <span className="font-medium">{c?.name ?? "—"}</span>
@@ -62,64 +59,50 @@ export function CobrancaTable({ rows, onRowClick }: Props) {
       {
         id: "cidade",
         header: "Cidade",
-        accessorFn: (r) => {
-          const addr = r.orders.customers?.customer_addresses ?? [];
-          return addr[0]?.city ?? "";
-        },
+        accessorFn: (r) => r.customer?.customer_addresses?.[0]?.city ?? "",
         cell: ({ getValue }) => <span className="text-sm">{(getValue() as string) || "—"}</span>,
       },
       {
         id: "bairro",
         header: "Bairro",
-        accessorFn: (r) => {
-          const addr = r.orders.customers?.customer_addresses ?? [];
-          return addr[0]?.neighborhood ?? "";
-        },
+        accessorFn: (r) => r.customer?.customer_addresses?.[0]?.neighborhood ?? "",
         cell: ({ getValue }) => <span className="text-sm">{(getValue() as string) || "—"}</span>,
       },
       {
         id: "telefone",
         header: "Telefone",
-        accessorFn: (r) => r.orders.customers?.whatsapp || r.orders.customers?.phone || "",
+        accessorFn: (r) => r.customer?.whatsapp || r.customer?.phone || "",
         cell: ({ getValue }) => <span className="text-sm">{(getValue() as string) || "—"}</span>,
       },
       {
         id: "order_number",
         header: "Nº da Venda",
-        accessorFn: (r) => r.orders.order_number,
+        accessorFn: (r) => r.order_number,
       },
       {
         id: "data_compra",
         header: "Data da Compra",
-        accessorFn: (r) => r.orders.created_at,
+        accessorFn: (r) => r.created_at,
         cell: ({ getValue }) => formatDateBR(getValue() as string),
       },
       {
         id: "valor_total",
         header: () => <div className="text-right">Valor Total</div>,
-        accessorFn: (r) => r.orders.total_amount,
+        accessorFn: (r) => r.total_amount,
         cell: ({ getValue }) => (
           <div className="text-right">{formatCurrencyBRL(getValue() as number)}</div>
         ),
       },
       {
-        id: "parcela",
-        header: "Parcela",
-        accessorFn: (r) => r.installment_number,
-        cell: ({ row }) => `${row.original.installment_number}/${row.original.orders.installments}`,
-      },
-      {
-        id: "valor_parcela",
-        header: () => <div className="text-right">Valor da Parcela</div>,
-        accessorFn: (r) => r.amount,
-        cell: ({ getValue }) => (
-          <div className="text-right">{formatCurrencyBRL(getValue() as number)}</div>
-        ),
+        id: "parcelas",
+        header: "Parcelas",
+        accessorFn: (r) => r.paid_count,
+        cell: ({ row }) => `${row.original.paid_count} de ${row.original.installments_count} pagas`,
       },
       {
         id: "valor_pago",
         header: () => <div className="text-right">Valor Pago</div>,
-        accessorFn: (r) => r.amount_paid,
+        accessorFn: (r) => r.total_paid,
         cell: ({ getValue }) => (
           <div className="text-right">{formatCurrencyBRL(getValue() as number)}</div>
         ),
@@ -127,21 +110,24 @@ export function CobrancaTable({ rows, onRowClick }: Props) {
       {
         id: "saldo",
         header: () => <div className="text-right">Saldo</div>,
-        accessorFn: (r) => round2(r.amount - r.amount_paid),
+        accessorFn: (r) => r.total_saldo,
         cell: ({ getValue }) => (
           <div className="text-right font-medium">{formatCurrencyBRL(getValue() as number)}</div>
         ),
       },
       {
         id: "vencimento",
-        header: "Vencimento",
-        accessorFn: (r) => r.due_date,
-        cell: ({ getValue }) => formatDateBR(getValue() as string),
+        header: "Próximo Vencimento",
+        accessorFn: (r) => r.next_due_date ?? "",
+        cell: ({ getValue }) => {
+          const v = getValue() as string;
+          return v ? formatDateBR(v) : "Quitado";
+        },
       },
       {
         id: "dias_atraso",
         header: () => <div className="text-right">Dias em Atraso</div>,
-        accessorFn: (r) => diasEmAtraso(r.due_date, round2(r.amount - r.amount_paid)),
+        accessorFn: (r) => r.max_dias_atraso,
         cell: ({ getValue }) => {
           const dias = getValue() as number;
           return (
@@ -154,9 +140,9 @@ export function CobrancaTable({ rows, onRowClick }: Props) {
       {
         id: "status",
         header: "Status",
-        accessorFn: (r) => situacaoParcela({ amount: r.amount, amountPaid: r.amount_paid, dueDate: r.due_date }),
+        accessorFn: (r) => r.situacao,
         cell: ({ getValue }) => {
-          const situacao = getValue() as ReturnType<typeof situacaoParcela>;
+          const situacao = getValue() as SituacaoParcela;
           return <Badge className={situacaoBadgeClass(situacao)}>{situacaoLabel(situacao)}</Badge>;
         },
       },
@@ -216,30 +202,23 @@ export function CobrancaTable({ rows, onRowClick }: Props) {
               <TableRow>
                 <TableCell colSpan={columns.length} className="text-center py-12 text-muted-foreground">
                   <PackageIcon className="mx-auto h-10 w-10 opacity-40 mb-2" />
-                  Nenhuma parcela encontrada com esses filtros.
+                  Nenhuma venda parcelada encontrada com esses filtros.
                 </TableCell>
               </TableRow>
             ) : (
-              table.getRowModel().rows.map((row) => {
-                const situacao = situacaoParcela({
-                  amount: row.original.amount,
-                  amountPaid: row.original.amount_paid,
-                  dueDate: row.original.due_date,
-                });
-                return (
-                  <TableRow
-                    key={row.id}
-                    className={`cursor-pointer ${situacaoRowClass(situacao)}`}
-                    onClick={() => onRowClick(row.original)}
-                  >
-                    {row.getVisibleCells().map((cell) => (
-                      <TableCell key={cell.id} onClick={(e) => cell.column.id === "acoes" && e.stopPropagation()}>
-                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                );
-              })
+              table.getRowModel().rows.map((row) => (
+                <TableRow
+                  key={row.id}
+                  className="cursor-pointer"
+                  onClick={() => onRowClick(row.original)}
+                >
+                  {row.getVisibleCells().map((cell) => (
+                    <TableCell key={cell.id} onClick={(e) => cell.column.id === "acoes" && e.stopPropagation()}>
+                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              ))
             )}
           </TableBody>
         </Table>
@@ -247,7 +226,7 @@ export function CobrancaTable({ rows, onRowClick }: Props) {
       <div className="flex items-center justify-between text-sm">
         <span className="text-muted-foreground">
           Página {table.getState().pagination.pageIndex + 1} de {Math.max(table.getPageCount(), 1)} —{" "}
-          {rows.length} parcela(s)
+          {rows.length} venda(s)
         </span>
         <div className="flex gap-2">
           <Button
