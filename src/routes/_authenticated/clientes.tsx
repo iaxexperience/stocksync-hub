@@ -772,6 +772,7 @@ function ClientesLayout() {
                 sellers={sellers}
                 isEditMode={!!edit}
                 navegarAba={navegarAba}
+                sacolaMode={modo === "sacola"}
               />
             )}
             {aba === "perfil" && id && (
