@@ -420,7 +420,7 @@ function RelatoriosPage() {
                         >
                           {r.isQuitado
                             ? "Quitado"
-                            : `Em aberto (${r.paidCount}/${r.installmentsCount})`}
+                            : `Em aberto (${r.paidCount.toLocaleString("pt-BR", { maximumFractionDigits: 1 })}/${r.installmentsCount})`}
                         </Badge>
                       </TableCell>
                       <TableCell className="text-right font-bold text-slate-900">
