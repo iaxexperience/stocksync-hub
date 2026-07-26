@@ -289,11 +289,12 @@ export function useLogCollectionAttempt() {
       } = await supabase.auth.getUser();
       const { error } = await supabase.from("audit_logs").insert({
         organization_id: orgId!,
-        user_id: user?.id ?? null,
+        table_name: "installments",
+        record_id: input.installmentId,
         action: "tentativa_cobranca",
-        entity_type: "installment",
-        entity_id: input.installmentId,
-        details: { channel: input.channel, notes: input.notes ?? null },
+        old_data: null,
+        new_data: { channel: input.channel, notes: input.notes ?? null },
+        performed_by: user?.id ?? null,
       });
       if (error) throw error;
     },
