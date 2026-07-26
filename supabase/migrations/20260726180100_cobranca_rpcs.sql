@@ -196,10 +196,12 @@ BEGIN
   WHERE id = p_payment_id
   RETURNING * INTO v_payment;
 
-  INSERT INTO public.audit_logs (organization_id, user_id, action, entity_type, entity_id, details)
+  INSERT INTO public.audit_logs (organization_id, table_name, record_id, action, old_data, new_data, performed_by)
   VALUES (
-    v_order.organization_id, auth.uid(), 'cancelamento_recebimento', 'installment_payment', p_payment_id,
-    jsonb_build_object('amount', v_payment.amount, 'reason', p_reason, 'order_number', v_order.order_number)
+    v_order.organization_id, 'installment_payments', p_payment_id, 'cancelamento_recebimento',
+    jsonb_build_object('status', 'ativo', 'amount', v_payment.amount),
+    jsonb_build_object('status', 'cancelado', 'reason', p_reason, 'order_number', v_order.order_number),
+    auth.uid()
   );
 
   RETURN v_payment;
@@ -224,10 +226,12 @@ BEGIN
     NEW.amount_paid := NEW.amount;
 
     SELECT organization_id INTO v_org_id FROM public.orders WHERE id = NEW.order_id;
-    INSERT INTO public.audit_logs (organization_id, user_id, action, entity_type, entity_id, details)
+    INSERT INTO public.audit_logs (organization_id, table_name, record_id, action, old_data, new_data, performed_by)
     VALUES (
-      v_org_id, auth.uid(), 'recebimento_fora_do_fluxo', 'installment', NEW.id,
-      jsonb_build_object('amount', NEW.amount, 'note', 'status Pago definido sem passar pela RPC de recebimento')
+      v_org_id, 'installments', NEW.id, 'recebimento_fora_do_fluxo',
+      jsonb_build_object('amount_paid', OLD.amount_paid),
+      jsonb_build_object('amount', NEW.amount, 'amount_paid', NEW.amount_paid, 'note', 'status Pago definido sem passar pela RPC de recebimento'),
+      auth.uid()
     );
   END IF;
   RETURN NEW;
