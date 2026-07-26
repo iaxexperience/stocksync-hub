@@ -14,7 +14,9 @@
       "Bash(npx --no-install wrangler deploy --config wrangler.json --dry-run)",
       "Bash(npx --no-install wrangler deploy --config wrangler.json)",
       "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" https://stocksync-hub.maxrangelformiga.workers.dev/produtos)",
-      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" https://josiejo.com.br/produtos)"
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" https://josiejo.com.br/produtos)",
+      "Bash(grep -n \"supabase\\\\s*$\\\\|from\\(\\\\\"\\\\|useQuery\\\\|queryKey\" src/routes/_authenticated/relatorios.tsx)",
+      "Bash(grep -n \"^function \\\\|^const .* = \\(\\\\|// ──\\\\|/\\\\* ===\\\\|=== TAB\\\\|function .*Tab\\\\b\" src/routes/_authenticated/clientes.tsx)"
     ]
   }
 }
