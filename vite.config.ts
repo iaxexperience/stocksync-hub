@@ -5,13 +5,13 @@
 //     React/TanStack dedupe, error logger plugins, and sandbox detection (port/host/strictPort).
 // You can pass additional config via defineConfig({ vite: { ... }, etc... }) if needed.
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
-import { mcpPlugin } from "@lovable.dev/mcp-js/stacks/tanstack/vite";
 
+// mcpPlugin() (@lovable.dev/mcp-js) desativado temporariamente: ele compara
+// caminhos com barra "/" contra o cwd nativo do Windows ("D:\...\src\routes"),
+// e falha o build inteiro com "routesDir must resolve under ...". Os arquivos
+// que o Lovable gerou em src/lib/mcp/ e .lovable/mcp/ continuam intactos.
 export default defineConfig({
   tanstackStart: {
     server: { entry: "server" },
-  },
-  vite: {
-    plugins: [mcpPlugin()],
   },
 });
