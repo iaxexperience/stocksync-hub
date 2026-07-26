@@ -138,6 +138,8 @@ CREATE INDEX IF NOT EXISTS idx_installments_status_due_date ON public.installmen
 
 -- Backfill sintético: uma linha de histórico para cada parcela já paga
 -- antes da existência deste módulo, para o Histórico nunca aparecer vazio.
+-- created_by fica NULL — não há um usuário real associado a esse
+-- recebimento histórico (orders não tem coluna created_by).
 INSERT INTO public.installment_payments
   (installment_id, organization_id, amount, payment_method, payment_date, notes, client_request_id, created_by, created_at)
 SELECT
@@ -148,11 +150,12 @@ SELECT
   COALESCE(i.payment_date, i.due_date),
   'Migração — recebimento anterior ao módulo de Cobrança',
   gen_random_uuid(),
-  o.created_by,
+  NULL,
   COALESCE(i.updated_at, i.created_at, now())
 FROM public.installments i
 JOIN public.orders o ON o.id = i.order_id
 WHERE i.status = 'Pago'
+  AND i.amount > 0
   AND NOT EXISTS (SELECT 1 FROM public.installment_payments ip WHERE ip.installment_id = i.id);
 
 -- ============================================================
