@@ -68,7 +68,7 @@ export function CobrancaPanel() {
   const canReceivePayment = !role || RECEIVE_ROLES.includes(role);
   const canCancelPayment = !!role && CANCEL_ROLES.includes(role);
 
-  const { data: installments = [], isLoading } = useCobrancaInstallments();
+  const { data: installments = [], isLoading, error, isError } = useCobrancaInstallments();
   const { data: periodo } = useCobrancaRecebimentosPeriodo();
 
   const [clienteSearch, setClienteSearch] = useState("");

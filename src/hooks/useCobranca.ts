@@ -63,7 +63,6 @@ export function useCobrancaInstallments() {
           )`,
         )
         .eq("orders.organization_id", orgId!)
-        .neq("orders.order_type", "orcamento")
         .neq("orders.status", "Cancelado")
         .order("due_date");
       if (error) throw error;
