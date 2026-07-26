@@ -465,36 +465,39 @@ function Produtos() {
                   accept="image/*"
                   className="hidden"
                 />
-                <div className="flex gap-2 items-center">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="icon"
-                    disabled={isUploading}
-                    onClick={() => fileInputRef.current?.click()}
-                    className="h-16 w-16 shrink-0 relative overflow-hidden"
-                    title="Enviar foto do produto"
-                  >
-                    {isUploading ? (
-                      <Loader2 className="h-5 w-5 animate-spin opacity-70" />
-                    ) : imageUrl ? (
-                      <img src={imageUrl} className="h-full w-full object-cover" />
-                    ) : (
-                      <ImagePlus className="h-5 w-5 opacity-70" />
-                    )}
-                  </Button>
-                  <div className="flex-1 space-y-1">
-                    <Input
-                      value={imageUrl}
-                      onChange={(e) => setImageUrl(e.target.value)}
-                      placeholder="https://exemplo.com/foto.png ou envie um arquivo"
+                <div className="flex items-center gap-3">
+                  {imageUrl ? (
+                    <img
+                      src={imageUrl}
+                      className="h-16 w-16 rounded object-cover shrink-0 border"
                     />
+                  ) : (
+                    <div className="h-16 w-16 rounded border border-dashed flex items-center justify-center shrink-0 bg-muted">
+                      <ImagePlus className="h-5 w-5 text-muted-foreground opacity-60" />
+                    </div>
+                  )}
+                  <div className="flex flex-col gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      disabled={isUploading}
+                      onClick={() => fileInputRef.current?.click()}
+                      className="w-fit"
+                    >
+                      {isUploading ? (
+                        <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
+                      ) : (
+                        <ImagePlus className="mr-1.5 h-4 w-4" />
+                      )}
+                      {isUploading ? "Enviando…" : "Enviar do computador"}
+                    </Button>
                     {imageUrl && (
                       <Button
                         type="button"
                         variant="ghost"
                         size="sm"
-                        className="h-auto p-0 text-xs text-muted-foreground"
+                        className="h-auto w-fit p-0 text-xs text-muted-foreground"
                         onClick={() => setImageUrl("")}
                       >
                         Remover foto
@@ -502,6 +505,12 @@ function Produtos() {
                     )}
                   </div>
                 </div>
+                <Input
+                  value={imageUrl}
+                  onChange={(e) => setImageUrl(e.target.value)}
+                  placeholder="ou cole a URL de uma imagem: https://exemplo.com/foto.png"
+                  className="mt-2"
+                />
               </div>
               <div className="col-span-2 md:col-span-4 space-y-1">
                 <Label>Descrição</Label>
