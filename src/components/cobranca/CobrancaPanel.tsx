@@ -87,7 +87,12 @@ export function CobrancaPanel() {
   const [atrasoFiltro, setAtrasoFiltro] = useState("todos");
   const [formaRecebimento, setFormaRecebimento] = useState("todos");
 
-  const [selectedGroup, setSelectedGroup] = useState<CobrancaOrderGroup | null>(null);
+  // Guarda só o id da venda selecionada — o objeto do grupo em si é
+  // recalculado a cada render a partir dos dados vivos (abaixo), pra nunca
+  // ficar "congelado" no valor de quando o drawer foi aberto (senão, depois
+  // de uma baixa parcial, o drawer continuaria mostrando o saldo antigo até
+  // fechar e abrir de novo).
+  const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
 
   // KPIs continuam calculados por PARCELA (não por venda) — "Parcelas
@@ -181,6 +186,14 @@ export function CobrancaPanel() {
     atrasoFiltro,
     formaRecebimento,
   ]);
+
+  // Deriva o grupo aberto no drawer a partir do array vivo (não filtrado,
+  // pra continuar mostrando a venda mesmo que ela deixe de bater com o
+  // filtro depois de uma baixa) — sempre reflete o último refetch.
+  const selectedGroup = useMemo(
+    () => (selectedOrderId ? (groups.find((g) => g.order_id === selectedOrderId) ?? null) : null),
+    [groups, selectedOrderId],
+  );
 
   const filterSummary = useMemo(() => {
     const parts: string[] = [];
