@@ -72,7 +72,8 @@
       "Bash(npx --no-install tsc --noEmit -p tsconfig.json)",
       "Bash(./node_modules/.bin/tsc --noEmit -p tsconfig.json)",
       "Bash(git -C . remote -v)",
-      "Bash(echo \"tracked=$?\")"
+      "Bash(echo \"tracked=$?\")",
+      "Bash(git remote *)"
     ],
     "additionalDirectories": [
       "C:\\Users\\maxra\\AppData\\Local\\Temp",
