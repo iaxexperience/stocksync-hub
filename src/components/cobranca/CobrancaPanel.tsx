@@ -227,8 +227,14 @@ export function CobrancaPanel() {
             overflow: visible !important;
             background: white !important;
           }
+          /* Cada botão de imprimir marca body[data-print-target] antes de
+             chamar window.print(), pra só a área certa aparecer — evita que
+             o painel e o drawer de uma venda se misturem na impressão. */
           body * { visibility: hidden !important; }
-          .cobranca-print-container, .cobranca-print-container * { visibility: visible !important; }
+          body[data-print-target="painel"] .cobranca-print-container,
+          body[data-print-target="painel"] .cobranca-print-container * {
+            visibility: visible !important;
+          }
           .cobranca-print-container {
             position: static !important;
             width: 100% !important;
@@ -252,7 +258,13 @@ export function CobrancaPanel() {
 
       <div className="flex items-center justify-between no-print">
         <div />
-        <Button variant="outline" onClick={() => window.print()}>
+        <Button
+          variant="outline"
+          onClick={() => {
+            document.body.setAttribute("data-print-target", "painel");
+            window.print();
+          }}
+        >
           <Printer className="mr-1.5 h-4 w-4" /> Imprimir / PDF
         </Button>
       </div>
