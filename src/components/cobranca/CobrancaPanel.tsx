@@ -235,12 +235,19 @@ export function CobrancaPanel() {
           body[data-print-target="painel"] .cobranca-print-container * {
             visibility: visible !important;
           }
-          .cobranca-print-container {
-            position: static !important;
+          /* position: fixed tira o container do fluxo normal do layout —
+             sem isso, a barra lateral/cabeçalho (invisíveis mas ainda
+             ocupando espaço, já que visibility:hidden não remove do
+             layout) empurravam o conteúdo pra baixo e a 1ª folha saía em
+             branco. */
+          body[data-print-target="painel"] .cobranca-print-container {
+            position: fixed !important;
+            inset: 0 !important;
             width: 100% !important;
             max-width: none !important;
             margin: 0 !important;
             padding: 0 !important;
+            overflow: visible !important;
           }
           .no-print { display: none !important; }
           .print-only { display: block !important; }
