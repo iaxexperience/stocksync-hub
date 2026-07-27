@@ -71,7 +71,8 @@
       "WebFetch(domain:focusnfe.com.br)",
       "Bash(npx --no-install tsc --noEmit -p tsconfig.json)",
       "Bash(./node_modules/.bin/tsc --noEmit -p tsconfig.json)",
-      "Bash(git -C . remote -v)"
+      "Bash(git -C . remote -v)",
+      "Bash(echo \"tracked=$?\")"
     ],
     "additionalDirectories": [
       "C:\\Users\\maxra\\AppData\\Local\\Temp",
