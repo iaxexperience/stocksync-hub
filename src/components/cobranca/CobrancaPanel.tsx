@@ -356,7 +356,7 @@ export function CobrancaPanel() {
                 <CobrancaTable
                   rows={filteredGroups}
                   onRowClick={(group) => {
-                    setSelectedGroup(group);
+                    setSelectedOrderId(group.order_id);
                     setDrawerOpen(true);
                   }}
                 />
