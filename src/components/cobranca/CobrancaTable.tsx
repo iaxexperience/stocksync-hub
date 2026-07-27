@@ -33,6 +33,10 @@ interface Props {
   onRowClick: (row: CobrancaOrderGroup) => void;
 }
 
+// Célula compacta — reduz padding/fonte pra caber todas as colunas sem
+// precisar de barra de rolagem horizontal na maioria das telas.
+const CELL = "px-1.5 py-1.5 text-xs";
+
 export function CobrancaTable({ rows, onRowClick }: Props) {
   const [sorting, setSorting] = useState<SortingState>([{ id: "vencimento", desc: false }]);
 
@@ -45,10 +49,10 @@ export function CobrancaTable({ rows, onRowClick }: Props) {
         cell: ({ row }) => {
           const c = row.original.customer;
           return (
-            <div className="flex items-center gap-2">
-              <span className="font-medium">{c?.name ?? "—"}</span>
+            <div className="flex items-center gap-1.5 min-w-0">
+              <span className="font-medium truncate">{c?.name ?? "—"}</span>
               {c?.is_deleted && (
-                <Badge variant="outline" className="text-xs">
+                <Badge variant="outline" className="text-[10px] shrink-0">
                   Inativo
                 </Badge>
               )}
@@ -57,37 +61,41 @@ export function CobrancaTable({ rows, onRowClick }: Props) {
         },
       },
       {
-        id: "cidade",
-        header: "Cidade",
-        accessorFn: (r) => r.customer?.customer_addresses?.[0]?.city ?? "",
-        cell: ({ getValue }) => <span className="text-sm">{(getValue() as string) || "—"}</span>,
-      },
-      {
-        id: "bairro",
-        header: "Bairro",
-        accessorFn: (r) => r.customer?.customer_addresses?.[0]?.neighborhood ?? "",
-        cell: ({ getValue }) => <span className="text-sm">{(getValue() as string) || "—"}</span>,
+        id: "local",
+        header: "Cidade/Bairro",
+        accessorFn: (r) => {
+          const addr = r.customer?.customer_addresses?.[0];
+          return `${addr?.city ?? ""} ${addr?.neighborhood ?? ""}`.trim();
+        },
+        cell: ({ row }) => {
+          const addr = row.original.customer?.customer_addresses?.[0];
+          return (
+            <span className="truncate block max-w-[9rem]">
+              {addr?.city || "—"}/{addr?.neighborhood || "—"}
+            </span>
+          );
+        },
       },
       {
         id: "telefone",
         header: "Telefone",
         accessorFn: (r) => r.customer?.whatsapp || r.customer?.phone || "",
-        cell: ({ getValue }) => <span className="text-sm">{(getValue() as string) || "—"}</span>,
+        cell: ({ getValue }) => <span>{(getValue() as string) || "—"}</span>,
       },
       {
         id: "order_number",
-        header: "Nº da Venda",
+        header: "Nº Venda",
         accessorFn: (r) => r.order_number,
       },
       {
         id: "data_compra",
-        header: "Data da Compra",
+        header: "Compra",
         accessorFn: (r) => r.created_at,
         cell: ({ getValue }) => formatDateBR(getValue() as string),
       },
       {
         id: "valor_total",
-        header: () => <div className="text-right">Valor Total</div>,
+        header: () => <div className="text-right">Total</div>,
         accessorFn: (r) => r.total_amount,
         cell: ({ getValue }) => (
           <div className="text-right">{formatCurrencyBRL(getValue() as number)}</div>
@@ -97,11 +105,11 @@ export function CobrancaTable({ rows, onRowClick }: Props) {
         id: "parcelas",
         header: "Parcelas",
         accessorFn: (r) => r.paid_count,
-        cell: ({ row }) => `${row.original.paid_count} de ${row.original.installments_count} pagas`,
+        cell: ({ row }) => `${row.original.paid_count}/${row.original.installments_count} pagas`,
       },
       {
         id: "valor_pago",
-        header: () => <div className="text-right">Valor Pago</div>,
+        header: () => <div className="text-right">Pago</div>,
         accessorFn: (r) => r.total_paid,
         cell: ({ getValue }) => (
           <div className="text-right">{formatCurrencyBRL(getValue() as number)}</div>
@@ -117,7 +125,7 @@ export function CobrancaTable({ rows, onRowClick }: Props) {
       },
       {
         id: "vencimento",
-        header: "Próximo Vencimento",
+        header: "Vencimento",
         accessorFn: (r) => r.next_due_date ?? "",
         cell: ({ getValue }) => {
           const v = getValue() as string;
@@ -126,7 +134,7 @@ export function CobrancaTable({ rows, onRowClick }: Props) {
       },
       {
         id: "dias_atraso",
-        header: () => <div className="text-right">Dias em Atraso</div>,
+        header: () => <div className="text-right">Atraso</div>,
         accessorFn: (r) => r.max_dias_atraso,
         cell: ({ getValue }) => {
           const dias = getValue() as number;
@@ -143,16 +151,25 @@ export function CobrancaTable({ rows, onRowClick }: Props) {
         accessorFn: (r) => r.situacao,
         cell: ({ getValue }) => {
           const situacao = getValue() as SituacaoParcela;
-          return <Badge className={situacaoBadgeClass(situacao)}>{situacaoLabel(situacao)}</Badge>;
+          return (
+            <Badge className={`${situacaoBadgeClass(situacao)} text-[10px] px-1.5 py-0`}>
+              {situacaoLabel(situacao)}
+            </Badge>
+          );
         },
       },
       {
         id: "acoes",
-        header: () => <div className="text-right">Ações</div>,
+        header: () => <div className="text-right">Ação</div>,
         cell: ({ row }) => (
           <div className="text-right">
-            <Button size="sm" variant="outline" onClick={() => onRowClick(row.original)}>
-              Ver / Receber
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-6 px-2 text-[11px]"
+              onClick={() => onRowClick(row.original)}
+            >
+              Ver
             </Button>
           </div>
         ),
@@ -180,7 +197,7 @@ export function CobrancaTable({ rows, onRowClick }: Props) {
             {table.getHeaderGroups().map((hg) => (
               <TableRow key={hg.id}>
                 {hg.headers.map((header) => (
-                  <TableHead key={header.id}>
+                  <TableHead key={header.id} className={`${CELL} h-8 whitespace-nowrap`}>
                     {header.isPlaceholder ? null : (
                       <button
                         type="button"
@@ -189,7 +206,7 @@ export function CobrancaTable({ rows, onRowClick }: Props) {
                         disabled={!header.column.getCanSort()}
                       >
                         {flexRender(header.column.columnDef.header, header.getContext())}
-                        {header.column.getCanSort() && <ArrowUpDown className="h-3 w-3 opacity-50" />}
+                        {header.column.getCanSort() && <ArrowUpDown className="h-2.5 w-2.5 opacity-50" />}
                       </button>
                     )}
                   </TableHead>
@@ -213,7 +230,11 @@ export function CobrancaTable({ rows, onRowClick }: Props) {
                   onClick={() => onRowClick(row.original)}
                 >
                   {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id} onClick={(e) => cell.column.id === "acoes" && e.stopPropagation()}>
+                    <TableCell
+                      key={cell.id}
+                      className={CELL}
+                      onClick={(e) => cell.column.id === "acoes" && e.stopPropagation()}
+                    >
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}
                     </TableCell>
                   ))}
