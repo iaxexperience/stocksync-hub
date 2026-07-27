@@ -41,11 +41,13 @@ function createSupabaseAdminClient() {
     SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
   }
 
-  // Se o Lovable injetar as credenciais antigas do Supabase ou estiver vazio, forçamos o uso do novo projeto
+  // Se o Lovable injetar a URL antiga/errada do Supabase (ou estiver vazia),
+  // corrige só a URL (não é segredo — é só a referência pública do projeto).
+  // NUNCA embutir a service_role key aqui: ela precisa vir só de variável de
+  // ambiente. Um valor hardcoded nesse arquivo já vazou pro histórico do Git
+  // anteriormente — não repetir o erro.
   if (!SUPABASE_URL || SUPABASE_URL.includes("hlangcduecxwmfbnncf") || SUPABASE_URL.includes("hianqcduecxkwmfbnncf")) {
     SUPABASE_URL = "https://fyvatfnpdoqowjckhtkb.supabase.co";
-    SUPABASE_SERVICE_ROLE_KEY =
-      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ5dmF0Zm5wZG9xb3dqY2todGtiIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4MzgwOTU4NSwiZXhwIjoyMDk5Mzg1NTg1fQ.GRRl_kR2OrFVNkynTZR1YfEbil6dzb1Hr5qjYbba5QU";
   }
 
   if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {

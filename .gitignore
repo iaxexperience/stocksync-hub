@@ -20,6 +20,11 @@ dist-ssr
 .wrangler/
 .dev.vars
 
+# Segredos — nunca versionar (a service_role key bypassa todo o RLS)
+.env
+.env.*
+!.env.example
+
 # Claude Code worktrees (isolated agent working copies — never part of the repo)
 .claude/worktrees/
 
