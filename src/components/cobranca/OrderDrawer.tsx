@@ -66,8 +66,13 @@ export function OrderDrawer({
             body[data-print-target="drawer"] .order-drawer-print-container * {
               visibility: visible !important;
             }
-            .order-drawer-print-container {
-              position: static !important;
+            /* position: fixed tira o container do fluxo normal do layout —
+               sem isso, a barra lateral/cabeçalho do sistema (invisíveis mas
+               ainda ocupando espaço) empurravam o conteúdo pra baixo e a 1ª
+               folha saía em branco. */
+            body[data-print-target="drawer"] .order-drawer-print-container {
+              position: fixed !important;
+              inset: 0 !important;
               width: 100% !important;
               max-width: none !important;
               margin: 0 !important;
