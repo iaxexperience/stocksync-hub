@@ -79,7 +79,9 @@
       "Bash(where.exe magick.exe)",
       "Bash(python fetch_photos.py)",
       "Bash(python build_mockup.py)",
-      "Bash(python -c \"import sys,json; d=json.load\\(sys.stdin\\); from collections import Counter; print\\(Counter\\(x['organization_id'] for x in d\\)\\)\")"
+      "Bash(python -c \"import sys,json; d=json.load\\(sys.stdin\\); from collections import Counter; print\\(Counter\\(x['organization_id'] for x in d\\)\\)\")",
+      "Bash(supabase link *)",
+      "Bash(supabase db *)"
     ],
     "additionalDirectories": [
       "C:\\Users\\maxra\\AppData\\Local\\Temp",
