@@ -244,7 +244,8 @@ function Loja() {
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
             {filtered.map((p) => {
-              const low = p.stock_current <= 3;
+              const out = p.stock_current <= 0;
+              const low = !out && p.stock_current <= 3;
               return (
                 <div
                   key={p.id}
@@ -273,18 +274,21 @@ function Loja() {
                     <Badge
                       variant="outline"
                       className={
-                        low
-                          ? "self-start border-amber-200 bg-amber-50 text-amber-700"
-                          : "self-start border-emerald-200 bg-emerald-50 text-emerald-700"
+                        out
+                          ? "self-start border-slate-200 bg-slate-100 text-slate-500"
+                          : low
+                            ? "self-start border-amber-200 bg-amber-50 text-amber-700"
+                            : "self-start border-emerald-200 bg-emerald-50 text-emerald-700"
                       }
                     >
-                      {low ? `Últimas ${p.stock_current} unid.` : "Em estoque"}
+                      {out ? "Em falta" : low ? `Últimas ${p.stock_current} unid.` : "Em estoque"}
                     </Badge>
                     <Button
                       onClick={() => addToCart(p.id)}
-                      className="mt-auto bg-blue-900 hover:bg-blue-800 text-white font-bold rounded-full text-xs h-9"
+                      disabled={out}
+                      className="mt-auto bg-blue-900 hover:bg-blue-800 text-white font-bold rounded-full text-xs h-9 disabled:opacity-60"
                     >
-                      Adicionar à sacola
+                      {out ? "Indisponível" : "Adicionar à sacola"}
                     </Button>
                   </div>
                 </div>
