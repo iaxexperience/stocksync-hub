@@ -71,6 +71,9 @@ function Landing() {
             <a href="#inicio" className="hover:text-pink-600 transition-colors">
               Início
             </a>
+            <Link to="/loja" className="hover:text-pink-600 transition-colors">
+              Produtos
+            </Link>
             <a href="#categorias" className="hover:text-pink-600 transition-colors">
               Categorias
             </a>
@@ -140,6 +143,14 @@ function Landing() {
                 >
                   <WhatsAppIcon className="h-5 w-5" /> Falar no WhatsApp
                 </a>
+              </Button>
+              <Button
+                asChild
+                size="lg"
+                variant="outline"
+                className="border-white/30 bg-white/5 text-white hover:bg-white/15 hover:text-white font-bold rounded-full px-8 py-6 transition-all"
+              >
+                <Link to="/loja">Ver Produtos</Link>
               </Button>
             </div>
           </div>
