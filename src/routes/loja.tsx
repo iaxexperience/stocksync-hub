@@ -12,6 +12,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { ArrowLeft, Minus, Plus, Search, ShoppingBag, Trash2 } from "lucide-react";
 
 const WHATSAPP_NUMBER = "5583988059666";
@@ -60,6 +61,7 @@ function Loja() {
   const [category, setCategory] = useState("Todos");
   const [cart, setCart] = useState<Cart>({});
   const [cartOpen, setCartOpen] = useState(false);
+  const [zoomedProduct, setZoomedProduct] = useState<StorefrontProduct | null>(null);
 
   useEffect(() => {
     setCart(loadCart());
@@ -248,14 +250,19 @@ function Loja() {
                   key={p.id}
                   className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow flex flex-col"
                 >
-                  <div className="aspect-[4/3] bg-slate-100">
+                  <button
+                    type="button"
+                    onClick={() => setZoomedProduct(p)}
+                    className="aspect-[4/3] bg-slate-100 cursor-zoom-in"
+                    aria-label={`Ampliar foto de ${p.name}`}
+                  >
                     <img
                       src={p.image_url ?? undefined}
                       alt={p.name}
                       loading="lazy"
                       className="w-full h-full object-cover"
                     />
-                  </div>
+                  </button>
                   <div className="p-3 flex flex-col gap-2 flex-1">
                     {p.category_name && (
                       <span className="text-[11px] font-bold uppercase tracking-wide text-pink-600">
@@ -358,6 +365,19 @@ function Loja() {
           </div>
         </SheetContent>
       </Sheet>
+
+      <Dialog open={!!zoomedProduct} onOpenChange={(open) => !open && setZoomedProduct(null)}>
+        <DialogContent className="max-w-2xl p-2 bg-transparent border-none shadow-none">
+          <DialogTitle className="sr-only">{zoomedProduct?.name}</DialogTitle>
+          {zoomedProduct && (
+            <img
+              src={zoomedProduct.image_url ?? undefined}
+              alt={zoomedProduct.name}
+              className="w-full h-auto max-h-[80vh] object-contain rounded-2xl bg-white"
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
