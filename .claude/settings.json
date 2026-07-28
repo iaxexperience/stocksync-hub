@@ -82,7 +82,8 @@
       "Bash(python -c \"import sys,json; d=json.load\\(sys.stdin\\); from collections import Counter; print\\(Counter\\(x['organization_id'] for x in d\\)\\)\")",
       "Bash(supabase link *)",
       "Bash(supabase db *)",
-      "Bash(npx supabase *)"
+      "Bash(npx supabase *)",
+      "Bash(npx wrangler *)"
     ],
     "additionalDirectories": [
       "C:\\Users\\maxra\\AppData\\Local\\Temp",
