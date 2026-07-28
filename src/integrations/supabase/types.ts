@@ -1264,7 +1264,17 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      public_storefront_products: {
+        Row: {
+          id: string
+          name: string
+          image_url: string | null
+          stock_current: number
+          category_id: string | null
+          category_name: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       create_new_organization: {
