@@ -432,6 +432,11 @@ function Landing() {
             </div>
             <ul className="space-y-2.5 font-semibold">
               <li>
+                <Link to="/loja" className="hover:text-pink-600 transition-colors">
+                  Ver Produtos
+                </Link>
+              </li>
+              <li>
                 <a href="#categorias" className="hover:text-pink-600 transition-colors">
                   Eletrodomésticos
                 </a>
