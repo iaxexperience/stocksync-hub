@@ -26,6 +26,7 @@ import {
   ChevronDown,
   HandCoins,
   ShoppingBag,
+  PackageX,
 } from "lucide-react";
 import {
   Sidebar,
@@ -107,6 +108,7 @@ const groups = [
         icon: ArrowDownToLine,
       },
       { title: "Saídas", to: "/movimentacoes", search: { tipo: "saida" }, icon: ArrowUpFromLine },
+      { title: "Avarias", to: "/avarias", icon: PackageX },
     ],
   },
   {

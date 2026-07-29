@@ -1127,6 +1127,57 @@ export type Database = {
           },
         ]
       }
+      product_damages: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          notes: string | null
+          organization_id: string
+          product_id: string
+          quantity: number
+          reason: string
+          unit_cost: number
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          notes?: string | null
+          organization_id: string
+          product_id: string
+          quantity: number
+          reason: string
+          unit_cost?: number
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          notes?: string | null
+          organization_id?: string
+          product_id?: string
+          quantity?: number
+          reason?: string
+          unit_cost?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_damages_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "product_damages_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       suppliers: {
         Row: {
           address: string | null

@@ -83,7 +83,8 @@
       "Bash(supabase link *)",
       "Bash(supabase db *)",
       "Bash(npx supabase *)",
-      "Bash(npx wrangler *)"
+      "Bash(npx wrangler *)",
+      "Bash(python -m json.tool)"
     ],
     "additionalDirectories": [
       "C:\\Users\\maxra\\AppData\\Local\\Temp",
