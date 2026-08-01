@@ -1,0 +1,7 @@
+﻿name = "stocksync-hub"
+main = ".output/server/index.mjs"
+compatibility_date = "2026-08-01"
+account_id = "898fec1f713b40fb314a547eae349d30"
+
+[assets]
+directory = ".output/public"
