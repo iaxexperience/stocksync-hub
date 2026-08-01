@@ -5873,69 +5873,105 @@ function ProdutosContratadosList({
                   </TableCell>
                 </TableRow>
               ) : (
-                filtered.map((item, i) => {
-                  const dObj = new Date(item.date);
-                  if (item.warranty_days) {
-                    dObj.setDate(dObj.getDate() + item.warranty_days);
-                  }
-                  const isExpired = item.warranty_days ? new Date() > dObj : false;
+                (() => {
+                  // Agrupar itens por order_id para não repetir o cliente vinculado
+                  const groups: { key: string; customerId: string; customerName: string; navigateId: string; items: typeof filtered }[] = [];
+                  filtered.forEach((item: any) => {
+                    const groupKey = `${item.order_id}_${item.customer_id}`;
+                    const existing = groups.find(g => g.key === groupKey);
+                    if (existing) {
+                      existing.items.push(item);
+                    } else {
+                      groups.push({
+                        key: groupKey,
+                        customerId: item.customer_id,
+                        customerName: item.customer_name,
+                        navigateId: item.customer_id,
+                        items: [item],
+                      });
+                    }
+                  });
 
-                  return (
-                    <TableRow key={i} className="hover:bg-slate-50/50">
-                      <TableCell className="font-semibold">{item.name}</TableCell>
-                      <TableCell className="font-mono text-[10px]">{item.sku}</TableCell>
-                      <TableCell
-                        className="font-semibold text-primary cursor-pointer hover:underline"
-                        onClick={() => navegarAba("perfil", { id: item.customer_id })}
-                      >
-                        {item.customer_name}
-                      </TableCell>
-                      <TableCell className="font-mono text-[10px]">
-                        {item.serial_number || "—"}
-                      </TableCell>
-                      <TableCell className="text-center font-semibold">{item.quantity}</TableCell>
-                      <TableCell className="text-right">
-                        {Number(item.price).toLocaleString("pt-BR", {
-                          style: "currency",
-                          currency: "BRL",
-                        })}
-                      </TableCell>
-                      <TableCell className="text-right font-bold">
-                        {Number(item.total).toLocaleString("pt-BR", {
-                          style: "currency",
-                          currency: "BRL",
-                        })}
-                      </TableCell>
-                      <TableCell>{new Date(item.date).toLocaleDateString("pt-BR")}</TableCell>
-                      <TableCell>
-                        {item.warranty_days ? (
-                          <Badge
-                            className={
-                              isExpired
-                                ? "bg-rose-50 text-rose-600 border-rose-200"
-                                : "bg-success/15 text-success border-success/30"
-                            }
-                            variant="outline"
-                          >
-                            {dObj.toLocaleDateString("pt-BR")} {isExpired && "(Expirada)"}
-                          </Badge>
-                        ) : (
-                          "Não declarada"
-                        )}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => navegarAba("perfil", { id: item.customer_id })}
-                          className="h-7 text-xs"
+                  return groups.map((group) =>
+                    group.items.map((item: any, itemIdx: number) => {
+                      const dObj = new Date(item.date);
+                      if (item.warranty_days) {
+                        dObj.setDate(dObj.getDate() + item.warranty_days);
+                      }
+                      const isExpired = item.warranty_days ? new Date() > dObj : false;
+                      const isFirstInGroup = itemIdx === 0;
+                      const rowSpan = group.items.length;
+
+                      return (
+                        <TableRow
+                          key={`${group.key}-${item.id}`}
+                          className={`hover:bg-slate-50/50${
+                            isFirstInGroup && groups.indexOf(group) > 0
+                              ? " border-t-2 border-slate-200"
+                              : ""
+                          }`}
                         >
-                          Ver Perfil
-                        </Button>
-                      </TableCell>
-                    </TableRow>
+                          <TableCell className="font-semibold">{item.name}</TableCell>
+                          <TableCell className="font-mono text-[10px]">{item.sku}</TableCell>
+                          {isFirstInGroup && (
+                            <TableCell
+                              rowSpan={rowSpan}
+                              className="font-semibold text-primary cursor-pointer hover:underline align-top pt-3"
+                              onClick={() => navegarAba("perfil", { id: group.navigateId })}
+                            >
+                              {group.customerName}
+                            </TableCell>
+                          )}
+                          <TableCell className="font-mono text-[10px]">
+                            {item.serial_number || "—"}
+                          </TableCell>
+                          <TableCell className="text-center font-semibold">{item.quantity}</TableCell>
+                          <TableCell className="text-right">
+                            {Number(item.price).toLocaleString("pt-BR", {
+                              style: "currency",
+                              currency: "BRL",
+                            })}
+                          </TableCell>
+                          <TableCell className="text-right font-bold">
+                            {Number(item.total).toLocaleString("pt-BR", {
+                              style: "currency",
+                              currency: "BRL",
+                            })}
+                          </TableCell>
+                          <TableCell>{new Date(item.date).toLocaleDateString("pt-BR")}</TableCell>
+                          <TableCell>
+                            {item.warranty_days ? (
+                              <Badge
+                                className={
+                                  isExpired
+                                    ? "bg-rose-50 text-rose-600 border-rose-200"
+                                    : "bg-success/15 text-success border-success/30"
+                                }
+                                variant="outline"
+                              >
+                                {dObj.toLocaleDateString("pt-BR")} {isExpired && "(Expirada)"}
+                              </Badge>
+                            ) : (
+                              "Não declarada"
+                            )}
+                          </TableCell>
+                          {isFirstInGroup && (
+                            <TableCell className="text-right align-top pt-2" rowSpan={rowSpan}>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => navegarAba("perfil", { id: group.navigateId })}
+                                className="h-7 text-xs"
+                              >
+                                Ver Perfil
+                              </Button>
+                            </TableCell>
+                          )}
+                        </TableRow>
+                      );
+                    })
                   );
-                })
+                })()
               )}
             </TableBody>
           </Table>
