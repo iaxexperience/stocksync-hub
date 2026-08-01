@@ -5874,10 +5874,10 @@ function ProdutosContratadosList({
                 </TableRow>
               ) : (
                 (() => {
-                  // Agrupar itens por order_id para não repetir o cliente vinculado
+                  // Agrupar itens por customer_id para não repetir o cliente vinculado
                   const groups: { key: string; customerId: string; customerName: string; navigateId: string; items: typeof filtered }[] = [];
                   filtered.forEach((item: any) => {
-                    const groupKey = `${item.order_id}_${item.customer_id}`;
+                    const groupKey = `${item.customer_id}`;
                     const existing = groups.find(g => g.key === groupKey);
                     if (existing) {
                       existing.items.push(item);
