@@ -5794,22 +5794,26 @@ function ProdutosContratadosList({
     orders.forEach((o: any) => {
       if (o.status !== "Cancelado" && o.order_type !== "orcamento") {
         o.order_items?.forEach((item: any) => {
-          list.push({
-            id: item.id,
-            order_number: o.order_number,
-            order_id: o.id,
-            customer_id: o.customer_id,
-            customer_name: o.customers?.name || "Desconhecido",
-            date: o.created_at,
-            name: item.products?.name || "Desconhecido",
-            sku: item.products?.sku || "—",
-            quantity: item.quantity,
-            price: item.unit_price,
-            total: item.total_amount,
-            warranty_days: item.warranty_days,
-            serial_number: item.serial_number,
-            status: item.status,
-          });
+          const qty = Number(item.quantity || 0);
+          const prodName = item.products?.name || "Desconhecido";
+          if (qty > 0 && !prodName.toLowerCase().includes("cadeira infantil")) {
+            list.push({
+              id: item.id,
+              order_number: o.order_number,
+              order_id: o.id,
+              customer_id: o.customer_id,
+              customer_name: o.customers?.name || "Desconhecido",
+              date: o.created_at,
+              name: prodName,
+              sku: item.products?.sku || "—",
+              quantity: item.quantity,
+              price: item.unit_price,
+              total: item.total_amount,
+              warranty_days: item.warranty_days,
+              serial_number: item.serial_number,
+              status: item.status,
+            });
+          }
         });
       }
     });
