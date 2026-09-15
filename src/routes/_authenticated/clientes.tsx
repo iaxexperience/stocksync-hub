@@ -2979,8 +2979,8 @@ function ClienteForm({
                             <SelectTrigger className="h-8">
                               <SelectValue />
                             </SelectTrigger>
-                            <SelectContent>
-                              {[1, 2, 3, 4, 5, 6, 10, 12, 18, 24, 36].map((n) => (
+                            <SelectContent className="max-h-60">
+                              {Array.from({ length: 36 }, (_, i) => i + 1).map((n) => (
                                 <SelectItem key={n} value={String(n)}>
                                   {n}x
                                 </SelectItem>
