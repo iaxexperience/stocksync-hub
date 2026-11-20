@@ -25,6 +25,9 @@ dist-ssr
 .env.*
 !.env.example
 
+# Configuração local do Claude Code (contém chaves/permissões da máquina)
+.claude/settings.local.json
+
 # Claude Code worktrees (isolated agent working copies — never part of the repo)
 .claude/worktrees/
 
