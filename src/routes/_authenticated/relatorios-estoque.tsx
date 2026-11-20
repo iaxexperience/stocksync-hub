@@ -65,7 +65,10 @@ function RelatorioEstoquePage() {
   const [startDate, setStartDate] = usePersistentState("relEstoque.dataInicial", "");
   const [endDate, setEndDate] = usePersistentState("relEstoque.dataFinal", "");
   const [movementTypeFilter, setMovementTypeFilter] = usePersistentState("relEstoque.tipo", "all");
-  const [stockSituationFilter, setStockSituationFilter] = usePersistentState("relEstoque.situacao", "all");
+  const [stockSituationFilter, setStockSituationFilter] = usePersistentState(
+    "relEstoque.situacao",
+    "all",
+  );
 
   const { data: products = [], isLoading: isLoadingProducts } = useQuery({
     queryKey: ["report_stock_products", orgId],

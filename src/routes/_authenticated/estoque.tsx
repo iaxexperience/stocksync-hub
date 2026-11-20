@@ -32,7 +32,10 @@ function Estoque() {
   const { data: profile } = useProfile();
   const orgId = profile?.active_org_id;
   const [search, setSearch] = usePersistentState("estoque.search", "");
-  const [filter, setFilter] = usePersistentState<"todos" | "baixo" | "sem">("estoque.filtro", "todos");
+  const [filter, setFilter] = usePersistentState<"todos" | "baixo" | "sem">(
+    "estoque.filtro",
+    "todos",
+  );
 
   const { data = [], isLoading } = useQuery({
     queryKey: ["estoque", orgId],
