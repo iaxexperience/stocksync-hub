@@ -3,6 +3,7 @@ import { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useProfile } from "@/hooks/useProfile";
+import { fetchAllRows } from "@/lib/fetch-all";
 import { toast } from "sonner";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -121,16 +122,17 @@ function Financeiro() {
   const { data: transactions = [], isLoading: isLoadingTx } = useQuery({
     queryKey: ["financial_transactions", orgId],
     enabled: !!orgId,
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("financial_transactions")
-        .select("*")
-        .eq("organization_id", orgId!)
-        .order("date", { ascending: false })
-        .order("created_at", { ascending: false });
-      if (error) throw error;
-      return data;
-    },
+    queryFn: () =>
+      fetchAllRows((from, to) =>
+        supabase
+          .from("financial_transactions")
+          .select("*")
+          .eq("organization_id", orgId!)
+          .order("date", { ascending: false })
+          .order("created_at", { ascending: false })
+          .order("id")
+          .range(from, to),
+      ),
   });
 
   // 2. Active Cash Register Session

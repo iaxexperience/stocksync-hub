@@ -3,6 +3,7 @@ import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useProfile } from "@/hooks/useProfile";
+import { fetchAllRows } from "@/lib/fetch-all";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -82,16 +83,17 @@ function RelatorioEstoquePage() {
   const { data: movements = [], isLoading: isLoadingMovements } = useQuery({
     queryKey: ["report_stock_movements", orgId],
     enabled: !!orgId,
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("stock_movements")
-        .select("*, products(name, sku), warehouses(name)")
-        .eq("organization_id", orgId!)
-        .order("created_at", { ascending: false })
-        .limit(2000);
-      if (error) throw error;
-      return data ?? [];
-    },
+    // Paginado: o .limit(2000) antigo era cortado em 1000 pelo PostgREST.
+    queryFn: () =>
+      fetchAllRows((from, to) =>
+        supabase
+          .from("stock_movements")
+          .select("*, products(name, sku), warehouses(name)")
+          .eq("organization_id", orgId!)
+          .order("created_at", { ascending: false })
+          .order("id")
+          .range(from, to),
+      ),
   });
 
   const filteredMovements = useMemo(() => {
