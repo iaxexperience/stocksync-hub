@@ -23,6 +23,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
+import { CustomerMovementDialog } from "@/components/relatorios/CustomerMovementDialog";
 import {
   Search,
   FileBarChart,
@@ -64,30 +65,35 @@ function RelatoriosPage() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [methodFilter, setMethodFilter] = useState("all");
 
-  const { data: orders = [], isLoading: isLoadingOrders } = useQuery({
+  const [selectedCustomer, setSelectedCustomer] = useState<{ id: string; name: string } | null>(
+    null,
+  );
+
+  // As parcelas vêm embutidas em cada venda e a busca é paginada: o PostgREST
+  // devolve no máximo 1000 linhas por consulta, e uma busca única de
+  // installments cortava as parcelas mais distantes — vendas em aberto
+  // apareciam como "Quitado".
+  const { data: orders = [], isLoading } = useQuery({
     queryKey: ["report_orders", orgId],
     enabled: !!orgId,
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("orders")
-        .select("*, customers(name), order_items(*, products(name))")
-        .eq("organization_id", orgId!)
-        .order("created_at", { ascending: false });
-      if (error) throw error;
-      return data ?? [];
-    },
-  });
-
-  const { data: installments = [], isLoading: isLoadingInstallments } = useQuery({
-    queryKey: ["report_installments", orgId],
-    enabled: !!orgId,
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("installments")
-        .select("*, orders(organization_id)")
-        .order("due_date", { ascending: true });
-      if (error) throw error;
-      return (data ?? []).filter((i: any) => i.orders?.organization_id === orgId);
+      const pageSize = 500;
+      const all: any[] = [];
+      for (let from = 0; ; from += pageSize) {
+        const { data, error } = await supabase
+          .from("orders")
+          .select(
+            "*, customers(name), order_items(*, products(name)), installments(id, amount, amount_paid, status)",
+          )
+          .eq("organization_id", orgId!)
+          .order("created_at", { ascending: false })
+          .order("id", { ascending: true })
+          .range(from, from + pageSize - 1);
+        if (error) throw error;
+        all.push(...(data ?? []));
+        if (!data || data.length < pageSize) break;
+      }
+      return all;
     },
   });
 
@@ -95,7 +101,7 @@ function RelatoriosPage() {
     return orders
       .filter((o: any) => o.order_type !== "orcamento" && o.status !== "Cancelado")
       .map((o: any) => {
-        const orderInstallments = installments.filter((i: any) => i.order_id === o.id);
+        const orderInstallments: any[] = o.installments ?? [];
         const isQuitado =
           orderInstallments.length > 0
             ? orderInstallments.every((i: any) => i.status === "Pago")
@@ -107,6 +113,7 @@ function RelatoriosPage() {
         return {
           id: o.id,
           order_number: o.order_number,
+          customer_id: o.customer_id as string,
           customer_name: o.customers?.name || "—",
           products: productNames,
           date: o.created_at,
@@ -125,7 +132,7 @@ function RelatoriosPage() {
           }, 0),
         };
       });
-  }, [orders, installments]);
+  }, [orders]);
 
   const filtered = useMemo(() => {
     return rows.filter((r) => {
@@ -154,8 +161,6 @@ function RelatoriosPage() {
     const emAberto = filtered.length - quitados;
     return { totalVendas, quitados, emAberto, count: filtered.length };
   }, [filtered]);
-
-  const isLoading = isLoadingOrders || isLoadingInstallments;
 
   return (
     <div className="space-y-6 text-xs max-w-7xl animate-fade-in print-container">
@@ -390,7 +395,16 @@ function RelatoriosPage() {
                   filtered.map((r) => (
                     <TableRow key={r.id} className="hover:bg-slate-50/50">
                       <TableCell className="font-semibold text-slate-800">
-                        {r.customer_name}
+                        <button
+                          type="button"
+                          className="text-left text-primary hover:underline underline-offset-2"
+                          title="Ver toda a movimentação do cliente"
+                          onClick={() =>
+                            setSelectedCustomer({ id: r.customer_id, name: r.customer_name })
+                          }
+                        >
+                          {r.customer_name}
+                        </button>
                       </TableCell>
                       <TableCell className="max-w-xs">
                         {r.products.length > 0 ? r.products.join(", ") : "—"}
@@ -437,6 +451,12 @@ function RelatoriosPage() {
           </div>
         </CardContent>
       </Card>
+
+      <CustomerMovementDialog
+        customerId={selectedCustomer?.id ?? null}
+        customerName={selectedCustomer?.name ?? ""}
+        onOpenChange={(open) => !open && setSelectedCustomer(null)}
+      />
     </div>
   );
 }
