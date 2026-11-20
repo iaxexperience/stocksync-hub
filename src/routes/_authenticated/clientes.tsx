@@ -2,6 +2,7 @@ import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useProfile } from "@/hooks/useProfile";
+import { fetchAllRows } from "@/lib/fetch-all";
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -106,30 +107,32 @@ function ClientesLayout() {
   const { data: customers = [], isLoading: isLoadingCustomers } = useQuery({
     queryKey: ["customers", orgId],
     enabled: !!orgId,
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("customers")
-        .select("*, customer_addresses(*)")
-        .eq("organization_id", orgId!)
-        .eq("is_deleted", false)
-        .order("name");
-      if (error) throw error;
-      return data ?? [];
-    },
+    queryFn: () =>
+      fetchAllRows((from, to) =>
+        supabase
+          .from("customers")
+          .select("*, customer_addresses(*)")
+          .eq("organization_id", orgId!)
+          .eq("is_deleted", false)
+          .order("name")
+          .order("id")
+          .range(from, to),
+      ),
   });
 
   const { data: orders = [], isLoading: isLoadingOrders } = useQuery({
     queryKey: ["orders", orgId],
     enabled: !!orgId,
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("orders")
-        .select("*, order_items(*, products(*)), customers(*)")
-        .eq("organization_id", orgId!)
-        .order("created_at", { ascending: false });
-      if (error) throw error;
-      return data ?? [];
-    },
+    queryFn: () =>
+      fetchAllRows((from, to) =>
+        supabase
+          .from("orders")
+          .select("*, order_items(*, products(*)), customers(*)")
+          .eq("organization_id", orgId!)
+          .order("created_at", { ascending: false })
+          .order("id")
+          .range(from, to),
+      ),
   });
 
   const { data: products = [] } = useQuery({
@@ -165,15 +168,18 @@ function ClientesLayout() {
     queryKey: ["all_installments", orgId],
     enabled: !!orgId,
     staleTime: 30_000,
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("installments")
-        .select("*, orders!inner(*, customers(*))")
-        .eq("orders.organization_id", orgId!)
-        .order("due_date", { ascending: true });
-      if (error) throw error;
-      return data ?? [];
-    },
+    // Paginado: são mais de 1000 parcelas, e uma busca única cortava as de
+    // vencimento mais distante (clientes apareciam com só as parcelas pagas).
+    queryFn: () =>
+      fetchAllRows((from, to) =>
+        supabase
+          .from("installments")
+          .select("*, orders!inner(*, customers(*))")
+          .eq("orders.organization_id", orgId!)
+          .order("due_date", { ascending: true })
+          .order("id")
+          .range(from, to),
+      ),
   });
 
   const { data: signatures = [] } = useQuery({
