@@ -83,7 +83,7 @@ function RelatoriosPage() {
         const { data, error } = await supabase
           .from("orders")
           .select(
-            "*, customers(name), order_items(*, products(name)), installments(id, amount, amount_paid, status)",
+            "*, customers(name), order_items(*, products(name)), parcelas:installments(id, amount, amount_paid, status)",
           )
           .eq("organization_id", orgId!)
           .order("created_at", { ascending: false })
@@ -101,7 +101,9 @@ function RelatoriosPage() {
     return orders
       .filter((o: any) => o.order_type !== "orcamento" && o.status !== "Cancelado")
       .map((o: any) => {
-        const orderInstallments: any[] = o.installments ?? [];
+        // "parcelas" é um alias: a tabela orders já tem a coluna numérica
+        // `installments` (quantidade), que o embed com o mesmo nome sobrescrevia.
+        const orderInstallments: any[] = o.parcelas ?? [];
         const isQuitado =
           orderInstallments.length > 0
             ? orderInstallments.every((i: any) => i.status === "Pago")
@@ -120,7 +122,7 @@ function RelatoriosPage() {
           total: o.total_amount,
           paymentMethod: o.payment_method,
           methodCategory: classifyPaymentMethod(o.payment_method),
-          installmentsCount: o.installments || 1,
+          installmentsCount: orderInstallments.length || Number(o.installments) || 1,
           isQuitado,
           // Conta parcelas com saldo zerado (Pago) OU parcialmente pagas
           // contam como "0.5" para o indicador não subestimar o progresso
