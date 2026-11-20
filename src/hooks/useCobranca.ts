@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useProfile } from "@/hooks/useProfile";
+import { fetchAllRows } from "@/lib/fetch-all";
 import { diasEmAtraso, round2, situacaoParcela, worseSituacao, type SituacaoParcela } from "@/lib/cobranca";
 
 export interface CobrancaInstallmentRow {
@@ -53,19 +54,23 @@ export function useCobrancaInstallments() {
     queryKey: ["cobranca_installments", orgId],
     enabled: !!orgId,
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("installments")
-        .select(
-          `*, orders!inner(
+      // Paginado: são mais de 1000 parcelas e o PostgREST corta o resto.
+      const data = await fetchAllRows((from, to) =>
+        supabase
+          .from("installments")
+          .select(
+            `*, orders!inner(
             id, order_number, order_type, total_amount, installments, status, created_at, customer_id, organization_id,
             customers(id, name, cpf_cnpj, phone, whatsapp, is_deleted, customer_addresses(city, neighborhood, street, number, complement)),
             order_items(quantity, products(name))
           )`,
-        )
-        .eq("orders.organization_id", orgId!)
-        .neq("orders.status", "Cancelado")
-        .order("due_date");
-      if (error) throw error;
+          )
+          .eq("orders.organization_id", orgId!)
+          .neq("orders.status", "Cancelado")
+          .order("due_date")
+          .order("id")
+          .range(from, to),
+      );
       // Se a coluna amount_paid não vem no payload, o cache de schema do
       // PostgREST ainda não foi recarregado depois da migration — avisa
       // explicitamente em vez de deixar a UI esconder a baixa silenciosamente.

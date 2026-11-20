@@ -76,11 +76,9 @@ function RelatoriosPage() {
   const { data: orders = [], isLoading } = useQuery({
     queryKey: ["report_orders", orgId],
     enabled: !!orgId,
-    queryFn: async () => {
-      const pageSize = 500;
-      const all: any[] = [];
-      for (let from = 0; ; from += pageSize) {
-        const { data, error } = await supabase
+    queryFn: () =>
+      fetchAllRows<any>((from, to) =>
+        supabase
           .from("orders")
           .select(
             "*, customers(name), order_items(*, products(name)), parcelas:installments(id, amount, amount_paid, status)",
@@ -88,13 +86,8 @@ function RelatoriosPage() {
           .eq("organization_id", orgId!)
           .order("created_at", { ascending: false })
           .order("id", { ascending: true })
-          .range(from, from + pageSize - 1);
-        if (error) throw error;
-        all.push(...(data ?? []));
-        if (!data || data.length < pageSize) break;
-      }
-      return all;
-    },
+          .range(from, to),
+      ),
   });
 
   const rows = useMemo(() => {
