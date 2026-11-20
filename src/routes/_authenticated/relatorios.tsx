@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { usePersistentState } from "@/hooks/usePersistentState";
 import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -59,12 +60,12 @@ function RelatoriosPage() {
   const { data: profile } = useProfile();
   const orgId = profile?.active_org_id;
 
-  const [customerSearch, setCustomerSearch] = useState("");
-  const [productSearch, setProductSearch] = useState("");
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
-  const [methodFilter, setMethodFilter] = useState("all");
+  const [customerSearch, setCustomerSearch] = usePersistentState("relVendas.cliente", "");
+  const [productSearch, setProductSearch] = usePersistentState("relVendas.produto", "");
+  const [startDate, setStartDate] = usePersistentState("relVendas.dataInicial", "");
+  const [endDate, setEndDate] = usePersistentState("relVendas.dataFinal", "");
+  const [statusFilter, setStatusFilter] = usePersistentState("relVendas.situacao", "all");
+  const [methodFilter, setMethodFilter] = usePersistentState("relVendas.forma", "all");
 
   const [selectedCustomer, setSelectedCustomer] = useState<{ id: string; name: string } | null>(
     null,

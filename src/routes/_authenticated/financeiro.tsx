@@ -1,4 +1,5 @@
 import { createFileRoute, useRouter } from "@tanstack/react-router";
+import { usePersistentState } from "@/hooks/usePersistentState";
 import { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -88,8 +89,8 @@ function Financeiro() {
   const setActiveTab = (v: string) => router.navigate({ to: "/financeiro", search: { aba: v } });
 
   // Local State: Cash Flow Tab
-  const [txTypeFilter, setTxTypeFilter] = useState<"todos" | "receita" | "despesa">("todos");
-  const [txSearch, setTxSearch] = useState("");
+  const [txTypeFilter, setTxTypeFilter] = usePersistentState<"todos" | "receita" | "despesa">("financeiro.tipo", "todos");
+  const [txSearch, setTxSearch] = usePersistentState("financeiro.search", "");
   const [openAddTxModal, setOpenAddTxModal] = useState(false);
   const [newTx, setNewTx] = useState({
     type: "despesa" as "receita" | "despesa",
@@ -101,10 +102,10 @@ function Financeiro() {
   });
 
   // Local State: Sales Statement Tab
-  const [startDate, setStartDate] = useState(
+  const [startDate, setStartDate] = usePersistentState("financeiro.dataInicial", 
     new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split("T")[0],
   );
-  const [endDate, setEndDate] = useState(new Date().toISOString().split("T")[0]);
+  const [endDate, setEndDate] = usePersistentState("financeiro.dataFinal", new Date().toISOString().split("T")[0]);
 
   // Local State: Cash Drawer
   const [openAdjustmentModal, setOpenAdjustmentModal] = useState<"suprimento" | "sangria" | null>(

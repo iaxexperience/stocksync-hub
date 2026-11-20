@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { usePersistentState } from "@/hooks/usePersistentState";
 import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -60,11 +61,11 @@ function RelatorioEstoquePage() {
   const { data: profile } = useProfile();
   const orgId = profile?.active_org_id;
 
-  const [productSearch, setProductSearch] = useState("");
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
-  const [movementTypeFilter, setMovementTypeFilter] = useState("all");
-  const [stockSituationFilter, setStockSituationFilter] = useState("all");
+  const [productSearch, setProductSearch] = usePersistentState("relEstoque.produto", "");
+  const [startDate, setStartDate] = usePersistentState("relEstoque.dataInicial", "");
+  const [endDate, setEndDate] = usePersistentState("relEstoque.dataFinal", "");
+  const [movementTypeFilter, setMovementTypeFilter] = usePersistentState("relEstoque.tipo", "all");
+  const [stockSituationFilter, setStockSituationFilter] = usePersistentState("relEstoque.situacao", "all");
 
   const { data: products = [], isLoading: isLoadingProducts } = useQuery({
     queryKey: ["report_stock_products", orgId],

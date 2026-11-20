@@ -1,4 +1,5 @@
 import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
+import { usePersistentState } from "@/hooks/usePersistentState";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useProfile } from "@/hooks/useProfile";
@@ -1157,11 +1158,11 @@ function ClientesList({
   navegarAba: any;
   sellers: any[];
 }) {
-  const [search, setSearch] = useState("");
-  const [filterCity, setFilterCity] = useState("all");
-  const [filterStatus, setFilterStatus] = useState("all");
-  const [filterFin, setFilterFin] = useState("all");
-  const [filterSeller, setFilterSeller] = useState("all");
+  const [search, setSearch] = usePersistentState("clientes.lista.search", "");
+  const [filterCity, setFilterCity] = usePersistentState("clientes.lista.cidade", "all");
+  const [filterStatus, setFilterStatus] = usePersistentState("clientes.lista.status", "all");
+  const [filterFin, setFilterFin] = usePersistentState("clientes.lista.financeiro", "all");
+  const [filterSeller, setFilterSeller] = usePersistentState("clientes.lista.vendedor", "all");
 
   // Obtém lista de cidades cadastradas para o filtro
   const cities = useMemo(() => {
@@ -5793,7 +5794,7 @@ function ProdutosContratadosList({
   customers: any[];
   navegarAba: any;
 }) {
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = usePersistentState("clientes.contratados.search", "");
 
   const items = useMemo(() => {
     const list: any[] = [];
@@ -6005,8 +6006,8 @@ function HistoricoCompras({
   updateOrder: any;
   deleteOrder: any;
 }) {
-  const [search, setSearch] = useState("");
-  const [typeFilter, setTypeFilter] = useState("all");
+  const [search, setSearch] = usePersistentState("clientes.historico.search", "");
+  const [typeFilter, setTypeFilter] = usePersistentState("clientes.historico.tipo", "all");
 
   const [editingOrder, setEditingOrder] = useState<any | null>(null);
   const [editOrderType, setEditOrderType] = useState("pedido");
@@ -6662,8 +6663,8 @@ function PagamentosControle({
   deleteInstallment: any;
   navegarAba: any;
 }) {
-  const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
+  const [search, setSearch] = usePersistentState("clientes.pagamentos.search", "");
+  const [statusFilter, setStatusFilter] = usePersistentState("clientes.pagamentos.status", "all");
 
   const [payingIns, setPayingIns] = useState<any | null>(null);
   const [payMethod, setPayMethod] = useState("Pix");
@@ -7152,7 +7153,7 @@ function DocumentosList({
   saveSignature: any;
   navegarAba: any;
 }) {
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = usePersistentState("clientes.documentos.search", "");
   const [openSignModal, setOpenSignModal] = useState(false);
   const [signingOrder, setSigningOrder] = useState<any | null>(null);
   const [signingCustomer, setSigningCustomer] = useState<any | null>(null);

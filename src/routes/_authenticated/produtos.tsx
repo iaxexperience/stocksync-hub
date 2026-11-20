@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { usePersistentState } from "@/hooks/usePersistentState";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useProfile } from "@/hooks/useProfile";
@@ -63,7 +64,7 @@ function Produtos() {
   const { data: profile } = useProfile();
   const orgId = profile?.active_org_id;
   const qc = useQueryClient();
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = usePersistentState("produtos.search", "");
   const [editing, setEditing] = useState<any | null>(null);
   const [open, setOpen] = useState(false);
 

@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { usePersistentState } from "@/hooks/usePersistentState";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -79,13 +80,13 @@ export function CobrancaPanel() {
   const { data: installments = [], isLoading, error, isError } = useCobrancaInstallments();
   const { data: periodo } = useCobrancaRecebimentosPeriodo();
 
-  const [clienteSearch, setClienteSearch] = useState("");
-  const [localizacaoSearch, setLocalizacaoSearch] = useState("");
-  const [dataInicial, setDataInicial] = useState("");
-  const [dataFinal, setDataFinal] = useState("");
-  const [situacaoFiltro, setSituacaoFiltro] = useState("todos");
-  const [atrasoFiltro, setAtrasoFiltro] = useState("todos");
-  const [formaRecebimento, setFormaRecebimento] = useState("todos");
+  const [clienteSearch, setClienteSearch] = usePersistentState("cobranca.cliente", "");
+  const [localizacaoSearch, setLocalizacaoSearch] = usePersistentState("cobranca.localizacao", "");
+  const [dataInicial, setDataInicial] = usePersistentState("cobranca.dataInicial", "");
+  const [dataFinal, setDataFinal] = usePersistentState("cobranca.dataFinal", "");
+  const [situacaoFiltro, setSituacaoFiltro] = usePersistentState("cobranca.situacao", "todos");
+  const [atrasoFiltro, setAtrasoFiltro] = usePersistentState("cobranca.atraso", "todos");
+  const [formaRecebimento, setFormaRecebimento] = usePersistentState("cobranca.forma", "todos");
 
   // Guarda só o id da venda selecionada — o objeto do grupo em si é
   // recalculado a cada render a partir dos dados vivos (abaixo), pra nunca

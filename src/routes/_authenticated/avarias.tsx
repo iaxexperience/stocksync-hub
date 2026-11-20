@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { usePersistentState } from "@/hooks/usePersistentState";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useProfile } from "@/hooks/useProfile";
@@ -56,8 +57,8 @@ function Avarias() {
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
   const [reason, setReason] = useState(REASONS[0]);
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
+  const [startDate, setStartDate] = usePersistentState("avarias.dataInicial", "");
+  const [endDate, setEndDate] = usePersistentState("avarias.dataFinal", "");
 
   const { data: damages = [], isLoading } = useQuery({
     queryKey: ["product-damages", orgId, startDate, endDate],
