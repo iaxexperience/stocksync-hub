@@ -91,6 +91,9 @@ function Financeiro() {
   // Local State: Cash Flow Tab
   const [txTypeFilter, setTxTypeFilter] = usePersistentState<"todos" | "receita" | "despesa">("financeiro.tipo", "todos");
   const [txSearch, setTxSearch] = usePersistentState("financeiro.search", "");
+  // Período do extrato (vazio = sem limite). Também vale para os cards de totais.
+  const [txDataInicial, setTxDataInicial] = usePersistentState("financeiro.fluxo.dataInicial", "");
+  const [txDataFinal, setTxDataFinal] = usePersistentState("financeiro.fluxo.dataFinal", "");
   const [openAddTxModal, setOpenAddTxModal] = useState(false);
   const [newTx, setNewTx] = useState({
     type: "despesa" as "receita" | "despesa",
@@ -343,18 +346,29 @@ function Financeiro() {
   });
 
   // Derived Values - Cash Flow Tab
+  const periodTx = useMemo(
+    () =>
+      transactions.filter((tx) => {
+        const d = String(tx.date ?? "").slice(0, 10);
+        if (txDataInicial && d < txDataInicial) return false;
+        if (txDataFinal && d > txDataFinal) return false;
+        return true;
+      }),
+    [transactions, txDataInicial, txDataFinal],
+  );
+
   const totals = useMemo(() => {
     let receita = 0;
     let despesa = 0;
-    transactions.forEach((tx) => {
+    periodTx.forEach((tx) => {
       if (tx.type === "receita") receita += Number(tx.amount);
       else despesa += Number(tx.amount);
     });
     return { receita, despesa, net: receita - despesa };
-  }, [transactions]);
+  }, [periodTx]);
 
   const filteredTx = useMemo(() => {
-    return transactions.filter((tx) => {
+    return periodTx.filter((tx) => {
       if (txTypeFilter !== "todos" && tx.type !== txTypeFilter) return false;
       if (
         txSearch &&
@@ -365,7 +379,7 @@ function Financeiro() {
       }
       return true;
     });
-  }, [transactions, txTypeFilter, txSearch]);
+  }, [periodTx, txTypeFilter, txSearch]);
 
   // Derived Values - Cash Session Tab
   const expectedClosingBalance = useMemo(() => {
@@ -516,6 +530,62 @@ function Financeiro() {
                     <SelectItem value="despesa">Apenas Despesas (Saídas)</SelectItem>
                   </SelectContent>
                 </Select>
+              </div>
+              <div className="flex flex-col sm:flex-row sm:items-end gap-3">
+                <div className="space-y-1">
+                  <Label className="text-xs">Data inicial</Label>
+                  <Input
+                    type="date"
+                    className="h-9 sm:w-44"
+                    value={txDataInicial}
+                    onChange={(e) => setTxDataInicial(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs">Data final</Label>
+                  <Input
+                    type="date"
+                    className="h-9 sm:w-44"
+                    value={txDataFinal}
+                    onChange={(e) => setTxDataFinal(e.target.value)}
+                  />
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {(() => {
+                    const iso = (d: Date) =>
+                      `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+                    const hoje = new Date();
+                    const atalhos: { label: string; ini: string; fim: string }[] = [
+                      { label: "Hoje", ini: iso(hoje), fim: iso(hoje) },
+                      {
+                        label: "Últimos 7 dias",
+                        ini: iso(new Date(hoje.getFullYear(), hoje.getMonth(), hoje.getDate() - 6)),
+                        fim: iso(hoje),
+                      },
+                      {
+                        label: "Este mês",
+                        ini: iso(new Date(hoje.getFullYear(), hoje.getMonth(), 1)),
+                        fim: iso(hoje),
+                      },
+                      { label: "Tudo", ini: "", fim: "" },
+                    ];
+                    return atalhos.map((a) => (
+                      <Button
+                        key={a.label}
+                        type="button"
+                        size="sm"
+                        variant={txDataInicial === a.ini && txDataFinal === a.fim ? "default" : "outline"}
+                        className="h-9"
+                        onClick={() => {
+                          setTxDataInicial(a.ini);
+                          setTxDataFinal(a.fim);
+                        }}
+                      >
+                        {a.label}
+                      </Button>
+                    ));
+                  })()}
+                </div>
               </div>
 
               <div className="rounded-md border overflow-x-auto bg-white">
