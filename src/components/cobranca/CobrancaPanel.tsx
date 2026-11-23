@@ -188,6 +188,18 @@ export function CobrancaPanel() {
     formaRecebimento,
   ]);
 
+  // Na impressão, vendas do mesmo cliente ficam juntas (mais recente primeiro).
+  const printGroups = useMemo(
+    () =>
+      [...filteredGroups].sort(
+        (a, b) =>
+          (a.customer?.name ?? "").localeCompare(b.customer?.name ?? "", "pt-BR") ||
+          (a.customer?.id ?? "").localeCompare(b.customer?.id ?? "") ||
+          b.created_at.localeCompare(a.created_at),
+      ),
+    [filteredGroups],
+  );
+
   // Deriva o grupo aberto no drawer a partir do array vivo (não filtrado,
   // pra continuar mostrando a venda mesmo que ela deixe de bater com o
   // filtro depois de uma baixa) — sempre reflete o último refetch.
@@ -400,7 +412,7 @@ export function CobrancaPanel() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredGroups.map((g) => {
+                  {printGroups.map((g) => {
                     const addr = g.customer?.customer_addresses?.[0];
                     return (
                       <tr key={g.order_id} className="border-b">

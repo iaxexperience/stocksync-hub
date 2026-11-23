@@ -3,6 +3,7 @@ import {
   type ColumnDef,
   flexRender,
   getCoreRowModel,
+  getExpandedRowModel,
   getPaginationRowModel,
   getSortedRowModel,
   type SortingState,
@@ -18,12 +19,20 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowUpDown, ChevronLeft, ChevronRight, Package as PackageIcon } from "lucide-react";
+import {
+  ArrowUpDown,
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  Package as PackageIcon,
+} from "lucide-react";
 import {
   formatCurrencyBRL,
   formatDateBR,
+  round2,
   situacaoBadgeClass,
   situacaoLabel,
+  worseSituacao,
   type SituacaoParcela,
 } from "@/lib/cobranca";
 import type { CobrancaOrderGroup } from "@/hooks/useCobranca";
@@ -33,6 +42,53 @@ interface Props {
   onRowClick: (row: CobrancaOrderGroup) => void;
 }
 
+// Linha da tabela: uma venda, ou (quando o cliente tem mais de uma venda no
+// filtro) o cliente com os totais somados e as vendas como sub-linhas.
+type Linha = CobrancaOrderGroup & { salesCount?: number; subRows?: Linha[] };
+
+function groupByCustomer(rows: CobrancaOrderGroup[]): Linha[] {
+  const byCustomer = new Map<string, CobrancaOrderGroup[]>();
+  for (const r of rows) {
+    const key = r.customer?.id ?? `venda:${r.order_id}`;
+    const list = byCustomer.get(key);
+    if (list) list.push(r);
+    else byCustomer.set(key, [r]);
+  }
+
+  const result: Linha[] = [];
+  for (const [key, orders] of byCustomer) {
+    if (orders.length === 1) {
+      result.push(orders[0]);
+      continue;
+    }
+    const sorted = [...orders].sort((a, b) => b.created_at.localeCompare(a.created_at));
+    let nextDue: string | null = null;
+    let situacao: SituacaoParcela = "quitada";
+    for (const o of sorted) {
+      situacao = worseSituacao(situacao, o.situacao);
+      if (o.next_due_date && (!nextDue || o.next_due_date < nextDue)) nextDue = o.next_due_date;
+    }
+    result.push({
+      order_id: `cliente:${key}`,
+      order_number: `${sorted.length} vendas`,
+      created_at: sorted[0].created_at,
+      total_amount: round2(sorted.reduce((s, o) => s + Number(o.total_amount || 0), 0)),
+      installments_count: sorted.reduce((s, o) => s + Number(o.installments_count || 0), 0),
+      paid_count: sorted.reduce((s, o) => s + o.paid_count, 0),
+      total_paid: round2(sorted.reduce((s, o) => s + o.total_paid, 0)),
+      total_saldo: round2(sorted.reduce((s, o) => s + o.total_saldo, 0)),
+      next_due_date: nextDue,
+      max_dias_atraso: Math.max(...sorted.map((o) => o.max_dias_atraso)),
+      situacao,
+      customer: sorted[0].customer,
+      installments: sorted.flatMap((o) => o.installments),
+      salesCount: sorted.length,
+      subRows: sorted,
+    });
+  }
+  return result;
+}
+
 // Célula compacta — reduz padding/fonte pra caber todas as colunas sem
 // precisar de barra de rolagem horizontal na maioria das telas.
 const CELL = "px-1.5 py-1.5 text-xs";
@@ -40,7 +96,9 @@ const CELL = "px-1.5 py-1.5 text-xs";
 export function CobrancaTable({ rows, onRowClick }: Props) {
   const [sorting, setSorting] = useState<SortingState>([{ id: "vencimento", desc: false }]);
 
-  const columns = useMemo<ColumnDef<CobrancaOrderGroup>[]>(
+  const data = useMemo(() => groupByCustomer(rows), [rows]);
+
+  const columns = useMemo<ColumnDef<Linha>[]>(
     () => [
       {
         id: "cliente",
@@ -48,8 +106,17 @@ export function CobrancaTable({ rows, onRowClick }: Props) {
         accessorFn: (r) => r.customer?.name ?? "",
         cell: ({ row }) => {
           const c = row.original.customer;
+          if (row.depth > 0) {
+            return <span className="pl-5 text-muted-foreground">↳ venda</span>;
+          }
           return (
             <div className="flex items-center gap-1.5 min-w-0">
+              {row.getCanExpand() &&
+                (row.getIsExpanded() ? (
+                  <ChevronDown className="h-3.5 w-3.5 shrink-0" />
+                ) : (
+                  <ChevronRight className="h-3.5 w-3.5 shrink-0" />
+                ))}
               <span className="font-medium truncate">{c?.name ?? "—"}</span>
               {c?.is_deleted && (
                 <Badge variant="outline" className="text-[10px] shrink-0">
@@ -167,9 +234,9 @@ export function CobrancaTable({ rows, onRowClick }: Props) {
               size="sm"
               variant="outline"
               className="h-6 px-2 text-[11px]"
-              onClick={() => onRowClick(row.original)}
+              onClick={() => (row.getCanExpand() ? row.toggleExpanded() : onRowClick(row.original))}
             >
-              Ver
+              {row.getCanExpand() ? (row.getIsExpanded() ? "Fechar" : "Abrir") : "Ver"}
             </Button>
           </div>
         ),
@@ -179,13 +246,18 @@ export function CobrancaTable({ rows, onRowClick }: Props) {
   );
 
   const table = useReactTable({
-    data: rows,
+    data,
     columns,
     state: { sorting },
     onSortingChange: setSorting,
+    getSubRows: (r) => r.subRows,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
+    getExpandedRowModel: getExpandedRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
+    // As vendas de um cliente ficam na mesma página que ele.
+    paginateExpandedRows: false,
+    autoResetExpanded: false,
     initialState: { pagination: { pageSize: 25 } },
   });
 
@@ -226,8 +298,8 @@ export function CobrancaTable({ rows, onRowClick }: Props) {
               table.getRowModel().rows.map((row) => (
                 <TableRow
                   key={row.id}
-                  className="cursor-pointer"
-                  onClick={() => onRowClick(row.original)}
+                  className={`cursor-pointer ${row.getCanExpand() ? "bg-muted/40 font-medium" : ""} ${row.depth > 0 ? "bg-muted/10" : ""}`}
+                  onClick={() => (row.getCanExpand() ? row.toggleExpanded() : onRowClick(row.original))}
                 >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell
@@ -247,7 +319,7 @@ export function CobrancaTable({ rows, onRowClick }: Props) {
       <div className="flex items-center justify-between text-sm">
         <span className="text-muted-foreground">
           Página {table.getState().pagination.pageIndex + 1} de {Math.max(table.getPageCount(), 1)} —{" "}
-          {rows.length} venda(s)
+          {data.length} cliente(s) · {rows.length} venda(s)
         </span>
         <div className="flex gap-2">
           <Button
