@@ -106,6 +106,13 @@ function RelatoriosPage() {
         const productNames: string[] = (o.order_items || [])
           .map((it: any) => it.products?.name)
           .filter(Boolean);
+        const items: { name: string; quantity: number; total: number }[] = (o.order_items || []).map(
+          (it: any) => ({
+            name: it.products?.name || "Produto removido",
+            quantity: Number(it.quantity) || 0,
+            total: Number(it.total_amount ?? Number(it.unit_price) * Number(it.quantity)) || 0,
+          }),
+        );
 
         return {
           id: o.id,
@@ -113,6 +120,7 @@ function RelatoriosPage() {
           customer_id: o.customer_id as string,
           customer_name: o.customers?.name || "—",
           products: productNames,
+          items,
           date: o.created_at,
           total: o.total_amount,
           paymentMethod: o.payment_method,
@@ -404,7 +412,17 @@ function RelatoriosPage() {
                         </button>
                       </TableCell>
                       <TableCell className="max-w-xs">
-                        {r.products.length > 0 ? r.products.join(", ") : "—"}
+                        {r.items.length > 0
+                          ? r.items.map((it, idx) => (
+                              <div key={idx} className="whitespace-nowrap">
+                                {it.quantity}x {it.name}
+                                <span className="text-muted-foreground">
+                                  {" "}
+                                  · {it.total.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+                                </span>
+                              </div>
+                            ))
+                          : "—"}
                       </TableCell>
                       <TableCell className="whitespace-nowrap">
                         {new Date(r.date).toLocaleDateString("pt-BR")}

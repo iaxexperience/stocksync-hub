@@ -46,6 +46,16 @@ interface Props {
 // filtro) o cliente com os totais somados e as vendas como sub-linhas.
 type Linha = CobrancaOrderGroup & { salesCount?: number; subRows?: Linha[] };
 
+// "2x Fruteira grande, 1x Rede" — produtos da venda (ou de todas as vendas do
+// cliente, na linha agrupada).
+export function produtosDaVenda(g: CobrancaOrderGroup): string {
+  const orders = new Map(g.installments.map((i) => [i.order_id, i.orders]));
+  return Array.from(orders.values())
+    .flatMap((o) => o.order_items ?? [])
+    .map((it) => `${it.quantity}x ${it.products?.name ?? "Produto removido"}`)
+    .join(", ");
+}
+
 function groupByCustomer(rows: CobrancaOrderGroup[]): Linha[] {
   const byCustomer = new Map<string, CobrancaOrderGroup[]>();
   for (const r of rows) {
@@ -153,6 +163,19 @@ export function CobrancaTable({ rows, onRowClick }: Props) {
         id: "order_number",
         header: "Nº Venda",
         accessorFn: (r) => r.order_number,
+      },
+      {
+        id: "produtos",
+        header: "Produto(s)",
+        accessorFn: (r) => produtosDaVenda(r),
+        cell: ({ getValue }) => {
+          const v = getValue() as string;
+          return (
+            <span className="block max-w-[12rem] truncate" title={v}>
+              {v || "—"}
+            </span>
+          );
+        },
       },
       {
         id: "data_compra",

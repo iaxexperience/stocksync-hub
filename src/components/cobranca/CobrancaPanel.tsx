@@ -19,7 +19,7 @@ import {
   useCobrancaRecebimentosPeriodo,
   type CobrancaOrderGroup,
 } from "@/hooks/useCobranca";
-import { CobrancaTable } from "@/components/cobranca/CobrancaTable";
+import { CobrancaTable, produtosDaVenda } from "@/components/cobranca/CobrancaTable";
 import { OrderDrawer } from "@/components/cobranca/OrderDrawer";
 import {
   PAYMENT_METHODS,
@@ -402,6 +402,7 @@ export function CobrancaPanel() {
                     <th className="text-left py-1 pr-2">Cidade/Bairro</th>
                     <th className="text-left py-1 pr-2">Telefone</th>
                     <th className="text-left py-1 pr-2">Nº Venda</th>
+                    <th className="text-left py-1 pr-2">Produto(s)</th>
                     <th className="text-left py-1 pr-2">Data Compra</th>
                     <th className="text-right py-1 pr-2">Valor Total</th>
                     <th className="text-left py-1 pr-2">Parcelas</th>
@@ -422,6 +423,7 @@ export function CobrancaPanel() {
                         </td>
                         <td className="py-1 pr-2">{g.customer?.whatsapp || g.customer?.phone || "—"}</td>
                         <td className="py-1 pr-2">{g.order_number}</td>
+                        <td className="py-1 pr-2">{produtosDaVenda(g) || "—"}</td>
                         <td className="py-1 pr-2">{formatDateBR(g.created_at)}</td>
                         <td className="text-right py-1 pr-2">{formatCurrencyBRL(g.total_amount)}</td>
                         <td className="py-1 pr-2">
