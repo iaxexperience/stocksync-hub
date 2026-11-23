@@ -284,7 +284,15 @@ export function CustomerMovementDialog({ customerId, customerName, onOpenChange 
                         return (
                           <TableRow key={p.id} className={cancelado ? "opacity-60" : undefined}>
                             <TableCell>{formatDateBR(p.payment_date)}</TableCell>
-                            <TableCell>{p.order?.order_number ?? "—"}</TableCell>
+                            <TableCell>
+                              <div>{p.order?.order_number ?? "—"}</div>
+                              <div className="text-xs text-muted-foreground">
+                                {(p.order?.order_items ?? [])
+                                  .map((it: any) => it.products?.name)
+                                  .filter(Boolean)
+                                  .join(", ")}
+                              </div>
+                            </TableCell>
                             <TableCell>{p.installment?.installment_number ?? "—"}</TableCell>
                             <TableCell>{paymentMethodLabel(p.payment_method)}</TableCell>
                             <TableCell className="max-w-xs">
