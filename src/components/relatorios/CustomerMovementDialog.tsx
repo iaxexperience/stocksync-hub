@@ -172,10 +172,27 @@ export function CustomerMovementDialog({ customerId, customerName, onOpenChange 
                           · {formatDateBR(o.created_at)} · {o.payment_method ?? "—"}
                         </span>
                       </div>
-                      <div className="text-sm text-muted-foreground">
-                        {(o.order_items ?? [])
-                          .map((it: any) => `${it.quantity}× ${it.products?.name ?? "Produto"} (${formatCurrencyBRL(Number(it.total_amount))})`)
-                          .join(" · ") || "Sem itens"}
+                      <div className="mt-2">
+                        <div className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                          Produtos comprados
+                        </div>
+                        {(o.order_items ?? []).length === 0 ? (
+                          <div className="text-sm text-muted-foreground">Sem itens</div>
+                        ) : (
+                          <ul className="mt-1 space-y-0.5">
+                            {(o.order_items ?? []).map((it: any) => (
+                              <li key={it.id} className="text-base">
+                                <span className="font-semibold">
+                                  {it.quantity}× {it.products?.name ?? "Produto removido"}
+                                </span>
+                                <span className="text-sm text-muted-foreground">
+                                  {" "}
+                                  — {formatCurrencyBRL(Number(it.total_amount))}
+                                </span>
+                              </li>
+                            ))}
+                          </ul>
+                        )}
                       </div>
                       {o.notes && <div className="text-xs text-muted-foreground mt-1">Obs.: {o.notes}</div>}
                     </div>
